@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 
 // Run against a locally built image; never invoke its application entrypoint or connect to services.
 const image = process.env.TRIPBOT_TEST_IMAGE;
@@ -26,4 +27,11 @@ describe.skipIf(!image)('production Docker image', () => {
     ], { encoding: 'utf8', timeout: 30_000 });
     expect(output).toContain('runtime verified');
   }, 35_000);
+  it('starts and stops PM2 with a writable state directory as the runtime user', () => {
+    const script = readFileSync('src/docker/tests/pm2.smoke.js', 'utf8');
+    const output = execFileSync('docker', [
+      'run', '--rm', '--network', 'none', '--entrypoint', 'node', image ?? '', '-e', script,
+    ], { encoding: 'utf8', timeout: 25_000 });
+    expect(output).toContain('PM2 runtime verified');
+  }, 30_000);
 });

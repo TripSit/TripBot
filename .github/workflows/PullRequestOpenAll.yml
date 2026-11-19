@@ -115,8 +115,15 @@ jobs:
           context: .
           file: ./src/docker/Dockerfile.tripbot
           push: false
+          load: true
+          tags: tripbot:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      - name: Smoke-test PM2 runtime as the image user
+        run: |
+          docker run --rm --network none --entrypoint node \
+            --mount "type=bind,source=${{ github.workspace }}/src/docker/tests/pm2.smoke.js,target=/tmp/pm2.smoke.js,readonly" \
+            tripbot:ci /tmp/pm2.smoke.js
   codeql:
     name: CodeQL
     runs-on: ubuntu-latest
