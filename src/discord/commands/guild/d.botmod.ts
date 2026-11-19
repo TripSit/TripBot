@@ -149,10 +149,9 @@ export const dBotmod: SlashCommand = {
 
     await interaction.showModal(modal);
 
-    const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('botModModal');
+    const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('botModModal') && i.customId.split('~')[1] === interaction.id;
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
-        if (i.customId.split('~')[1] !== interaction.id) return;
         await i.deferReply({ flags: MessageFlags.Ephemeral });
         const toggle = interaction.options.getString('toggle') ?? 'on' as 'on' | 'off';
 

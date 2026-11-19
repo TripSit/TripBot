@@ -212,6 +212,8 @@ describe('modModal: submit handling', () => {
     const [{ filter }] = s.raw.awaitModalSubmit.mock.calls[0] as unknown as [{ filter: (i: { customId: string }) => boolean }];
     expect(filter({ customId: 'modModal~NOTE~int1' })).toBe(true);
     expect(filter({ customId: 'somethingElse' })).toBe(false);
+    // another moderator's modal for the same command is not ours
+    expect(filter({ customId: 'modModal~NOTE~someone-elses' })).toBe(false);
   });
 
   it('logs and swallows failures while answering a submitted modal', async () => {
@@ -315,10 +317,12 @@ describe('modModal: submissions', () => {
     expect(s.raw.message.edit).toHaveBeenCalled();
   });
 
-  it('ignores submissions from other modals', async () => {
+  it('only collects the submit of its own modal, so another moderator\'s modal is never consumed', async () => {
     const s = setup('WARNING', { submitId: 'other' });
     await modModal(s.interaction);
-    expect(s.submit.deferReply).not.toHaveBeenCalled();
+    const [{ filter }] = s.raw.awaitModalSubmit.mock.calls[0] as unknown as [{ filter: (i: { customId: string }) => boolean }];
+    expect(filter(s.submit as never)).toBe(false);
+    expect(filter({ customId: 'modModal~WARNING~int1' })).toBe(true);
   });
 
   it('re-enables the button when the modal times out, and ignores other errors', async () => {

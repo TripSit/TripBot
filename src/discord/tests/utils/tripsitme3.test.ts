@@ -342,10 +342,13 @@ describe('tripsitmeButton', () => {
   });
 
   it('ignores other users\' modals, reports creation failures, and survives reply errors', async () => {
+    // The collector only accepts this click's own modal, so someone else's submit is never consumed
     const other = setup({ submitId: 'else' });
+    other.raw.awaitModalSubmit.mockImplementation(async () => other.submit);
     await tripsitmeButton(other.interaction);
-    await flushPromises();
-    expect(other.submit.deferReply).not.toHaveBeenCalled();
+    const [{ filter }] = other.raw.awaitModalSubmit.mock.calls[0] as unknown as [{ filter: (i: { customId: string }) => boolean }];
+    expect(filter(other.submit as never)).toBe(false);
+    expect(filter({ customId: 'tripsitmeSubmit~int1' })).toBe(true);
     const broken = setup({ tripsit: 'unset' });
     await tripsitmeButton(broken.interaction);
     await flushPromises();

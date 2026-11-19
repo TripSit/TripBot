@@ -1493,10 +1493,9 @@ export async function tripsitmeButton(
         .setStyle(TextInputStyle.Paragraph)),
     ));
 
-  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('tripsitmeSubmit');
+  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('tripsitmeSubmit') && i.customId.split('~')[1] === interaction.id;
   await interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
       await i.deferReply({ flags: MessageFlags.Ephemeral });
       const triage = i.fields.getTextInputValue('triageInput');
       const intro = i.fields.getTextInputValue('introInput');

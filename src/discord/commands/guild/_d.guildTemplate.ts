@@ -106,10 +106,9 @@ export const dTemplate: SlashCommand = {
 
     await interaction.showModal(modal);
 
-    const filter = (i:ModalSubmitInteraction) => i.customId.includes('feedbackReportModal');
+    const filter = (i:ModalSubmitInteraction) => i.customId.includes('feedbackReportModal') && i.customId.split('~')[2] === interaction.id;
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
-        if (i.customId.split('~')[2] !== interaction.id) return;
         const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
         await i.deferReply({ flags: ephemeral });
         const input = i.fields.getTextInputValue('modalInput');

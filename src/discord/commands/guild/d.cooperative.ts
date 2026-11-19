@@ -163,10 +163,9 @@ export async function cooperativeApplyButton(
         .setRequired(true)
         .setCustomId('info')),
     ));
-  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('cooperativeApply~');
+  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('cooperativeApply~') && i.customId.split('~')[1] === interaction.id;
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
       await i.deferReply({ flags: MessageFlags.Ephemeral });
 
       await i.editReply({
