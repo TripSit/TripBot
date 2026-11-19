@@ -35,11 +35,15 @@ const dxmData:DxmDataType = {
   Fourth: { min: 15, max: 20 },
 };
 
-const data = {
-  First: { min: 0, max: 0 },
-  Second: { min: 0, max: 0 },
-  Third: { min: 0, max: 0 },
-  Fourth: { min: 0, max: 0 },
+// mg of dextromethorphan per unit, and how that unit is shown, for each product the command offers
+const DXM_PRODUCTS: Record<string, { roaValue: number; units: string }> = {
+  'RoboCough (ml)': { roaValue: 10, units: '(ml)' },
+  'Robitussin DX (oz)': { roaValue: 88.5, units: '(oz)' },
+  'Robitussin DX (ml)': { roaValue: 3, units: '(ml)' },
+  'Robitussin Gelcaps (15 mg caps)': { roaValue: 15, units: '(15 mg caps)' },
+  'Pure (mg)': { roaValue: 1, units: '(mg)' },
+  '30mg Gelcaps (30 mg caps)': { roaValue: 30, units: '(30 mg caps)' },
+  'RoboTablets (30 mg tablets)': { roaValue: 40.9322, units: '(30 mg tablets)' },
 };
 
 /**
@@ -100,34 +104,13 @@ export async function calcBenzo(
  * @return {any}
  */
 export async function calcDxm(givenWeight:number, weightUnits:string, taking:string):Promise<ReturnType> {
-  let calcWeight = weightUnits === 'lbs' ? givenWeight * 0.453592 : givenWeight;
-  let roaValue = 0;
-  let units = '';
-  if (taking === 'RoboCough (ml)') {
-    roaValue = 10;
-    units = '(ml)';
-  } else if (taking === 'Robitussin DX (oz)') {
-    roaValue = 88.5;
-    units = '(oz)';
-  } else if (taking === 'Robitussin DX (ml)') {
-    roaValue = 3;
-    units = '(ml)';
-  } else if (taking === 'Robitussin Gelcaps (15 mg caps)') {
-    roaValue = 15;
-    units = '(15 mg caps)';
-  } else if (taking === 'Pure (mg)') {
-    roaValue = 1;
-    units = '(mg)';
-  } else if (taking === '30mg Gelcaps (30 mg caps)') {
-    roaValue = 30;
-    units = '(30 mg caps)';
-  } else if (taking === 'RoboTablets (30 mg tablets)') {
-    roaValue = 40.9322;
-    units = '(30 mg tablets)';
-  }
+  // An unknown product would divide by zero and show Infinity or NaN as a dose, so refuse it instead
+  if (!Object.hasOwn(DXM_PRODUCTS, taking)) throw new Error(`Unknown DXM product: ${taking}`);
+  const { roaValue, units } = DXM_PRODUCTS[taking];
+  const calcWeight = (weightUnits === 'lbs' ? givenWeight * 0.453592 : givenWeight) / roaValue;
 
-  calcWeight /= roaValue;
-
+  // A fresh result per call, so simultaneous calculations never share one object
+  const data = {} as DxmDataType;
   Object.keys(dxmData).forEach(key => {
     const min = Math.round((dxmData[key as keyof DxmDataType].min * calcWeight) * 100) / 100;
     const max = Math.round((dxmData[key as keyof DxmDataType].max * calcWeight) * 100) / 100;

@@ -47,8 +47,16 @@ describe('calcDxm', () => {
     expect(lbs.data.First.min).toBeCloseTo(kg.data.First.min, 1);
   });
 
-  it('returns empty units for an unrecognised product', async () => {
-    expect((await calcDxm(100, 'kg', 'mystery')).units).toBe('');
+  it('refuses an unrecognised product instead of dividing by zero', async () => {
+    await expect(calcDxm(100, 'kg', 'mystery')).rejects.toThrow('Unknown DXM product');
+    await expect(calcDxm(100, 'kg', 'toString')).rejects.toThrow('Unknown DXM product');
+  });
+
+  it('returns a separate result for every call', async () => {
+    const [light, heavy] = await Promise.all([calcDxm(50, 'kg', 'Pure (mg)'), calcDxm(100, 'kg', 'Pure (mg)')]);
+    expect(light.data).not.toBe(heavy.data);
+    expect(light.data.First).toEqual({ min: 75, max: 125 });
+    expect(heavy.data.First).toEqual({ min: 150, max: 250 });
   });
 });
 
