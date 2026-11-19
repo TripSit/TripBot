@@ -45,6 +45,13 @@ const historyCategories = [
   {
     type: 'UNDERBAN', plural: 'Underbans', singular: 'Underban', emoji: '🔨', color: Colors.Red,
   },
+  {
+    type: 'ACKN_REPORT',
+    plural: 'Report Acknowledgements',
+    singular: 'Report Acknowledgement',
+    emoji: '📬',
+    color: Colors.Blue,
+  },
 ] as const;
 
 type HistoryCategory = typeof historyCategories[number];

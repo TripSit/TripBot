@@ -123,25 +123,18 @@ describe('moderate: guards', () => {
     dbMock.user_actions.findFirst.mockResolvedValue({ id: 'recent' } as never);
     const run = async (customId: string) => {
       const s = setup('WARNING');
-      const collector = { on: vi.fn() };
-      s.raw.followUp.mockResolvedValue({ createMessageComponentCollector: vi.fn(() => collector) });
-      const pending = moderate(s.buttonInt, s.modalInt);
-      await vi.waitFor(() => expect(collector.on).toHaveBeenCalled());
-      const handler = collector.on.mock.calls[0][1] as (i: unknown) => Promise<void>;
       const click = { customId, update: vi.fn() };
-      if (customId === 'proceedButton') dbMock.user_actions.findFirst.mockResolvedValue(null);
-      await handler(click);
-      return {
-        result: await pending, click, collector, s,
-      };
+      s.raw.followUp.mockResolvedValue({
+        awaitMessageComponent: vi.fn().mockResolvedValue(click), edit: vi.fn().mockResolvedValue(undefined),
+      });
+      return { result: await moderate(s.buttonInt, s.modalInt), click };
     };
     const cancelled = await run('nahButton');
-    expect(cancelled.result.content).toContain('cancelled due to another taken recently');
+    expect(cancelled.result.content).toContain('your choice to proceed or cancel below has been completed');
     expect(cancelled.click.update).toHaveBeenCalledWith({ content: 'Action cancelled.', components: [] });
     expect(dbMock.user_actions.create).not.toHaveBeenCalled();
-    dbMock.user_actions.findFirst.mockResolvedValue({ id: 'recent' } as never);
     await run('proceedButton');
-    expect(dbMock.user_actions.create).toHaveBeenCalled();
+    expect(dbMock.user_actions.create).toHaveBeenCalledTimes(1);
   });
 
   it('does not run the recent-action check for appeals, notes, reports or reversals', async () => {
@@ -232,22 +225,34 @@ describe('moderate: gaps', () => {
     expect(dbMock.user_actions.findFirst).not.toHaveBeenCalled();
   });
 
-  it('only listens to the moderator who asked, and survives a failed button update', async () => {
+  it('only accepts the requesting moderator and valid buttons, and handles failed updates', async () => {
     dbMock.user_actions.findFirst.mockResolvedValue({ id: 'recent' } as never);
     const s = setup('WARNING');
-    const collector = { on: vi.fn() };
-    const createCollector = vi.fn((options: unknown) => { expect(options).toBeDefined(); return collector; });
-    s.raw.followUp.mockResolvedValue({ createMessageComponentCollector: createCollector });
-    const pending = moderate(s.buttonInt, s.modalInt);
-    await vi.waitFor(() => expect(collector.on).toHaveBeenCalled());
-    const { filter } = createCollector.mock.calls[0][0] as unknown as { filter: (i: unknown) => boolean };
-    expect(filter({ isButton: () => true, user: { id: 'actor1' } })).toBe(true);
-    expect(filter({ isButton: () => true, user: { id: 'someone-else' } })).toBe(false);
+    const click = { customId: 'nahButton', update: vi.fn().mockRejectedValue(new Error('Unknown Interaction')) };
+    const confirmation = {
+      awaitMessageComponent: vi.fn().mockResolvedValue(click), edit: vi.fn().mockResolvedValue(undefined),
+    };
+    s.raw.followUp.mockResolvedValue(confirmation);
+    const result = await moderate(s.buttonInt, s.modalInt);
+    const { filter } = confirmation.awaitMessageComponent.mock.calls[0][0] as unknown as { filter: (i: unknown) => boolean };
+    expect(filter({ isButton: () => true, user: { id: 'actor1' }, customId: 'nahButton' })).toBe(true);
+    expect(filter({ isButton: () => true, user: { id: 'someone-else' }, customId: 'nahButton' })).toBe(false);
     expect(filter({ isButton: () => false, user: { id: 'actor1' } })).toBe(false);
-    const handler = collector.on.mock.calls[0][1] as (i: unknown) => Promise<void>;
-    await handler({ customId: 'nahButton', update: vi.fn().mockRejectedValue(new Error('Unknown Interaction')) });
-    handler({ customId: 'nahButton', update: vi.fn() });
-    await pending.catch(() => undefined);
+    expect(filter({ isButton: () => true, user: { id: 'actor1' }, customId: 'other' })).toBe(false);
+    expect(result.content).toContain('could not be completed');
+    expect(confirmation.edit).toHaveBeenCalledWith(expect.objectContaining({ components: [] }));
+    expect(dbMock.user_actions.create).not.toHaveBeenCalled();
+  });
+
+  it('finishes expired confirmations even when their message was deleted', async () => {
+    dbMock.user_actions.findFirst.mockResolvedValue({ id: 'recent' } as never);
+    const s = setup('WARNING');
+    s.raw.followUp.mockResolvedValue({
+      awaitMessageComponent: vi.fn().mockRejectedValue(new Error('time')),
+      edit: vi.fn().mockRejectedValue(new Error('deleted')),
+    });
+    expect((await moderate(s.buttonInt, s.modalInt)).content).toContain('confirmation expired');
+    expect(dbMock.user_actions.create).not.toHaveBeenCalled();
   });
 });
 

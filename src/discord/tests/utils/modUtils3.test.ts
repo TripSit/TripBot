@@ -193,6 +193,17 @@ describe('acknowledgeReportButton', () => {
     const s = setup({ reportee: 'member' });
     await acknowledgeReportButton(s.interaction);
     expect(s.reporter.send).toHaveBeenCalledWith(expect.stringContaining('report on Reportee'));
+    expect(dbMock.users.upsert).toHaveBeenCalledWith(expect.objectContaining({ where: { discord_id: 'actor' } }));
+    expect(dbMock.user_actions.create).toHaveBeenCalledWith({
+      data: {
+        user_id: 'uid',
+        target_discord_id: ID,
+        guild_id: 'g1',
+        type: 'ACKN_REPORT',
+        created_by: 'uid',
+        internal_note: 'Report acknowledged.',
+      },
+    });
     expect(JSON.stringify(s.targetChan.send.mock.calls[0][0])).toContain('Mod has acknowledged the report on <@reportee>');
     expect(s.modLog.send).toHaveBeenCalled();
     const [{ components }] = s.message.edit.mock.calls[0] as unknown as [{ components: Array<{ components: Array<{ custom_id: string }> }> }];
@@ -214,13 +225,21 @@ describe('acknowledgeReportButton', () => {
     await acknowledgeReportButton(s.interaction);
     expect(JSON.stringify(s.targetChan.send.mock.calls[0][0])).toContain('original reporter of this user has left');
     const editFails = setup({ reportee: 'member', reporter: 'left', editFails: true });
-    await expect(acknowledgeReportButton(editFails.interaction)).resolves.toBeUndefined();
+    await expect(acknowledgeReportButton(editFails.interaction)).resolves.toBe(false);
+  });
+
+  it('keeps successful acknowledgements recorded when the mod-log notification fails', async () => {
+    const s = setup({ reportee: 'member', modLogFetchFails: true });
+    await expect(acknowledgeReportButton(s.interaction)).resolves.toBe(true);
+    expect(dbMock.user_actions.create).toHaveBeenCalledTimes(1);
+    expect(s.message.edit).toHaveBeenCalled();
   });
 
   it('handles DM failures and missing mod log channels', async () => {
     const dm = setup({ reportee: 'member', dmFails: true });
     await acknowledgeReportButton(dm.interaction);
     expect(JSON.stringify(dm.targetChan.send.mock.calls.at(-1)?.[0])).toContain('there was an error');
+    expect(dbMock.user_actions.create).not.toHaveBeenCalled();
     const noLog = setup({ reportee: 'member', modLog: null });
     await acknowledgeReportButton(noLog.interaction);
     expect(noLog.modLog.send).not.toHaveBeenCalled();
