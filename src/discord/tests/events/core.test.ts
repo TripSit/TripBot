@@ -184,6 +184,14 @@ describe('handleError', () => {
       expect(i.reply.mock.calls[0][0].embeds[0].data.description).toContain('developers have been alerted');
     });
 
+    it('truncates huge stacks so the alert fits in an embed and still reaches the developers', async () => {
+      const huge = new Error('huge');
+      huge.stack = `Error: huge\n${'    at somewhere (file.ts:1:1)\n'.repeat(500)}`;
+      await handleError(huge, 'tripsit', interaction() as never);
+      expect(sent[0].length).toBeLessThanOrEqual(4096);
+      expect(sent[0]).toContain('truncated, see the bot logs');
+    });
+
     it('omits context for data-sensitive commands', async () => {
       await handleError(shortError('x'), 'idose', interaction() as never);
       expect(sent[0]).toContain('Error running /idose ```');
