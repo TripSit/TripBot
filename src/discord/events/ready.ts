@@ -69,7 +69,7 @@ export const ready: ReadyEvent = {
         const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
         log.info(F, `Discord finished booting in ${bootDuration}s!`);
         if (env.NODE_ENV !== 'development') {
-          const channelTripbot = await discordClient.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
+          const channelBoot = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
           const botOwner = await discordClient.users.fetch(env.DISCORD_OWNER_ID);
           const newFact = await fact();
           const statData = await botStats();
@@ -102,7 +102,7 @@ export const ready: ReadyEvent = {
           const longest = columns.reduce((long, str) => Math.max(long, str[0].length), 0);
           const message = columns.map(col => `${col[0].padEnd(longest)}  ${col[1]}`).join('\n');
 
-          await channelTripbot.send(stripIndents`
+          await channelBoot.send(stripIndents`
         Hey ${botOwner} I just rebooted in ${bootDuration} seconds!
         \`\`\`${message}\`\`\`*${newFact}*
         `);
