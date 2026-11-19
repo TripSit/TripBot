@@ -113,38 +113,44 @@ router.post('/create', async (req: AuthenticatedRequest, res) => {
       return res.status(200).json(createFailureBody(result.error));
     }
 
-    const guild = await discordClient.guilds.fetch(process.env.DISCORD_GUILD_ID);
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const botMember = await guild.members.fetch(discordClient.user!.id);
-    if (!botMember) throw new Error('Failed to fetch bot user.');
+    try {
+      const guild = await discordClient.guilds.fetch(process.env.DISCORD_GUILD_ID);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const botMember = await guild.members.fetch(discordClient.user!.id);
+      if (!botMember) throw new Error('Failed to fetch bot user.');
 
-    // Fetch the target user
-    const targetUser = await discordClient.users.fetch(req.user.discord_id);
-    if (!targetUser) throw new Error('Failed to fetch target user.');
+      // Fetch the target user
+      const targetUser = await discordClient.users.fetch(req.user.discord_id);
+      if (!targetUser) throw new Error('Failed to fetch target user.');
 
-    const description = `
-    **Do you know why you were banned?**: ${appealData.reason}
+      const description = `
+      **Do you know why you were banned?**: ${appealData.reason}
 
-      **Have you taken any steps to rectify the situation or make amends for the behavior that lead to the ban?**: ${appealData.solution}
+        **Have you taken any steps to rectify the situation or make amends for the behavior that lead to the ban?**: ${appealData.solution}
 
-      **What steps will you take to ensure that you do not repeat the behavior that lead to the ban?**: ${appealData.future}
+        **What steps will you take to ensure that you do not repeat the behavior that lead to the ban?**: ${appealData.future}
 
-      **Is there anything else you would like to add?**: ${appealData.extra}
-      `;
+        **Is there anything else you would like to add?**: ${appealData.extra}
+        `;
 
-    await messageModThread(
-      null,
-      botMember,
-      targetUser,
-      'BAN_APPEAL',
-      {
-        internalNote: '',
-        description,
-        extraMessage: '',
-        duration: '',
-        appealData,
-      },
-    );
+      await messageModThread(
+        null,
+        botMember,
+        targetUser,
+        'BAN_APPEAL',
+        {
+          internalNote: '',
+          description,
+          extraMessage: '',
+          duration: '',
+          appealData,
+        },
+      );
+    } catch (error) {
+      // The moderators never saw it, so it must not lock the user out of trying again.
+      if (result.appealId) await appeals.rollbackAppeal(result.appealId);
+      throw error;
+    }
     return res.json({ success: true, message: 'Appeal submitted successfully' });
   } catch (error: unknown) {
     log.error(F, `Error in create route: ${error}`);
