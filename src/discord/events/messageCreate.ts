@@ -16,6 +16,7 @@ import { nightsWatch } from '../../global/commands/g.watchuser';
 import { getOrCreateUser } from '../../global/utils/dbRecords';
 import { touchLastSeen } from '../../global/utils/lastSeen';
 import { aiMessage } from '../commands/global/d.ai';
+import { botBannedUsers } from '../utils/populateBotBans';
 
 const F = f(__filename); // eslint-disable-line
 
@@ -50,7 +51,8 @@ async function getCategory(channel:TextChannel):Promise<experience_category> {
 export const messageCreate: MessageCreateEvent = {
   name: 'messageCreate',
   async execute(message) {
-    messageCommand(message);
+    // Bot-banned users get no message commands (~tripsit pings helper roles, ~ replies); the cached list needs no DB read
+    if (!botBannedUsers.includes(message.author.id)) messageCommand(message);
     relayDiscordMessage(message);
     // awayMessage(message);
     // Only run on Tripsit or DM, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)

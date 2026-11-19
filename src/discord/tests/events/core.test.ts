@@ -395,6 +395,19 @@ describe('messageCreate', () => {
     await expect(messageCreate.execute(msg() as never)).resolves.toBeUndefined();
   });
 
+  it('does not run message commands for bot-banned users', async () => {
+    const bannedId = 'banned-user';
+    botBannedUsers.push(bannedId);
+    try {
+      await messageCreate.execute(msg({ author: { id: bannedId, bot: false } }) as never);
+      expect(mocks.messageCommand).not.toHaveBeenCalled();
+      await messageCreate.execute(msg({ author: { id: 'someone-else', bot: false } }) as never);
+      expect(mocks.messageCommand).toHaveBeenCalledTimes(1);
+    } finally {
+      botBannedUsers.splice(botBannedUsers.indexOf(bannedId), 1);
+    }
+  });
+
   it('stops early for other guilds, banned users and bots', async () => {
     await messageCreate.execute(msg({ guild: { id: 'other' } }) as never);
     expect(mocks.countMessage).not.toHaveBeenCalled();
