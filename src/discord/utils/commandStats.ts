@@ -7,6 +7,9 @@ import { ApplicationCommandOptionType, type CommandInteractionOption } from 'dis
  */
 export const STAT_VALUE_OPTIONS = new Set(['substance', 'section', 'first_drug', 'second_drug']);
 
+/** Commands whose usage is never recorded and whose context is withheld from error alerts. */
+export const dataSensitiveCommands = ['idose', 'moderate', 'report'];
+
 const MAX_VALUE_LENGTH = 100;
 
 export function statParameters(

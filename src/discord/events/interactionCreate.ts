@@ -14,7 +14,7 @@ import { botBannedUsers } from '../utils/populateBotBans';
 import modalSubmit from './modalSubmit';
 import { getOrCreateUser } from '../../global/utils/dbRecords';
 import { touchLastSeen } from '../../global/utils/lastSeen';
-import { statParameters } from '../utils/commandStats';
+import { dataSensitiveCommands, statParameters } from '../utils/commandStats';
 
 const F = f(__filename);  // eslint-disable-line
 
@@ -27,23 +27,30 @@ async function recordCommandUsage(interaction: ChatInputCommandInteraction): Pro
     touchLastSeen(await getOrCreateUser(interaction.user.id));
   }
 
-  const commandUsage = await db.command_usage.create({
-    data: {
-      command: commandName,
-      created_at: new Date(),
-      channel_id: interaction.channel?.id ?? '0',
-      guild_id: interaction.guild?.id ?? null,
-    },
-  });
+  // Personal doses, moderation and reports are never kept, not even as stats.
+  if (dataSensitiveCommands.includes(interaction.commandName)) return;
 
-  // Now create the parameters linked to the command_usage entry. Values are stripped to what stats need.
-  const parameterEntries = statParameters(interaction.options.data)
-    .map(param => ({ ...param, usage_id: commandUsage.id }));
+  // Usage stats must never break the command that already ran.
+  try {
+    const commandUsage = await db.command_usage.create({
+      data: {
+        command: commandName,
+        created_at: new Date(),
+        channel_id: interaction.channel?.id ?? '0',
+        guild_id: interaction.guild?.id ?? null,
+      },
+    });
 
-  // Create the parameters in the database
-  await db.command_usage_parameter.createMany({
-    data: parameterEntries,
-  });
+    // Now create the parameters linked to the command_usage entry. Values are stripped to what stats need.
+    const parameterEntries = statParameters(interaction.options.data)
+      .map(param => ({ ...param, usage_id: commandUsage.id }));
+
+    await db.command_usage_parameter.createMany({
+      data: parameterEntries,
+    });
+  } catch (error) {
+    log.error(F, `Failed to record command usage: ${error}`);
+  }
 }
 
 function routeComponent(interaction: MessageComponentInteraction): void {
