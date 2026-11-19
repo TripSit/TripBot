@@ -274,7 +274,7 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
     include: { ai_channels: true },
   });
 
-  log.debug(F, `Fetched guild data for ${messageData.guild.id}: ${JSON.stringify(guildData)}`);
+  log.debug(F, 'Fetched AI guild configuration');
 
   const isAiEnabled = guildData?.ai_channels.some(c => c.channel_id === messageData.channelId);
   if (!isAiEnabled) {
@@ -294,7 +294,7 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
     include: { ai_info: true },
   });
 
-  log.debug(F, `Fetched user data for ${messageData.author.id}: ${JSON.stringify(userData)}`);
+  log.debug(F, 'Fetched AI user settings');
 
   if (!userData.ai_info?.ai_tos_agree || !userData.ai_info?.ai_privacy_agree) {
     await messageData.reply('Please review and agree to `/ai tos` and `/ai privacy` before chatting.');
@@ -363,7 +363,7 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
       update: {},
     });
 
-    log.debug(F, `Upserted persona data for ${personaId}: ${JSON.stringify(personaData)}`);
+    log.debug(F, 'Prepared AI persona');
 
     await db.ai_message.create({
       data: {
@@ -524,7 +524,7 @@ export async function aiMenu(
 
       const userData = await getOrCreateUser(user.id);
 
-      log.debug(F, `User data ${JSON.stringify(userData)}`);
+      log.debug(F, 'Fetched user for AI persona selection');
 
       await db.ai_info.update({
         where: { user_id: userData.id },
