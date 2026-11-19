@@ -95,9 +95,11 @@ describe('appeals authenticated identity', () => {
 
   it('keeps the appeal when the moderators were notified', async () => {
     mocks.messageModThread.mockResolvedValue(undefined);
-    await supertest(app).post('/create').send({
+    const response = await supertest(app).post('/create').send({
       reason: 'Reason', solution: 'Solution', future: 'Future', extra: 'Extra',
     });
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ success: true, message: 'Appeal submitted successfully' });
     expect(mocks.rollbackAppeal).not.toHaveBeenCalled();
   });
 });
