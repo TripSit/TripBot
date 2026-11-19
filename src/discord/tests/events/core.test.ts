@@ -575,9 +575,10 @@ describe('ready', () => {
     e.NODE_ENV = env;
     const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
     const send = vi.fn();
+    const channelFetch = vi.fn(async () => ({ send }));
     setClient({
       guilds: { fetch: vi.fn(async () => ({ name: 'Host' })), cache: new Map() },
-      channels: { fetch: vi.fn(async () => ({ send })) },
+      channels: { fetch: channelFetch },
       users: { fetch: vi.fn(async () => '<@owner>') },
     });
     (global as unknown as { bootTime: Date }).bootTime = new Date(Date.now() - 5000);
@@ -587,11 +588,12 @@ describe('ready', () => {
     await ready.execute({ guilds: { fetch: vi.fn(), cache: new Map() } } as never);
     await flushPromises();
     vi.useRealTimers();
-    return { send, exit };
+    return { send, exit, channelFetch };
   }
 
   it('starts services and posts the boot report outside development', async () => {
-    const { send } = await boot('production');
+    const { send, channelFetch } = await boot('production');
+    expect(channelFetch).toHaveBeenCalledWith(e.CHANNEL_BOTERRORS);
     expect(mocks.emojiCache).toHaveBeenCalled();
     expect(mocks.runTimer).toHaveBeenCalled();
     const report = send.mock.calls[0][0] as string;
