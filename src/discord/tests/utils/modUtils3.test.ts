@@ -235,6 +235,15 @@ describe('acknowledgeReportButton', () => {
     expect(s.message.edit).toHaveBeenCalled();
   });
 
+  it('reports persistence failures without removing the acknowledgement button', async () => {
+    const s = setup({ reportee: 'member' });
+    dbMock.user_actions.create.mockRejectedValueOnce(new Error('write failed'));
+    await expect(acknowledgeReportButton(s.interaction)).resolves.toBe(false);
+    expect(s.message.edit).not.toHaveBeenCalled();
+    expect(s.modLog.send).not.toHaveBeenCalled();
+    expect(JSON.stringify(s.targetChan.send.mock.calls.at(-1)?.[0])).toContain('there was an error');
+  });
+
   it('handles DM failures and missing mod log channels', async () => {
     const dm = setup({ reportee: 'member', dmFails: true });
     await acknowledgeReportButton(dm.interaction);

@@ -1337,7 +1337,6 @@ export async function acknowledgeReportButton(
   let reporteeMember: GuildMember | null = null;
   let reporteeUser: User | null = null;
   let reporterUser: User | null = null;
-  let acknowledged = false;
 
   try {
     // Fetch the mod thread
@@ -1404,6 +1403,8 @@ export async function acknowledgeReportButton(
 
   const reporteeName = reporteeMember?.displayName ?? reporteeUser?.username ?? 'Unknown User';
 
+  let guildData: Awaited<ReturnType<typeof getOrCreateGuild>>;
+
   // Send a DM to the user who triggered the report
   try {
     await reporterUser.send(stripIndents`
@@ -1419,7 +1420,7 @@ export async function acknowledgeReportButton(
       Team TripSit
     `);
 
-    const guildData = await getOrCreateGuild(buttonInt.guild.id);
+    guildData = await getOrCreateGuild(buttonInt.guild.id);
     const actorData = await getOrCreateUser(buttonInt.user.id);
     await db.user_actions.create({
       data: {
@@ -1431,8 +1432,16 @@ export async function acknowledgeReportButton(
         internal_note: 'Report acknowledged.',
       },
     });
+  } catch (error) {
+    log.error(F, `Failed to acknowledge report for ${targetId}: ${error}`);
+    await targetChan.send({
+      embeds: [errorEmbed(`${buttonInt.user.username} tried to acknowledged ${reporteeData.username}'s report, but there was an error.`)],
+    });
+    return false;
+  }
 
-    acknowledged = true;
+  // Once persisted, a failed notification must not report the acknowledgement as unsuccessful.
+  try {
     await removeAcknowledgeRow(buttonInt.message);
 
     const successEmbed = embedTemplate()
@@ -1459,15 +1468,8 @@ export async function acknowledgeReportButton(
     log.info(F, 'Failed to send report acknowledgement to mod log. No mod log channel set.');
     return true;
   } catch (error) {
-    if (acknowledged) {
-      log.error(F, `Report acknowledgement was recorded but its notification failed: ${error}`);
-      return true;
-    }
-    log.error(F, `Failed to acknowledge report for ${targetId}: ${error}`);
-    await targetChan.send({
-      embeds: [errorEmbed(`${buttonInt.user.username} tried to acknowledged ${reporteeData.username}'s report, but there was an error.`)],
-    });
-    return false;
+    log.error(F, `Report acknowledgement was recorded but its notification failed: ${error}`);
+    return true;
   }
 }
 
