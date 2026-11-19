@@ -48,6 +48,13 @@ const interactionFor = (over: Record<string, unknown> = {}) => ({
 
 const embedOf = (out: { embeds?: readonly unknown[] }) => (out.embeds as Array<{ data: { title: string; description: string } }>)[0].data;
 
+beforeEach(() => {
+  // Token changes are atomic updates; a transaction runs its callback against the same mock client
+  db.personas.update = vi.fn() as never;
+  db.personas.updateMany = vi.fn().mockResolvedValue({ count: 1 }) as never;
+  db.$transaction = vi.fn(async (callback: (client: unknown) => unknown) => callback(db)) as never;
+});
+
 describe('rpg helpers', () => {
   beforeEach(() => {
     mocks.user.mockResolvedValue({ id: 'dbu' });
@@ -81,8 +88,8 @@ describe('rpg helpers', () => {
       mocks.persona.mockResolvedValue(persona());
       const out = await rpgBounties(interactionFor() as never, command);
       expect(embedOf(out).title).toContain('Success');
-      const stored = (db.personas.upsert as ReturnType<typeof vi.fn>).mock.calls[0][0].update;
-      expect(stored.tokens).toBeGreaterThanOrEqual(5000 + base);
+      const stored = (db.personas.update as ReturnType<typeof vi.fn>).mock.calls[0][0].data;
+      expect(stored.tokens.increment).toBeGreaterThanOrEqual(base);
       expect(stored[`last_${command}`]).toBeInstanceOf(Date);
     });
 
@@ -90,8 +97,8 @@ describe('rpg helpers', () => {
       db.rpg_inventory.findMany = vi.fn().mockResolvedValue([{ effect: 'tokenMultiplier', effect_value: '0.5' }, { effect: 'font', effect_value: 'x' }]) as never;
       const booster = interactionFor({ guild: { members: { fetch: vi.fn(async () => member([e.ROLE_BOOSTER])) } } });
       await rpgBounties(booster as never, 'quest');
-      const stored = (db.personas.upsert as ReturnType<typeof vi.fn>).mock.calls[0][0].update;
-      expect(stored.tokens - 5000).toBeGreaterThanOrEqual(16);
+      const stored = (db.personas.update as ReturnType<typeof vi.fn>).mock.calls[0][0].data;
+      expect(stored.tokens.increment).toBeGreaterThanOrEqual(16);
     });
 
     it.each([
@@ -102,7 +109,7 @@ describe('rpg helpers', () => {
       mocks.persona.mockResolvedValue(persona({ [`last_${command}`]: when() }));
       const out = await rpgBounties(interactionFor() as never, command);
       expect(embedOf(out).title).toContain('Fail');
-      expect(db.personas.upsert).not.toHaveBeenCalled();
+      expect(db.personas.update).not.toHaveBeenCalled();
     });
 
     it('allows claiming again after the window passes', async () => {
@@ -162,17 +169,25 @@ describe('rpg helpers', () => {
         (selfStub.options.getMember as ReturnType<typeof vi.fn>).mockReturnValue(me);
         await dRpg.execute(selfStub as never);
         expect(embedOf(selfStub.editReply.mock.calls[0][0]).description).toContain("can't gift tokens to yourself");
-        expect(embedOf((await run('gift', { target, amount: -5 }).then(r => r.stub.editReply.mock.calls[0][0]))).description).toContain('negative');
+        expect(embedOf((await run('gift', { target, amount: -5 }).then(r => r.stub.editReply.mock.calls[0][0]))).description).toContain('at least 1');
+        expect(embedOf((await run('gift', { target, amount: 0 }).then(r => r.stub.editReply.mock.calls[0][0]))).description).toContain('at least 1');
         expect(embedOf((await run('gift', { target, amount: 1000 }).then(r => r.stub.editReply.mock.calls[0][0]))).description).toContain("don't have enough");
+      });
+
+      it('refuses when the sender spent the tokens after the balance check, without paying the target', async () => {
+        db.personas.updateMany = vi.fn().mockResolvedValue({ count: 0 }) as never;
+        const { stub } = await run('gift', { target, amount: 40 });
+        expect(embedOf(stub.editReply.mock.calls[0][0]).description).toContain("don't have enough");
+        expect(db.personas.update).not.toHaveBeenCalled();
       });
 
       it('moves tokens between wallets', async () => {
         const { stub } = await run('gift', { target, amount: 40 });
         expect(embedOf(stub.editReply.mock.calls[0][0]).title).toContain('Gift Successful');
-        expect(db.personas.upsert).toHaveBeenCalledTimes(2);
-        const [from, to] = (db.personas.upsert as ReturnType<typeof vi.fn>).mock.calls.map(c => c[0].update.tokens);
-        expect(from).toBe(60);
-        expect(to).toBe(40);
+        expect(db.personas.updateMany).toHaveBeenCalledWith({
+          where: { id: expect.anything(), tokens: { gte: 40 } }, data: { tokens: { decrement: 40 } },
+        });
+        expect(db.personas.update).toHaveBeenCalledWith({ where: { id: expect.anything() }, data: { tokens: { increment: 40 } } });
       });
     });
   });
@@ -309,7 +324,15 @@ describe('rpg market', () => {
       const interaction = withSelection('PremiumMembership');
       interaction.member.roles.add = vi.fn(() => { throw new Error('no perms'); });
       await rpgMarketAccept(interaction as never);
-      expect(db.personas.upsert).toHaveBeenCalledTimes(2);
+      expect(db.personas.updateMany).toHaveBeenCalledTimes(1);
+      expect(db.personas.update).toHaveBeenCalledWith(expect.objectContaining({ data: { tokens: { increment: expect.any(Number) } } }));
+    });
+
+    it('refuses a purchase when the wallet was spent after the balance check', async () => {
+      db.personas.updateMany = vi.fn().mockResolvedValue({ count: 0 }) as never;
+      const out = await rpgMarketAccept(withSelection('AbrilFatFace') as never);
+      expect(embedOf(out).description).toContain('do not have enough tokens');
+      expect(db.rpg_inventory.create).not.toHaveBeenCalled();
     });
   });
 });
@@ -385,7 +408,7 @@ describe('rpg home and flair', () => {
       expect((db.rpg_inventory.upsert as ReturnType<typeof vi.fn>).mock.calls[0][0].update.equipped).toBe(false);
       await rpgHomeSell(base() as never);
       expect(db.rpg_inventory.delete).toHaveBeenCalled();
-      expect((db.personas.upsert as ReturnType<typeof vi.fn>).mock.calls.at(-1)?.[0].update.tokens).toBe(5250);
+      expect((db.personas.update as ReturnType<typeof vi.fn>).mock.calls.at(-1)?.[0].data).toEqual({ tokens: { increment: 250 } });
       db.rpg_inventory.findMany = vi.fn().mockResolvedValue([]) as never;
       await rpgHomeDecline(base() as never);
     });
