@@ -10,6 +10,7 @@ import {
 } from 'discord.js';
 import { ErrorEvent } from '../@types/eventDef';
 import commandContext from '../utils/context';
+import { dataSensitiveCommands } from '../utils/commandStats';
 import { describeError } from '../../global/utils/networkErrors';
 import { ReportLimiter, withTimeout } from '../../global/utils/errorReporter';
 
@@ -18,12 +19,6 @@ const F = f(__filename);
 type ErrorInteraction = ChatInputCommandInteraction | MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction;
 
 const error10062 = 'Error 10062: (Unknown Interaction Error)[https://github.com/discord/discord-api-docs/issues/5558] for details'; // eslint-disable-line max-len
-const dataSensitiveCommands = [
-  'idose',
-  'moderate',
-  'report',
-];
-
 const reportLimiter = new ReportLimiter();
 const REPORT_TIMEOUT_MS = 10_000;
 
