@@ -9,6 +9,12 @@ import {
 
 const F = f(__filename); // eslint-disable-line
 
+function channelChangeMessage(oldState: VoiceState, newState: VoiceState): string {
+  if (!oldState.channel) return `${newState.member?.displayName} joined ${newState.channel?.name}`;
+  const departure = `${oldState.member?.displayName} left ${oldState.channel.name}`;
+  return newState.channel ? `${departure} and joined ${newState.channel.name}` : departure;
+}
+
 export const voiceStateUpdate: VoiceStateUpdateEvent = {
   name: 'voiceStateUpdate',
   async execute(Old: VoiceState, New: VoiceState) {
@@ -20,17 +26,7 @@ export const voiceStateUpdate: VoiceStateUpdateEvent = {
 
     // Mute, deafen and stream changes keep the same channel, so only a changed channel is a join, leave or move
     if (Old.channelId !== New.channelId) {
-      let modMessage = '';
-      if (Old.channel) {
-        if (New.channel) {
-          modMessage = `${Old.member?.displayName} left ${Old.channel.name} and joined ${New.channel.name}`;
-        } else {
-          modMessage = `${Old.member?.displayName} left ${Old.channel.name}`;
-        }
-      } else {
-        modMessage = `${New.member?.displayName} joined ${New.channel?.name}`;
-      }
-      channelAuditlog.send(modMessage);
+      channelAuditlog.send(channelChangeMessage(Old, New));
     }
 
     if (New.channelId === env.CHANNEL_CAMPFIRE) {

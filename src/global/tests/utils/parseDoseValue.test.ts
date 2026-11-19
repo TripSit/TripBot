@@ -2,6 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { parseDoseValue } from '../../utils/updateDb';
 
+vi.mock('graphql-request', () => ({ GraphQLClient: vi.fn() }));
+
 type DoseTable = Record<string, { formatted_dose?: Record<string, Record<string, string>> }>;
 
 describe('parseDoseValue', () => {
@@ -24,6 +26,13 @@ describe('parseDoseValue', () => {
     ['150mg+.', '150mg+'],
   ])('keeps the TripSit wording of %s', (source, expected) => {
     expect(parseDoseValue(source)).toBe(expected);
+  });
+
+  it('handles long dotted input without changing meaningful dose text', () => {
+    expect(parseDoseValue(`10mg${'.'.repeat(100_000)}`)).toBe('10 mg');
+    const source = `10${'.'.repeat(100_000)}mg`;
+    expect(parseDoseValue(source)).toBe(source);
+    expect(parseDoseValue('.'.repeat(100_000))).toBeNull();
   });
 
   it('returns null when there is no number', () => {

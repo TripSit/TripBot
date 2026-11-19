@@ -294,13 +294,13 @@ describe('relayDiscordMessage', () => {
         permissionsFor: () => permissions,
       },
     }));
-    expect(ircSend).not.toHaveBeenCalled();
+    expect(ircSend.mock.calls).toHaveLength(0);
   });
 
   it('fails closed when an automatic mapping no longer has a supported channel type', async () => {
     mappings.setMappings(bridgeRows().map(row => ({ ...row, source: 'auto' })));
     await chatBridge.relayDiscordMessage(message({ channel: { type: ChannelType.PublicThread } }));
-    expect(ircSend).not.toHaveBeenCalled();
+    expect(ircSend.mock.calls).toHaveLength(0);
   });
 
   it('keeps explicit override mappings eligible for private channels', async () => {

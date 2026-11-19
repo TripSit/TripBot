@@ -140,7 +140,7 @@ jobs:
           path: coverage
       - name: Verify coverage report
         run: test -s coverage/lcov.info
-      - uses: sonarsource/sonarqube-scan-action@master
+      - uses: SonarSource/sonarqube-scan-action@59202af334b4ba7b5db01b701b8e79f8b3bef0f4 # v8.5.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}

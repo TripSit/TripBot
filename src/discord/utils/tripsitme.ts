@@ -1002,6 +1002,11 @@ export async function tripsitmeUserClose(
   log.debug(F, 'Updated ticket status to CLOSED');
 }
 
+async function fetchTicketRole(guild: Guild, roleId: string | null): Promise<Role> {
+  if (!roleId) return {} as Role;
+  return await guild.roles.fetch(roleId) as Role;
+}
+
 /**
  * Creates the tripsit modal
  * @param {ButtonInteraction} interaction The interaction that initialized this
@@ -1037,16 +1042,9 @@ export async function tripSitMe(
 
   // let backupMessage = 'Hey ';
   // Get the roles we'll be referencing
-  let roleTripsitter = {} as Role;
-  let roleHelper = {} as Role;
-  let channelTripsitmeta = {} as TextChannel;
-  if (guildData.role_tripsitter) {
-    roleTripsitter = await interaction.guild.roles.fetch(guildData.role_tripsitter) as Role;
-  }
-  if (guildData.role_helper) {
-    roleHelper = await interaction.guild.roles.fetch(guildData.role_helper) as Role;
-  }
-  channelTripsitmeta = await fetchMetaChannel(interaction.guild, guildData);
+  const roleTripsitter = await fetchTicketRole(interaction.guild, guildData.role_tripsitter);
+  const roleHelper = await fetchTicketRole(interaction.guild, guildData.role_helper);
+  const channelTripsitmeta = await fetchMetaChannel(interaction.guild, guildData);
   log.debug(F, `roleTripsitter: ${roleTripsitter.name} (${roleTripsitter.id})`);
   log.debug(F, `roleHelper: ${roleHelper.name} (${roleHelper.id})`);
   log.debug(F, `channelTripsitmeta: ${channelTripsitmeta.name} (${channelTripsitmeta.id})`);

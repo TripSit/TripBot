@@ -140,6 +140,13 @@ describe('tripSitMe', () => {
     });
   });
 
+  it('keeps opening tickets when optional team roles are unset', async () => {
+    const s = setup();
+    guildRow({ role_tripsitter: null, role_helper: null });
+    expect(await tripSitMe(s.interaction, s.target, 'x', 'y')).toBe(s.thread);
+    expect(s.raw.guild?.roles.fetch).not.toHaveBeenCalled();
+  });
+
   it('handles missing details, team members and the interaction member as default target', async () => {
     const s = setup({ teamMember: true });
     await tripSitMe(s.interaction, null, '', '');

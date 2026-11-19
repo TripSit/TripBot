@@ -115,6 +115,15 @@ describe('runCodeAgent', () => {
     expect(calls.some(c => c.startsWith('git worktree remove --force'))).toBe(true);
   });
 
+  it('preserves a title with a long whitespace prefix', async () => {
+    const summary = `tItLe:${' '.repeat(100_000)}Fix spacing\n\nCause and fix.`;
+    codeAgentDeps.loadSdk = async () => fakeSdk([{ type: 'result', subtype: 'success', result: summary }]);
+    run.mockImplementation(async (_cmd: string, args: string[]) => (args[0] === 'status' ? ' M src/a.ts\n' : ''));
+    expect(await runCodeAgent('fix spacing')).toMatchObject({ status: 'pr', title: 'Fix spacing' });
+    const publish = run.mock.calls.find(call => call[0] === 'gh');
+    expect(publish?.[1].at(-1)).toContain('Cause and fix.');
+  });
+
   it('reports findings without a PR when nothing changed', async () => {
     codeAgentDeps.loadSdk = async () => fakeSdk([{ type: 'result', subtype: 'success', result: 'Could not reproduce.' }]);
     expect(await runCodeAgent('investigate x')).toEqual({ status: 'report', summary: 'Could not reproduce.' });
