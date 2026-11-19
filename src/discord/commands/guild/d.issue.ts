@@ -77,10 +77,9 @@ export const dIssue: SlashCommand = {
             .setCustomId('issueBody')),
         ),
     );
-    const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('issueModal');
+    const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('issueModal') && i.customId.split('~')[1] === interaction.id;
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
-        if (i.customId.split('~')[1] !== interaction.id) return;
         await i.deferReply({ flags: MessageFlags.Ephemeral });
         const issueBody = `${i.fields.getTextInputValue('issueBody')}
         

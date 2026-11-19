@@ -199,10 +199,9 @@ export async function applicationSetup(
             `)),
     ));
 
-  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('appModal');
+  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('appModal') && i.customId.split('~')[1] === interaction.id;
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
       await i.deferReply({ flags: MessageFlags.Ephemeral });
 
       await db.discord_guilds.upsert({
@@ -350,10 +349,9 @@ export async function applicationStart(
     ));
 
   // Collect a modal submit interaction
-  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('applicationSubmit');
+  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('applicationSubmit') && i.customId.split('~')[1] === interaction.id;
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
       await i.deferReply({ flags: MessageFlags.Ephemeral });
 
       if (!i.member) return;

@@ -84,10 +84,9 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       .setMinLength(10)
       .setMaxLength(1800))));
 
-  const filter = (i:ModalSubmitInteraction) => i.customId.includes('techHelpSubmit');
+  const filter = (i:ModalSubmitInteraction) => i.customId.includes('techHelpSubmit') && i.customId.split('~')[1] === interaction.id;
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
       await i.deferReply({ flags: MessageFlags.Ephemeral });
 
       if (!i.guild) {

@@ -142,11 +142,10 @@ export async function setupCustomReactionRole(
     ));
 
   // Collect a modal submit interaction
-  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"');
+  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"')
+    && i.customId.includes(`"II":"${interaction.id}"`);
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
-      const { II } = JSON.parse(`{${i.customId}}`);
-      if (II !== interaction.id) return;
       await i.deferReply({ flags: MessageFlags.Ephemeral });
       const button = new ButtonBuilder()
         .setCustomId(`"ID":"RR","RID":"${role.id}","IM":${introMessageRequired === true},"IC":${JSON.stringify(messagePostChannel?.id ?? null)}`)
@@ -199,11 +198,10 @@ async function removeReactionRoleWithReason(
       .setStyle(TextInputStyle.Paragraph))));
 
   // Collect a modal submit interaction
-  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"');
+  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"')
+    && i.customId.includes(`"II":"${interaction.id}"`);
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
-      const { II } = JSON.parse(`{${i.customId}}`);
-      if (II !== interaction.id) return;
       await i.deferReply({ flags: MessageFlags.Ephemeral });
 
       await target.roles.remove(role);
@@ -612,15 +610,12 @@ export async function buttonReactionRole(
     await interaction.showModal(modal);
 
     // Collect a modal submit interaction
-    const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"');
+    const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"')
+    && i.customId.includes(`"II":"${interaction.id}"`);
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
-        const {
-          II,
-        } = JSON.parse(`{${i.customId}}`);
         await i.deferReply({ flags: MessageFlags.Ephemeral });
 
-        if (II !== interaction.id) return;
         if (!i.guild) {
           await replyGuildOnly(i);
           return;

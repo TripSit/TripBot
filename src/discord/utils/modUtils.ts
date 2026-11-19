@@ -2352,12 +2352,9 @@ export async function modModal(
 
   await interaction.showModal(modal);
 
-  const filter = (i: ModalSubmitInteraction) => i.customId.startsWith('modModal');
+  const filter = (i: ModalSubmitInteraction) => i.customId.startsWith('modModal') && i.customId.split('~')[2] === interaction.id;
   await interaction.awaitModalSubmit({ filter, time: disableButtonTime })
     .then(async i => {
-      if (i.customId.split('~')[2] !== interaction.id) {
-        return;
-      }
       await i.deferReply({ flags: MessageFlags.Ephemeral });
       try {
         if (command === 'REPORT' || command === 'NOTE') {

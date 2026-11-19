@@ -104,12 +104,10 @@ export async function prReviewButton(interaction: ButtonInteraction): Promise<vo
           .setMaxLength(1900)
           .setStyle(TextInputStyle.Paragraph))));
 
-    const overrideFilter = (i: ModalSubmitInteraction) => i.customId.startsWith('"ID":"PR","T":"ACCEPTOVERRIDE"');
+    const overrideFilter = (i: ModalSubmitInteraction) => i.customId.startsWith('"ID":"PR","T":"ACCEPTOVERRIDE"')
+      && i.customId.includes(`"II":"${interaction.id}"`);
     interaction.awaitModalSubmit({ filter: overrideFilter, time: 0 })
       .then(async i => {
-        const { II } = JSON.parse(`{${i.customId}}`) as { II: string };
-        if (II !== interaction.id) return;
-
         await i.deferReply({ flags: MessageFlags.Ephemeral });
 
         const reason = i.fields.getTextInputValue('reason');
@@ -154,11 +152,11 @@ export async function prReviewButton(interaction: ButtonInteraction): Promise<vo
         .setMaxLength(1900)
         .setStyle(TextInputStyle.Paragraph))));
 
-  const filter = (i: ModalSubmitInteraction) => i.customId.startsWith('"ID":"PR","T":"REJECTMODAL"');
+  const filter = (i: ModalSubmitInteraction) => i.customId.startsWith('"ID":"PR","T":"REJECTMODAL"')
+    && i.customId.includes(`"II":"${interaction.id}"`);
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
-      const { II, N: modalPrNumberString } = JSON.parse(`{${i.customId}}`) as { II: string, N: string };
-      if (II !== interaction.id) return;
+      const { N: modalPrNumberString } = JSON.parse(`{${i.customId}}`) as { N: string };
 
       await i.deferReply({ flags: MessageFlags.Ephemeral });
 

@@ -86,8 +86,10 @@ type ModalOptions = { filter?: (i: { customId: string }) => boolean } | undefine
 /** An awaitModalSubmit implementation that exercises the command's filter, then resolves with `submit`. */
 export function resolvingModal<T extends { customId?: string }>(submit: T) {
   return async (options?: ModalOptions): Promise<T> => {
-    options?.filter?.({ customId: submit.customId ?? '' });
+    const accepted = options?.filter?.({ customId: submit.customId ?? '' });
     options?.filter?.({ customId: 'unrelated' });
+    // Like a real collector, a submit the filter rejects is never delivered
+    if (accepted === false) return new Promise<T>(() => { /* never settles */ });
     return submit;
   };
 }

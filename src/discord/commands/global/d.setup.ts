@@ -199,10 +199,9 @@ async function tripsit(
         .setCustomId('footerMessage')),
     ));
 
-  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('tripsitmeModal');
+  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('tripsitmeModal') && i.customId.split('~')[1] === interaction.id;
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
       if (!i.guild) return;
       await i.deferReply({ flags: MessageFlags.Ephemeral });
 
@@ -345,10 +344,9 @@ async function techhelp(
         .setCustomId('footerMessage')),
     ));
 
-  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('helpdeskModal');
+  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('helpdeskModal') && i.customId.split('~')[1] === interaction.id;
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
       if (!i.guild) return;
       await i.deferReply({ flags: MessageFlags.Ephemeral });
 
