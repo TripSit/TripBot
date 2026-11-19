@@ -38,6 +38,18 @@ vi.mock('../../utils/ai', async () => {
 
 const e = env as unknown as Record<string, string>;
 
+async function captureOperationalLogs(run: () => Promise<unknown>): Promise<string> {
+  const methods = ['debug', 'info', 'warn', 'error', 'http'] as const;
+  const spies = methods.map(method => vi.spyOn(log, method)
+    .mockReturnValue({} as ReturnType<typeof log.debug>));
+  try {
+    await run();
+    return JSON.stringify(spies.flatMap(spy => spy.mock.calls));
+  } finally {
+    spies.forEach(spy => spy.mockRestore());
+  }
+}
+
 describe('ai command', () => {
   beforeEach(() => {
     Object.values(mocks.page).forEach(p => p.mockResolvedValue({ content: 'page' }));
@@ -207,6 +219,34 @@ describe('aiMessage', () => {
     expect(react).toHaveBeenCalledTimes(2);
   });
 
+  it('keeps database records out of operational logs while preserving the audit', async () => {
+    const guildRecord = { ai_channels: [{ channel_id: 'c1' }] };
+    const userRecord = {
+      id: 'synthetic-user-record',
+      password_hash: 'synthetic-password-hash-canary',
+      email: 'synthetic-private@example.test',
+      ai_info: {
+        id: 'ai1', ai_tos_agree: new Date(), ai_privacy_agree: new Date(), persona_id: 'tripbot',
+      },
+    };
+    db.discord_guilds.findUnique = vi.fn().mockResolvedValue(guildRecord) as never;
+    db.users.upsert = vi.fn().mockResolvedValue(userRecord) as never;
+    db.ai_persona.upsert = vi.fn().mockResolvedValue({ id: 'synthetic-persona-record-canary' }) as never;
+    const m = msg();
+    m.reply.mockResolvedValue({ react: vi.fn() });
+    const response = { content: 'reply', usage: { promptTokens: 1, completionTokens: 2, cost: 0.01 } };
+    mocks.chat.mockResolvedValue(response);
+    const logged = await captureOperationalLogs(() => aiMessage(m as never));
+    expect(mocks.audit).toHaveBeenCalledWith(m.author, m, 'PROMPT', response, AiText.primaryModel);
+    expect(db.ai_message.create).toHaveBeenCalledWith({ data: expect.objectContaining({ tokens: 3 }) });
+    expect(logged).toContain('Created AI message');
+    expect(logged).not.toContain(userRecord.password_hash);
+    expect(logged).not.toContain(userRecord.email);
+    expect(logged).not.toContain('ai_tos_agree');
+    expect(logged).not.toContain(JSON.stringify(guildRecord));
+    expect(logged).not.toContain('synthetic-persona-record-canary');
+  });
+
   it('falls back to the cheaper model past the daily limit, with premium raising it', async () => {
     enabled();
     agreed();
@@ -332,6 +372,17 @@ describe('aiMenu', () => {
     await aiMenu(menu(AiText.MenuId.PERSONA_SELECT, ['tripbot']) as never);
     expect(db.ai_info.update).toHaveBeenCalledWith({ where: { user_id: 'db1' }, data: { persona_id: 'tripbot' } });
     expect(mocks.page.userSettings).toHaveBeenCalled();
+  });
+
+  it('keeps user records out of operational logs when selecting a persona', async () => {
+    mocks.getUser.mockResolvedValue({
+      id: 'db1', password_hash: 'synthetic-menu-hash-canary', email: 'synthetic-menu@example.test',
+    });
+    const logged = await captureOperationalLogs(() => aiMenu(menu(AiText.MenuId.PERSONA_SELECT, ['tripbot']) as never));
+    expect(db.ai_info.update).toHaveBeenCalledWith({ where: { user_id: 'db1' }, data: { persona_id: 'tripbot' } });
+    expect(mocks.page.userSettings).toHaveBeenCalled();
+    expect(logged).not.toContain('synthetic-menu-hash-canary');
+    expect(logged).not.toContain('synthetic-menu@example.test');
   });
 
   it('syncs guild channels, but only in a guild', async () => {
