@@ -28,6 +28,10 @@ jobs:
     name: Open uat -> main PR if needed
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
+    # Each run lists what uat holds when it runs, so the newest push should be the one that writes.
+    concurrency:
+      group: promote-open-pr
+      cancel-in-progress: true
     steps:
       - name: Open or refresh the promotion PR when uat is ahead of main
         env:
@@ -44,10 +48,11 @@ jobs:
 
           # Summarize what will land on main: every commit on uat not yet on main. uat takes squash
           # merges, so each subject already ends in "(#123)", which GitHub links to the merged PR.
-          # Plain author names (no @) so the PR body never pings anyone.
+          # Plain author names (no @) so the PR body never pings anyone. The compare API already
+          # lists commits oldest first.
           gh api --paginate "repos/${GH_REPO}/compare/main...uat" \
             --jq '.commits[] | "- " + (.commit.message | split("\n")[0]) + " - " + .commit.author.name' \
-            | tac > commits.txt
+            > commits.txt
 
           {
             echo "Automated promotion PR: uat is ${ahead} commit(s) ahead of main. Approving this PR fast-forwards main to uat's current commit automatically - no need to click Merge."
