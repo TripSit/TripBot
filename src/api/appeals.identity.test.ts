@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   guildId: 'configured-guild',
   checkBanStatus: vi.fn(),
   createAppeal: vi.fn(),
+  rollbackAppeal: vi.fn(),
   messageModThread: vi.fn(),
 }));
 
@@ -18,7 +19,7 @@ vi.mock('./middlewares/keycloakAuth', () => ({
   },
 }));
 vi.mock('./v2/users/users.queries', () => ({ default: { checkBanStatus: mocks.checkBanStatus } }));
-vi.mock('./v2/appeals/appeals.queries', () => ({ default: { createAppeal: mocks.createAppeal } }));
+vi.mock('./v2/appeals/appeals.queries', () => ({ default: { createAppeal: mocks.createAppeal, rollbackAppeal: mocks.rollbackAppeal } }));
 vi.mock('../discord/utils/modUtils', () => ({ messageModThread: mocks.messageModThread }));
 
 const app = express();
@@ -29,7 +30,8 @@ describe('appeals authenticated identity', () => {
   beforeEach(() => {
     vi.stubEnv('DISCORD_GUILD_ID', mocks.guildId);
     mocks.checkBanStatus.mockResolvedValue({ banned: true });
-    mocks.createAppeal.mockResolvedValue({ success: true });
+    mocks.createAppeal.mockResolvedValue({ success: true, appealId: 'new-appeal' });
+    mocks.rollbackAppeal.mockReset();
     (global as unknown as { discordClient: unknown }).discordClient = {
       user: { id: 'bot' },
       guilds: { fetch: vi.fn(async () => ({ members: { fetch: vi.fn(async () => ({ id: 'bot' })) } })) },
@@ -80,5 +82,22 @@ describe('appeals authenticated identity', () => {
     expect(response.status).toBe(500);
     expect(response.body).toEqual({ error: 'Failed to submit appeal' });
     expect(JSON.stringify(response.body)).not.toMatch(/prisma|secret|token|abc123/);
+  });
+
+  it('rolls the appeal back when the moderators could not be notified, so the cooldown does not start', async () => {
+    mocks.messageModThread.mockRejectedValue(new Error('thread gone'));
+    const response = await supertest(app).post('/create').send({
+      reason: 'Reason', solution: 'Solution', future: 'Future', extra: 'Extra',
+    });
+    expect(response.status).toBe(500);
+    expect(mocks.rollbackAppeal).toHaveBeenCalledWith('new-appeal');
+  });
+
+  it('keeps the appeal when the moderators were notified', async () => {
+    mocks.messageModThread.mockResolvedValue(undefined);
+    await supertest(app).post('/create').send({
+      reason: 'Reason', solution: 'Solution', future: 'Future', extra: 'Extra',
+    });
+    expect(mocks.rollbackAppeal).not.toHaveBeenCalled();
   });
 });

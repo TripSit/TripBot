@@ -51,7 +51,7 @@ export default {
     solution: string;
     future: string;
     extra?: string;
-  }): Promise<{ success: boolean; error?: string }> {
+  }): Promise<{ success: boolean; error?: string; appealId?: string }> {
     try {
       // Get or create user by discord_id to get their UUID
       const user = await db.users.upsert({
@@ -88,7 +88,7 @@ export default {
       }
 
       // Create the new appeal
-      await db.appeals.create({
+      const created = await db.appeals.create({
         data: {
           guild_id: data.guild_id,
           user_id: user.id, // Use the UUID
@@ -101,10 +101,19 @@ export default {
       });
 
       log.info(F, `Appeal created successfully for discord_id ${data.discord_id} (user_id: ${user.id})`);
-      return { success: true };
+      return { success: true, appealId: created.id };
     } catch (error) {
       log.error(F, `Error creating appeal: ${error}`);
       return { success: false, error: 'DATABASE_ERROR' };
+    }
+  },
+
+  /** Removes an appeal whose moderator notification failed, so it does not start the resubmission cooldown. */
+  async rollbackAppeal(appealId: string): Promise<void> {
+    try {
+      await db.appeals.deleteMany({ where: { id: appealId, status: 'RECEIVED' } });
+    } catch (error) {
+      log.error(F, `Error rolling back appeal ${appealId}: ${error}`);
     }
   },
 
@@ -165,15 +174,18 @@ export default {
         }
       }
 
-      // Update reminded_at timestamp
-      await db.appeals.update({
-        where: { id: appeal.id },
-        data: { reminded_at: new Date() },
-      });
+      const reminder = await appealReminder(appeal);
 
-      log.info(F, `Appeal reminder sent for discord_id ${discordId}, appeal_id ${appeal.id}`);
+      // Only a reminder that was actually delivered starts the wait before the next one.
+      if (reminder.success) {
+        await db.appeals.update({
+          where: { id: appeal.id },
+          data: { reminded_at: new Date() },
+        });
+        log.info(F, `Appeal reminder sent for discord_id ${discordId}, appeal_id ${appeal.id}`);
+      }
 
-      return await appealReminder(appeal);
+      return reminder;
     } catch (error) {
       log.error(F, `Error reminding appeal: ${error}`);
       return { success: false, message: 'Internal error' };
