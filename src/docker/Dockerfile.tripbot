@@ -30,6 +30,7 @@ RUN npm prune --omit=dev --ignore-scripts --no-audit --no-fund
 
 FROM node:22-bookworm-slim AS production
 ENV NODE_ENV=production
+ENV PM2_HOME=/home/node/.pm2
 WORKDIR /workspaces/tripbot
 # Prisma requires OpenSSL; keep package metadata and npm's cache out of the image.
 RUN apt-get update \
@@ -52,6 +53,8 @@ COPY tsconfig.json ./tsconfig.json
 # Runtime data refreshes write to build/assets/data.
 COPY --chown=node:node assets ./build/assets
 COPY src/docker/entrypoint.sh ./entrypoint.sh
-RUN chmod 755 ./entrypoint.sh
+RUN chmod 755 ./entrypoint.sh \
+    && mkdir -p /home/node/.pm2 \
+    && chown node:node /home/node/.pm2
 USER node
 ENTRYPOINT ["/workspaces/tripbot/entrypoint.sh"]
