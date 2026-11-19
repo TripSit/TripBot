@@ -1117,9 +1117,46 @@ async function getModThread(userData: users): Promise<ThreadChannel | null> {
   }
 }
 
+function buttonRowsOf(message: Message): APIActionRowComponent<APIButtonComponentWithCustomId>[] {
+  return message.components.map(row => row.toJSON()) as APIActionRowComponent<APIButtonComponentWithCustomId>[];
+}
+
+const pendingWarningResponses = new Set<string>();
+
+async function claimWarningResponse(interaction: ButtonInteraction): Promise<boolean> {
+  if (interaction.deferred || interaction.replied) return false;
+  try {
+    await interaction.deferUpdate();
+  } catch (error) {
+    log.debug(F, `Failed to defer warning response: ${error}`);
+    return false;
+  }
+
+  const messageId = interaction.message.id;
+  if (pendingWarningResponses.has(messageId)) return false;
+  pendingWarningResponses.add(messageId);
+  try {
+    const message = await interaction.message.fetch(true);
+    const hasWarningButtons = buttonRowsOf(message).some(row => row.components.some(component => (
+      component.custom_id === 'acknowledgeButton' || component.custom_id === 'refusalButton'
+    )));
+    if (!hasWarningButtons) return false;
+
+    // Persist the claim before notifications or moderation; stale clicks must not repeat either.
+    await interaction.editReply({ components: [] });
+    return true;
+  } catch (error) {
+    log.debug(F, `Failed to claim warning response: ${error}`);
+    return false;
+  } finally {
+    pendingWarningResponses.delete(messageId);
+  }
+}
+
 export async function acknowledgeButton(
   interaction:ButtonInteraction,
 ) {
+  if (!(await claimWarningResponse(interaction))) return;
   const targetData = await getOrCreateUser(interaction.user.id);
 
   const modThread = await getModThread(targetData);
@@ -1133,7 +1170,7 @@ export async function acknowledgeButton(
 
   // Buttons out, receipt in.
   try {
-    await interaction.update({
+    await interaction.editReply({
       components: [],
       embeds: [
         ...interaction.message.embeds,
@@ -1152,6 +1189,7 @@ export async function acknowledgeButton(
 export async function refusalButton(
   interaction:ButtonInteraction,
 ) {
+  if (!(await claimWarningResponse(interaction))) return;
   const targetData = await getOrCreateUser(interaction.user.id);
 
   // DMs don't come with a guild attached, so go by whoever warned them last.
@@ -1210,7 +1248,7 @@ export async function refusalButton(
   // Answer the DM first, in case everything below falls over.
   let dmDelivered = false;
   try {
-    await interaction.update({
+    await interaction.editReply({
       components: [],
       embeds: [
         ...interaction.message.embeds,
@@ -1302,10 +1340,6 @@ export async function refusalButton(
   if (!existingModThread && modThread) {
     await modThread.send({ embeds: [rejectionEmbed] });
   }
-}
-
-function buttonRowsOf(message: Message): APIActionRowComponent<APIButtonComponentWithCustomId>[] {
-  return message.components.map(row => row.toJSON()) as APIActionRowComponent<APIButtonComponentWithCustomId>[];
 }
 
 function isAcknowledgeRow(row: APIActionRowComponent<APIButtonComponentWithCustomId>): boolean {
