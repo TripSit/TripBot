@@ -26,6 +26,12 @@ describe('modHistoryRows', () => {
     expect(menu.options[1].label).toBe('View Notes (2)');
   });
 
+  it('offers persisted report acknowledgements as a history category', () => {
+    const menu = options({ ACKN_REPORT: 2 });
+    expect(menu.options.map(option => option.value)).toEqual(['PROFILE', 'ACKN_REPORT']);
+    expect(menu.options[1].label).toBe('View Report Acknowledgements (2)');
+  });
+
   it('offers only the profile when there is no history', () => {
     expect(options({}).options).toHaveLength(1);
   });

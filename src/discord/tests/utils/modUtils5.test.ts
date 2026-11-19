@@ -70,17 +70,19 @@ function setup(command: string, opts: Opts = {}) {
     roles: { fetch: vi.fn(async () => ({ toString: (): string => '<@&mods>' })) },
   };
   Object.defineProperty(actor, 'guild', { value: guild, configurable: true, writable: true });
+  const reporterVariant = opts.variant ?? (command === 'ACKN_REPORT' ? '222' : undefined);
   const interaction = {
     id: 'int1',
-    customId: `moderate~${command}~${ID}${opts.variant ? `~${opts.variant}` : ''}`,
+    customId: `moderate~${command}~${ID}${reporterVariant ? `~${reporterVariant}` : ''}`,
     guild: opts.guild === false ? null : guild,
     member: actor,
     user: { id: 'actor1', toString: (): string => '<@actor1>' },
     message: {
-      embeds: [embed], components: rows, channelId: 'thread-chan', edit: opts.editFails ? vi.fn().mockRejectedValue(new Error('ephemeral')) : vi.fn(),
+      embeds: [embed], components: rows, channelId: 'thread-chan', edit: opts.editFails ? vi.fn().mockRejectedValue(new Error('ephemeral')) : vi.fn().mockResolvedValue(undefined),
     },
     deferReply: vi.fn(),
     editReply: vi.fn(),
+    followUp: vi.fn(),
     showModal: vi.fn(),
     isChatInputCommand: () => false,
     isButton: () => true,
@@ -91,13 +93,19 @@ function setup(command: string, opts: Opts = {}) {
       : vi.fn(async () => submit),
   };
   (global as unknown as { discordClient: unknown }).discordClient = {
-    users: { fetch: vi.fn(async () => { if (opts.userFetch === 'fail') throw new Error('Unknown User'); return { id: ID, username: 'gone', displayAvatarURL: () => 'https://av' }; }) },
+    users: {
+      fetch: vi.fn(async () => {
+        if (opts.userFetch === 'fail') throw new Error('Unknown User'); return {
+          id: ID, username: 'gone', displayAvatarURL: () => 'https://av', send: vi.fn(),
+        };
+      }),
+    },
     channels: { fetch: vi.fn(async () => ({ send: vi.fn(), toString: (): string => '#c' })) },
     guilds: { fetch: vi.fn() },
   };
   mocks.getMember.mockResolvedValue([target]);
   dbMock.discord_guilds.upsert.mockResolvedValue({ id: 'g1', channel_moderators: null, channel_mod_log: null } as never);
-  dbMock.users.upsert.mockImplementation((async (args: { where: { discord_id: string } }) => ({ id: `uid-${args.where.discord_id}`, discord_id: args.where.discord_id, mod_thread_id: null })) as never);
+  dbMock.users.upsert.mockImplementation((async (args: { where: { discord_id: string } }) => ({ id: `uid-${args.where.discord_id}`, discord_id: args.where.discord_id, mod_thread_id: command === 'ACKN_REPORT' ? 'thread1' : null })) as never);
   return {
     interaction: interaction as never, raw: interaction, submit, target,
   };
@@ -151,6 +159,40 @@ describe('modModal: non-modal actions', () => {
       embeds: [expect.any(EmbedBuilder)], components: rows,
     });
     expect(rows[0].toJSON().components[0].custom_id).toBe(`modHistory~select~${ID}`);
+  });
+
+  it.each(['nahButton', 'proceedButton'])('checks recent acknowledgements before %s', async customId => {
+    dbMock.user_actions.findFirst.mockResolvedValue({ id: 'recent-ack' } as never);
+    vi.mocked(discordClient.users.fetch).mockResolvedValue({ username: 'reporter', send: vi.fn() } as never);
+    const s = setup('ACKN_REPORT', { ackRow: true });
+    const click = { customId, update: vi.fn() };
+    s.raw.followUp.mockResolvedValue({
+      awaitMessageComponent: vi.fn().mockResolvedValue(click), edit: vi.fn().mockResolvedValue(undefined),
+    });
+    await modModal(s.interaction);
+    expect(dbMock.user_actions.findFirst).toHaveBeenCalledWith({
+      where: { type: 'ACKN_REPORT', target_discord_id: ID, created_at: { gte: expect.any(Date) } },
+    });
+    expect(dbMock.user_actions.create).toHaveBeenCalledTimes(customId === 'proceedButton' ? 1 : 0);
+    expect(JSON.stringify(s.raw.editReply.mock.calls.at(-1))).toContain('your choice to proceed or cancel below has been completed');
+  });
+
+  it('handles acknowledgement conflict timeouts without acknowledging the report', async () => {
+    dbMock.user_actions.findFirst.mockResolvedValue({ id: 'recent-ack' } as never);
+    const s = setup('ACKN_REPORT', { ackRow: true });
+    s.raw.followUp.mockResolvedValue({
+      awaitMessageComponent: vi.fn().mockRejectedValue(new Error('time')), edit: vi.fn().mockResolvedValue(undefined),
+    });
+    await modModal(s.interaction);
+    expect(dbMock.user_actions.create).not.toHaveBeenCalled();
+    expect(JSON.stringify(s.raw.editReply.mock.calls.at(-1))).toContain('confirmation expired');
+  });
+
+  it('reports acknowledgement delivery failures without claiming success', async () => {
+    const s = setup('ACKN_REPORT', { ackRow: true, userFetch: 'fail' });
+    await modModal(s.interaction);
+    expect(dbMock.user_actions.create).not.toHaveBeenCalled();
+    expect(JSON.stringify(s.raw.editReply.mock.calls.at(-1))).toContain('acknowledgement could not be completed');
   });
 
   it('acknowledges reports once, then reports they were already acknowledged', async () => {

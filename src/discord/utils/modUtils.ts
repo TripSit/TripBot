@@ -19,6 +19,7 @@ import {
   ButtonInteraction,
   ChatInputCommandInteraction,
   Colors,
+  ComponentType,
   DiscordErrorData,
   EmbedBuilder,
   Guild,
@@ -64,9 +65,12 @@ link accounts to transfer warnings and experience
 */
 
 const F = f(__filename);
+const completedConflictMessage = 'The original action has been cancelled and your choice to proceed or cancel below has been completed.';
+const failedConflictMessage = 'The confirmation expired or could not be completed. Review moderation history before trying again.';
+
 type UndoAction = 'UN-FULL_BAN' | 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-BAN_EVASION' | 'UN-UNDERBAN' | 'UN-TIMEOUT' | 'UN-HELPER_BAN' | 'UN-CONTRIBUTOR_BAN';
 
-type ModAction = user_action_type | UndoAction | 'INFO' | 'LINK' | 'ACKN_REPORT' | 'BAN_APPEAL' | 'APPEAL_ACCEPT' | 'APPEAL_REJECT';
+type ModAction = user_action_type | UndoAction | 'INFO' | 'LINK' | 'BAN_APPEAL' | 'APPEAL_ACCEPT' | 'APPEAL_REJECT';
 type TargetObject = Snowflake | User | GuildMember;
 
 export interface AppealData {
@@ -546,6 +550,11 @@ export async function userInfoEmbed(
     }
     if ((targetActionCounts.UNDERBAN ?? 0) > 0) {
       modlogEmbed.addFields({ name: '# of Underbans', value: `${(targetActionCounts.UNDERBAN ?? 0)}`, inline: true });
+    }
+    if ((targetActionCounts.ACKN_REPORT ?? 0) > 0) {
+      modlogEmbed.addFields({
+        name: '# of Report Acknowledgements', value: `${targetActionCounts.ACKN_REPORT}`, inline: true,
+      });
     }
     modlogEmbed.setDescription(`${description}${threadLink}`);
     // modlogEmbed.setDescription(`${description}
@@ -1316,8 +1325,8 @@ async function removeAcknowledgeRow(message: Message): Promise<void> {
 
 export async function acknowledgeReportButton(
   buttonInt: ButtonInteraction,
-) {
-  if (!buttonInt.guild) return;
+): Promise<boolean> {
+  if (!buttonInt.guild) return false;
   const [, , targetId, reporterId]: [string, ModAction, Snowflake, Snowflake] = buttonInt.customId.split('~') as [string, ModAction, Snowflake, Snowflake];
 
   // Fetch db data for the person who was reported
@@ -1328,6 +1337,7 @@ export async function acknowledgeReportButton(
   let reporteeMember: GuildMember | null = null;
   let reporteeUser: User | null = null;
   let reporterUser: User | null = null;
+  let acknowledged = false;
 
   try {
     // Fetch the mod thread
@@ -1337,14 +1347,14 @@ export async function acknowledgeReportButton(
 
     if (!targetChan) {
       log.info(F, 'Failed to fetch mod thread. It was likely deleted.');
-      return;
+      return false;
     }
 
     try {
       modActorMember = await buttonInt.guild.members.fetch(buttonInt.user.id);
     } catch {
       log.info(F, 'Failed to fetch mod actor. They are likely no longer in the server.');
-      return;
+      return false;
     }
 
     // Fetch the reportee member or user
@@ -1375,11 +1385,11 @@ export async function acknowledgeReportButton(
       });
       await removeAcknowledgeRow(buttonInt.message);
       log.info(F, 'Could not determine the reporter user.');
-      return;
+      return false;
     }
   } catch (error) {
     log.info(F, `An unexpected error occurred: ${error}`);
-    return;
+    return false;
   }
 
   if (!reporteeMember && !reporteeUser) {
@@ -1389,7 +1399,7 @@ export async function acknowledgeReportButton(
         .setDescription('The user this mod thread is for has deleted their Discord account.')],
     });
     await removeAcknowledgeRow(buttonInt.message);
-    return;
+    return false;
   }
 
   const reporteeName = reporteeMember?.displayName ?? reporteeUser?.username ?? 'Unknown User';
@@ -1409,6 +1419,22 @@ export async function acknowledgeReportButton(
       Team TripSit
     `);
 
+    const guildData = await getOrCreateGuild(buttonInt.guild.id);
+    const actorData = await getOrCreateUser(buttonInt.user.id);
+    await db.user_actions.create({
+      data: {
+        user_id: reporteeData.id,
+        target_discord_id: targetId,
+        guild_id: buttonInt.guild.id,
+        type: 'ACKN_REPORT',
+        created_by: actorData.id,
+        internal_note: 'Report acknowledged.',
+      },
+    });
+
+    acknowledged = true;
+    await removeAcknowledgeRow(buttonInt.message);
+
     const successEmbed = embedTemplate()
       .setColor(Colors.Green)
       .setDescription(
@@ -1419,10 +1445,6 @@ export async function acknowledgeReportButton(
       embeds: [successEmbed],
     });
 
-    await removeAcknowledgeRow(buttonInt.message);
-
-    const guildData = await getOrCreateGuild(buttonInt.guild.id);
-
     if (guildData.channel_mod_log) {
       const modLog = await buttonInt.guild.channels.fetch(guildData.channel_mod_log) as TextChannel;
       successEmbed.setDescription(
@@ -1431,15 +1453,21 @@ export async function acknowledgeReportButton(
       await modLog.send({
         embeds: [successEmbed],
       });
-      return;
+      return true;
     }
 
     log.info(F, 'Failed to send report acknowledgement to mod log. No mod log channel set.');
+    return true;
   } catch (error) {
-    log.error(F, `Failed to send DM to ${buttonInt.user.username}: ${error}`);
+    if (acknowledged) {
+      log.error(F, `Report acknowledgement was recorded but its notification failed: ${error}`);
+      return true;
+    }
+    log.error(F, `Failed to acknowledge report for ${targetId}: ${error}`);
     await targetChan.send({
       embeds: [errorEmbed(`${buttonInt.user.username} tried to acknowledged ${reporteeData.username}'s report, but there was an error.`)],
     });
+    return false;
   }
 }
 
@@ -1462,8 +1490,8 @@ async function wasActionedRecently(actionType: string, targetDiscordId: Snowflak
 
 async function onActionedRecently(
   buttonInt: ButtonInteraction,
-  modalInt: ModalSubmitInteraction,
-) {
+  performAction: () => Promise<unknown>,
+): Promise<boolean> {
   const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId('proceedButton')
@@ -1477,34 +1505,30 @@ async function onActionedRecently(
 
   const replyMessage = await buttonInt.followUp({
     content: stripIndents`This action has already been taken by another moderator in the last 5 minutes. Would you like to proceed anyways?
-    
+
     NOTE: These buttons will only remain functional for 1 minute.`,
     components: [actionRow],
     ephemeral: true,
   });
 
-  // Filter only for ButtonInteraction
-  const filter = (i: ButtonInteraction | AnySelectMenuInteraction) => i.isButton() && i.user.id === buttonInt.user.id;
-  const collector = replyMessage.createMessageComponentCollector({ filter, time: 60000 });
-
-  return new Promise(resolve => {
-    collector.on('collect', async (i: ButtonInteraction) => {
-      try {
-        // Don't call deferUpdate() if you plan to use update()
-        if (i.customId === 'proceedButton') {
-          await i.update({ content: 'Proceeding with the action...', components: [] });
-          // eslint-disable-next-line @typescript-eslint/no-use-before-define
-          await moderate(buttonInt, modalInt, true);
-          resolve('proceeded');
-        } else if (i.customId === 'nahButton') {
-          await i.update({ content: 'Action cancelled.', components: [] });
-          resolve('cancelled');
-        }
-      } catch (error) {
-        log.error(F, `Error updating message: ${error}`);
-      }
+  const filter = (i: ButtonInteraction | AnySelectMenuInteraction) => i.isButton()
+    && i.user.id === buttonInt.user.id && ['proceedButton', 'nahButton'].includes(i.customId);
+  try {
+    const choice = await replyMessage.awaitMessageComponent({ filter, componentType: ComponentType.Button, time: 60000 });
+    if (choice.customId === 'proceedButton') {
+      await choice.update({ content: 'Proceeding with the action...', components: [] });
+      await performAction();
+    } else {
+      await choice.update({ content: 'Action cancelled.', components: [] });
+    }
+    return true;
+  } catch (error) {
+    log.error(F, `Conflict confirmation could not be completed: ${error}`);
+    await replyMessage.edit({ content: failedConflictMessage, components: [] }).catch(err => {
+      log.debug(F, `Could not clear conflict confirmation controls: ${err}`);
     });
-  });
+    return false;
+  }
 }
 
 /** Runs a Discord moderation call and returns why it failed, or null when it worked (or failed with `okCode`). */
@@ -1540,9 +1564,9 @@ export async function moderate(
     && !isNote(command)
     && !isReport(command)
     && !ignoreRecentActions && await wasActionedRecently(command, targetId)) {
-    await onActionedRecently(buttonInt, modalInt);
+    const completed = await onActionedRecently(buttonInt, async () => moderate(buttonInt, modalInt, true));
     return {
-      content: 'This action was cancelled due to another taken recently. Proceed or cancel below.',
+      content: completed ? completedConflictMessage : failedConflictMessage,
       components: [],
     }; // Ensure the function returns something
   }
@@ -2050,20 +2074,36 @@ export async function modModal(
 
   if (isReportAcknowledgement(command)) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-    if (!hasAcknowledgeButton(interaction.message)) {
+    const acknowledge = async () => {
+      if (!hasAcknowledgeButton(interaction.message)) {
+        await interaction.editReply({
+          embeds: [embedTemplate()
+            .setColor(Colors.DarkOrange)
+            .setDescription('This report has already been acknowledged.')],
+        });
+        return;
+      }
+      const success = await acknowledgeReportButton(interaction);
       await interaction.editReply({
-        embeds: [embedTemplate()
-          .setColor(Colors.DarkOrange)
-          .setDescription('This report has already been acknowledged.')],
+        embeds: [success
+          ? embedTemplate().setColor(Colors.Green).setDescription(`You have acknowledged the report on ${target}.`)
+          : errorEmbed('The report acknowledgement could not be completed.')],
       });
+    };
+    if (!hasAcknowledgeButton(interaction.message)) {
+      await acknowledge();
       return;
     }
-    await acknowledgeReportButton(interaction);
-    await interaction.editReply({
-      embeds: [embedTemplate()
-        .setColor(Colors.Green)
-        .setDescription(`You have acknowledged the report on ${target}.`)],
-    });
+    if (await wasActionedRecently(command, userId)) {
+      const completed = await onActionedRecently(interaction, acknowledge);
+      await interaction.editReply({
+        content: completed ? completedConflictMessage : failedConflictMessage,
+        embeds: [],
+        components: [],
+      });
+    } else {
+      await acknowledge();
+    }
     return;
   }
 
