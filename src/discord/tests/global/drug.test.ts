@@ -108,6 +108,17 @@ describe('getDrugInfo: absent optional data', () => {
     expect(field?.value).toBe('**Chemical**: chem\n**Psychoactive**: psy');
   });
 
+  it('puts smoked, vapourized and insufflated dosages first, even beyond three routes', async () => {
+    const roa = (name: string) => ({
+      name, dosage: [{ name: 'Light', value: `${name}-dose` }], duration: [],
+    });
+    mocks.drug.mockResolvedValueOnce({
+      name: 'Routes', url: 'https://u', roas: [roa('Oral'), roa('Rectal'), roa('Sublingual'), roa('Vapourized'), roa('Smoked')],
+    });
+    const dosages = (await dataOf('routes')).fields?.filter(f => f.name.startsWith('💊 Dosage')).map(f => f.name);
+    expect(dosages).toEqual(['💊 Dosage (Smoked)', '💊 Dosage (Vapourized)', '💊 Dosage (Oral)']);
+  });
+
   it('lists routes that are not reordered, and stops after three columns', async () => {
     const roa = (name: string) => ({
       name, dosage: [{ name: 'Light', value: '1mg' }], duration: [{ name: 'Total', value: '1h' }],

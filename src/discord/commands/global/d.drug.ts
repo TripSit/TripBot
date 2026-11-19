@@ -220,28 +220,27 @@ async function addDurations(
   return [embed, columns];
 }
 
+// For HR reasons we prefer non-invasive methods, so smoked, vapourised and insufflated go first (in that order)
+function orderRoaNames(roaNames: string[]): string[] {
+  const ordered = [...roaNames];
+  // The data spells it 'Vapourized'; accept the British spelling too
+  ['Insufflated', 'Vapourised', 'Vapourized', 'Smoked'].forEach(preferred => {
+    const index = ordered.indexOf(preferred);
+    if (index !== -1) {
+      ordered.splice(index, 1);
+      ordered.unshift(preferred);
+    }
+  });
+  return ordered;
+}
+
 async function addDosages(
   embed: EmbedBuilder,
   drugData: CbSubstance,
 ):Promise<EmbedBuilder> {
   if (drugData.roas) {
-    // Get a list of drug ROA names
-    const roaNames = drugData.roas.map(roa => roa.name);
-
-    // For HR reasons we prefer non-invasive methods
-    if (roaNames.includes('Insufflated')) {
-      roaNames.splice(roaNames.indexOf('Insufflated'), 1);
-      roaNames.unshift('Insufflated');
-    }
-
-    if (roaNames.includes('Vapourised')) {
-      roaNames.splice(roaNames.indexOf('Vapourised'), 1);
-      roaNames.unshift('Vapourised');
-    }
-    if (roaNames.includes('Smoked')) {
-      roaNames.splice(roaNames.indexOf('Smoked'), 1);
-      roaNames.unshift('Smoked');
-    }
+    // Get a list of drug ROA names, with the non-invasive methods first
+    const roaNames = orderRoaNames(drugData.roas.map(roa => roa.name));
 
     // For each roaName, get the dosage and duration
     // log.debug(F, `roaNames: ${roaNames}`);
@@ -262,19 +261,6 @@ async function addDosages(
     });
   }
   return embed;
-}
-
-// For HR reasons we prefer non-invasive methods, so smoked, vapourised and insufflated go first (in that order)
-function orderRoaNames(roaNames: string[]): string[] {
-  const ordered = [...roaNames];
-  ['Insufflated', 'Vapourised', 'Smoked'].forEach(preferred => {
-    const index = ordered.indexOf(preferred);
-    if (index !== -1) {
-      ordered.splice(index, 1);
-      ordered.unshift(preferred);
-    }
-  });
-  return ordered;
 }
 
 async function addRoaSections(
