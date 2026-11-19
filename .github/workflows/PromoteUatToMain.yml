@@ -28,25 +28,49 @@ jobs:
     name: Open uat -> main PR if needed
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
+    # Each run lists what uat holds when it runs, so the newest push should be the one that writes.
+    concurrency:
+      group: promote-open-pr
+      cancel-in-progress: true
     steps:
-      - name: Open a promotion PR when uat is ahead of main
+      - name: Open or refresh the promotion PR when uat is ahead of main
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
+          ahead=$(gh api "repos/${GH_REPO}/compare/main...uat" --jq '.ahead_by')
           existing=$(gh pr list --base main --head uat --state open --json number --jq '.[0].number')
-          if [ -n "$existing" ]; then
-            echo "PR #${existing} is already open from uat to main - it updates itself as uat moves, nothing to do."
+
+          if [ "$ahead" -le 0 ]; then
+            echo "uat is not ahead of main - nothing to promote."
             exit 0
           fi
 
-          ahead=$(gh api "repos/${GH_REPO}/compare/main...uat" --jq '.ahead_by')
-          if [ "$ahead" -gt 0 ]; then
-            gh pr create --base main --head uat \
-              --title "Promote uat to main" \
-              --body "Automated promotion PR: uat is ${ahead} commit(s) ahead of main. Approving this PR fast-forwards main to uat's current commit automatically - no need to click Merge."
+          # Summarize what will land on main: every commit on uat not yet on main. uat takes squash
+          # merges, so each subject already ends in "(#123)", which GitHub links to the merged PR.
+          # Plain author names (no @) so the PR body never pings anyone. The compare API already
+          # lists commits oldest first.
+          gh api --paginate "repos/${GH_REPO}/compare/main...uat" \
+            --jq '.commits[] | "- " + (.commit.message | split("\n")[0]) + " - " + .commit.author.name' \
+            > commits.txt
+
+          {
+            echo "Automated promotion PR: uat is ${ahead} commit(s) ahead of main. Approving this PR fast-forwards main to uat's current commit automatically - no need to click Merge."
+            echo
+            echo "## Included changes (oldest first)"
+            echo
+            head -c 60000 commits.txt
+            if [ "$(wc -c < commits.txt)" -gt 60000 ]; then
+              echo
+              echo "_List truncated - see the Commits tab for the full set._"
+            fi
+          } > body.md
+
+          if [ -n "$existing" ]; then
+            gh pr edit "$existing" --body-file body.md
+            echo "Refreshed the body of PR #${existing} (${ahead} commit(s))."
           else
-            echo "uat is not ahead of main - nothing to promote."
+            gh pr create --base main --head uat --title "Promote uat to main" --body-file body.md
           fi
 
   fast-forward:
