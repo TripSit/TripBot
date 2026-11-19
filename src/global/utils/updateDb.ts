@@ -387,7 +387,10 @@ const TS_STRENGTHS = [
  * the unit or the upper bound. Returns null when the text has no number.
  */
 export function parseDoseValue(strengthData: string): string | null {
-  const text = strengthData.trim().replace(/\.+$/, '');
+  const trimmed = strengthData.trim();
+  let end = trimmed.length;
+  while (end > 0 && trimmed[end - 1] === '.') end -= 1;
+  const text = trimmed.slice(0, end);
   if (!/\d/.test(text)) return null;
 
   const plain = /^(\d+(?:\.\d+)?)(?:-(\d+(?:\.\d+)?))?([a-zA-Z]+)?$/.exec(text);

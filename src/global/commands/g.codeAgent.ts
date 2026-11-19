@@ -107,7 +107,7 @@ export function isCodeAgentConfigured(): boolean {
 
 function parseSummary(finalText: string): { title: string; body: string } {
   const lines = finalText.trim().split('\n');
-  const first = lines[0]?.match(/^TITLE:\s*(.+)$/i);
+  const first = /^TITLE:(.+)$/i.exec(lines[0] ?? '');
   const title = (first?.[1] ?? 'Automated fix from TripBot').trim().slice(0, 100);
   const body = (first ? lines.slice(1) : lines).join('\n').trim() || 'No summary provided.';
   return { title, body: body.slice(0, 6000) };
@@ -209,7 +209,7 @@ export async function runCodeAgent(request: string): Promise<CodeAgentResult> {
 
     // Symlinked dependency folders are ignored by the repo's .gitignore, so they never show up here.
     const changed = (await run('git', ['status', '--porcelain'], { cwd: worktree }))
-      .split('\n').filter(Boolean).map(line => line.slice(3).replace(/^"|"$/g, ''));
+      .split('\n').filter(Boolean).map(line => line.slice(3).replace(/(^")|("$)/g, ''));
     if (changed.length === 0) return { status: 'report', summary: parseSummary(result.text).body };
 
     const blocked = forbiddenChanges(changed);

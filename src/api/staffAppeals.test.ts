@@ -36,10 +36,10 @@ afterEach(() => vi.unstubAllGlobals());
 
 it('requires a validated token before any staff data is read', async () => {
   await supertest(app).get('/staff').expect(401);
-  expect(listStaffAppeals).not.toHaveBeenCalled();
+  expect(vi.mocked(listStaffAppeals).mock.calls).toHaveLength(0);
   vi.mocked(fetch).mockResolvedValueOnce({ ok: false, status: 401 } as Response);
   await supertest(app).get('/staff').set(authorization, 'Bearer invalid').expect(401);
-  expect(listStaffAppeals).not.toHaveBeenCalled();
+  expect(vi.mocked(listStaffAppeals).mock.calls).toHaveLength(0);
 });
 
 it('denies users without linked staff identity or live ban permission', async () => {
@@ -47,13 +47,13 @@ it('denies users without linked staff identity or live ban permission', async ()
   await supertest(app).get(staffSession).set(authorization, bearerToken).expect(403);
   permission.mockReturnValue(false);
   await supertest(app).get('/staff').set(authorization, bearerToken).expect(403);
-  expect(listStaffAppeals).not.toHaveBeenCalled();
+  expect(vi.mocked(listStaffAppeals).mock.calls).toHaveLength(0);
 });
 
 it('fails closed when membership cannot be fetched', async () => {
   memberFetch.mockRejectedValueOnce(new Error('member unavailable'));
   await supertest(app).get('/staff').set(authorization, bearerToken).expect(503);
-  expect(listStaffAppeals).not.toHaveBeenCalled();
+  expect(vi.mocked(listStaffAppeals).mock.calls).toHaveLength(0);
 });
 
 it('fetches fresh membership and returns a minimal staff session', async () => {
