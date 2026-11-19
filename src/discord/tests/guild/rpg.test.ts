@@ -1,6 +1,7 @@
 /* eslint-disable no-restricted-syntax, no-await-in-loop */
 /* eslint-disable max-len, sonarjs/no-duplicate-string */
 import { ComponentType } from 'discord-api-types/v10';
+import type { ActionRowBuilder, ButtonBuilder as DiscordButtonBuilder } from 'discord.js';
 import {
   dRpg, getNewTimer, rpgArcade, rpgArcadeAnimate, rpgArcadeGame, rpgArcadeWager, rpgBounties, rpgFlair, rpgFlairAccept, rpgFlairDecline, rpgHelp, rpgHome, rpgHomeAccept,
   rpgHomeDecline, rpgHomeInventory, rpgHomeNameChange, rpgHomeSell, rpgMarket, rpgMarketAccept, rpgMarketChange, rpgMarketInventory,
@@ -550,6 +551,26 @@ describe('rpg arcade', () => {
     expect(description(await rpgArcadeGame(p as never, 'Coinflip'))).toContain('How to play');
     expect(description(await rpgArcadeGame(p as never, 'Roulette'))).toContain('Odds');
     expect(description(await rpgArcadeGame(p as never, 'Roulette', 'red'))).toContain("can't start a game without first placing a bet");
+  });
+
+  it.each([
+    ['Coinflip', [3, 2], ['rpgCoinflipHeads']],
+    ['Roulette', [3, 5, 5, 3], ['rpgRouletteRed', 'rpgRouletteEven', 'rpgRouletteZero']],
+  ] as const)('keeps the populated %s button rows in order', async (game, counts, firstButtons) => {
+    const p = player(`layout-${game}`);
+    const out = await rpgArcadeGame(p as never, game);
+    const rows = out.components as ActionRowBuilder<DiscordButtonBuilder>[];
+    expect(rows.map(row => row.components.length)).toEqual(counts);
+    expect(rows[0].toJSON().components).toMatchObject([
+      { custom_id: `rpgWager500,user:${p.user.id}` },
+      { custom_id: `rpgWager1000,user:${p.user.id}` },
+      { custom_id: `rpgArcade,user:${p.user.id}` },
+    ]);
+    rows.slice(1).forEach((row, index) => {
+      expect(row.toJSON().components[0]).toMatchObject({
+        custom_id: `${firstButtons[index]},user:${p.user.id}`,
+      });
+    });
   });
 
   it('wagers accumulate, are capped at 1000, and need enough tokens', async () => {
