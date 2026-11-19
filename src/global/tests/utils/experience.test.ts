@@ -199,6 +199,17 @@ describe('experience', () => {
     expect(botlog).toHaveBeenCalledWith(expect.stringContaining('level 4'));
     expect(announce).not.toHaveBeenCalled();
   });
+
+  it('still saves the new level when the level-up announcement cannot be sent', async () => {
+    const { member, guild } = makeMember();
+    dbMock.user_experience.findFirst.mockResolvedValueOnce(row({ level: 3, level_points: 10000, total_points: 10000 }));
+    dbMock.user_experience.findMany.mockResolvedValueOnce([]);
+    botlog.mockRejectedValueOnce(new Error('Missing Access'));
+    await expect(experience(member, 'GENERAL' as never, 'TEXT' as never, textChannel(guild))).resolves.toBeUndefined();
+    expect(dbMock.user_experience.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ level: 4, last_message_at: expect.any(Date) }),
+    }));
+  });
 });
 
 describe('awardGitHubXP', () => {
