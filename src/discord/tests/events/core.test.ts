@@ -283,6 +283,31 @@ describe('interactionCreate', () => {
     });
   });
 
+  it.each(['idose', 'moderate', 'report'])('never records usage of the data-sensitive /%s command', async commandName => {
+    const i = base({
+      isChatInputCommand: () => true,
+      commandName,
+      guildId: 'g',
+      options: { getSubcommand: () => null, data: [{ name: 'substance', type: 3, value: 'lsd' }] },
+    });
+    await interactionCreate.execute(i as never);
+    expect(mocks.commandRun).toHaveBeenCalled();
+    expect(dbMock.command_usage.create).not.toHaveBeenCalled();
+    expect(dbMock.command_usage_parameter.createMany).not.toHaveBeenCalled();
+  });
+
+  it('keeps the command running when usage cannot be recorded', async () => {
+    dbMock.command_usage.create.mockRejectedValue(new Error('db down'));
+    const i = base({
+      isChatInputCommand: () => true,
+      commandName: 'ping',
+      guildId: 'g',
+      options: { getSubcommand: () => null, data: [] },
+    });
+    await expect(interactionCreate.execute(i as never)).resolves.toBeUndefined();
+    expect(dbMock.command_usage_parameter.createMany).not.toHaveBeenCalled();
+  });
+
   it('records and touches the user only for slash commands in the TripSit guild', async () => {
     dbMock.command_usage.create.mockResolvedValue({ id: 'u3' } as never);
     const i = base({
