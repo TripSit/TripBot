@@ -3118,6 +3118,11 @@ export async function rpgArcadeGame(
   }
 
   if (choice) {
+    // Spend the wager before animating, so clicking again while the game plays cannot play the same bet twice
+    wagers[interaction.user.id] = {
+      tokens: 0,
+      gameName,
+    };
     await rpgArcadeAnimate(interaction, gameName);
     const { object, options } = gameData[gameName as keyof typeof gameData];
     const result = randomItem(options);
@@ -3127,19 +3132,26 @@ export async function rpgArcadeGame(
     // The user won or lost
     const won = payout !== 0;
     const BetOutcomeMessage = randomItem(won ? BetWinMessageList : BetLossMessageList);
-    personaData.tokens += won ? payout : -currentBet;
-    await db.personas.upsert({
-      where: {
-        user_id: userData.id,
-      },
-      create: personaData,
-      update: personaData,
+    const change = won ? payout : -currentBet;
+    // Settle against the live balance in one statement: the wallet may have been spent since the bet was placed
+    const settled = await db.personas.updateMany({
+      where: { user_id: userData.id, tokens: { gte: currentBet } },
+      data: { tokens: { increment: change } },
     });
+    if (settled.count !== 1) {
+      return {
+        content: null,
+        embeds: [arcadeEmbed(
+          interaction,
+          gameTitle,
+          '**You no longer have enough tokens for that bet, so the game was cancelled.**',
+          Colors.Grey,
+        )],
+        components,
+      };
+    }
+    personaData.tokens += change;
 
-    wagers[interaction.user.id] = {
-      tokens: 0,
-      gameName,
-    };
     const outcome = won ? `**You won ${payout} tokens!**` : `**You lost ${currentBet} tokens!**`;
     // The wallet shown is the one after the payout, so it is rebuilt from the updated persona
     return {

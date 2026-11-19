@@ -503,6 +503,7 @@ describe('rpg arcade', () => {
     mocks.persona.mockResolvedValue(persona({ tokens: 5000 }));
     mocks.sleep.mockResolvedValue(undefined);
     db.personas.upsert = vi.fn() as never;
+    db.personas.updateMany = vi.fn().mockResolvedValue({ count: 1 }) as never;
     (global as unknown as Record<string, unknown>).emojiGet = vi.fn(() => ({ id: '1', identifier: 'e:1', toString: () => '<:e:1>' }));
   });
 
@@ -561,8 +562,10 @@ describe('rpg arcade', () => {
     mocks.random.mockReturnValueOnce(result);
     const out = await rpgArcadeGame(p as never, 'Coinflip', choice);
     expect(description(out)).toContain(wins ? 'You won 1000 tokens' : 'You lost 1000 tokens');
-    const saved = (db.personas.upsert as ReturnType<typeof vi.fn>).mock.calls.at(-1)?.[0].update.tokens;
-    expect(saved).toBe(wins ? 6000 : 4000);
+    const settle = (db.personas.updateMany as ReturnType<typeof vi.fn>).mock.calls.at(-1)?.[0];
+    expect(settle.data.tokens.increment).toBe(wins ? 1000 : -1000);
+    expect(settle.where).toEqual({ user_id: 'dbu', tokens: { gte: 1000 } });
+    expect(description(out)).toContain(`Wallet:** ${wins ? 6000 : 4000}`);
   });
 
   it.each([
@@ -575,6 +578,47 @@ describe('rpg arcade', () => {
     mocks.random.mockReturnValueOnce(result);
     const out = await rpgArcadeGame(p as never, 'Roulette', choice);
     expect(description(out)).toContain(multiplier ? `You won ${1000 * multiplier} tokens` : 'You lost 1000 tokens');
+  });
+});
+
+describe('arcade settlement', () => {
+  const player = (id: string) => ({
+    user: { id }, member: member(), editReply: vi.fn(), customId: '',
+  });
+  beforeEach(() => {
+    mocks.user.mockResolvedValue({ id: 'dbu' });
+    mocks.persona.mockResolvedValue(persona({ tokens: 5000 }));
+    mocks.sleep.mockResolvedValue(undefined);
+    db.personas.updateMany = vi.fn().mockResolvedValue({ count: 1 }) as never;
+    (global as unknown as Record<string, unknown>).emojiGet = vi.fn(() => ({ id: '1', identifier: 'e:1', toString: () => '<:e:1>' }));
+  });
+
+  const placeBet = async (id: string) => {
+    const p = { ...player(id), customId: `rpgWager1000,user:${id}` };
+    await rpgArcadeGame(p as never, 'Coinflip');
+    await rpgArcadeWager(p as never);
+    return p;
+  };
+
+  it('cancels the game instead of overdrawing when the wallet was spent after betting', async () => {
+    const p = await placeBet('settle-broke');
+    db.personas.updateMany = vi.fn().mockResolvedValue({ count: 0 }) as never;
+    mocks.random.mockReturnValueOnce('tails');
+    const out = await rpgArcadeGame(p as never, 'Coinflip', 'heads');
+    expect(embedOf(out).description).toContain('no longer have enough tokens');
+  });
+
+  it('plays a wager only once even if the choice is clicked again while it animates', async () => {
+    const p = await placeBet('settle-double');
+    mocks.random.mockReturnValue('heads');
+    let release: () => void = () => undefined;
+    mocks.sleep.mockImplementationOnce(() => new Promise<void>(resolve => { release = resolve; }));
+    const first = rpgArcadeGame(p as never, 'Coinflip', 'heads');
+    const second = await rpgArcadeGame(p as never, 'Coinflip', 'heads');
+    expect(embedOf(second).description).toContain("can't start a game without first placing a bet");
+    release();
+    await first;
+    expect(db.personas.updateMany).toHaveBeenCalledTimes(1);
   });
 });
 
