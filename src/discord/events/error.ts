@@ -21,6 +21,8 @@ type ErrorInteraction = ChatInputCommandInteraction | MessageContextMenuCommandI
 const error10062 = 'Error 10062: (Unknown Interaction Error)[https://github.com/discord/discord-api-docs/issues/5558] for details'; // eslint-disable-line max-len
 const reportLimiter = new ReportLimiter();
 const REPORT_TIMEOUT_MS = 10_000;
+// Embed descriptions are capped at 4096 characters; leave room for the code fence and command context
+const MAX_REPORTED_STACK = 3500;
 
 /** Posts to the bot-errors channel. Throws on failure; the caller catches. */
 async function reportToChannel(
@@ -41,7 +43,10 @@ async function reportToChannel(
   // Get the role we want to ping
   const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
   const role = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
-  let message = `\`\`\`${errorStack}\`\`\``;
+  const reportedStack = errorStack.length > MAX_REPORTED_STACK
+    ? `${errorStack.slice(0, MAX_REPORTED_STACK)}\n... (truncated, see the bot logs)`
+    : errorStack;
+  let message = `\`\`\`${reportedStack}\`\`\``;
   if (interaction && commandName) {
     const context = dataSensitiveCommands.includes(commandName) ? '' : await commandContext(interaction);
     message = `**Error running /${commandName} ${context}${message}`;

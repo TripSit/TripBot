@@ -281,27 +281,10 @@ export async function experience(
   experienceData.level_points += expPoints;
   experienceData.total_points += expPoints;
 
-  if (expToLevel <= experienceData.level_points) {
+  const leveledUp = expToLevel <= experienceData.level_points;
+  if (leveledUp) {
     experienceData.level += 1;
-    const channelTripbotLogs = await channel.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
-    await channelTripbotLogs.send(stripIndents`${member.displayName} has leveled up to ${categoryName} ${typeName} level ${experienceData.level}!`);
     experienceData.level_points -= expToLevel;
-
-    if (experienceData.level % 10 === 0) {
-      let id = '' as string;
-      if (category === 'GENERAL' as experience_category) {
-        id = env.CHANNEL_LOUNGE;
-      } else if (category === 'TRIPSITTER' as experience_category) {
-        id = env.CHANNEL_TRIPSITMETA;
-      } else if (category === 'DEVELOPER' as experience_category) {
-        id = env.CHANNEL_DEVELOPMENT;
-      } else if (category === 'TEAM' as experience_category) {
-        id = env.CHANNEL_TEAMTRIPSIT;
-      } else if (category === 'IGNORED' as experience_category) {
-        id = env.CHANNEL_BOTSPAM;
-      }
-      sendMilestoneAnnouncement(member, id, experienceData.level, categoryName, typeName);
-    }
   }
 
   experienceData.last_message_at = new Date();
@@ -319,6 +302,32 @@ export async function experience(
       last_message_channel: experienceData.last_message_channel,
     },
   });
+
+  // Saved first: an announcement that cannot be sent must never cost the user their points or level
+  if (leveledUp) {
+    try {
+      const channelTripbotLogs = await channel.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+      await channelTripbotLogs.send(stripIndents`${member.displayName} has leveled up to ${categoryName} ${typeName} level ${experienceData.level}!`);
+    } catch (err) {
+      log.error(F, `Could not announce a level-up: ${err}`);
+    }
+
+    if (experienceData.level % 10 === 0) {
+      let id = '' as string;
+      if (category === 'GENERAL' as experience_category) {
+        id = env.CHANNEL_LOUNGE;
+      } else if (category === 'TRIPSITTER' as experience_category) {
+        id = env.CHANNEL_TRIPSITMETA;
+      } else if (category === 'DEVELOPER' as experience_category) {
+        id = env.CHANNEL_DEVELOPMENT;
+      } else if (category === 'TEAM' as experience_category) {
+        id = env.CHANNEL_TEAMTRIPSIT;
+      } else if (category === 'IGNORED' as experience_category) {
+        id = env.CHANNEL_BOTSPAM;
+      }
+      sendMilestoneAnnouncement(member, id, experienceData.level, categoryName, typeName);
+    }
+  }
 
   // Try to give the appropriate role
   await giveMilestone(member);
