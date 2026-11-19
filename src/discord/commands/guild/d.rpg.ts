@@ -3085,9 +3085,8 @@ export async function rpgArcadeGame(
   const rowBetsC = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(...bets.slice(10, 15));
 
-  const components = [rowWagers, rowBetsA];
-  if (rowBetsB.components.length > 0) components.push(rowBetsB);
-  if (rowBetsC.components.length > 0) components.push(rowBetsC);
+  const components = [rowWagers, rowBetsA, rowBetsB, rowBetsC]
+    .filter(row => row.components.length > 0);
 
   if (wagers[interaction.user.id]?.gameName !== gameName) {
     wagers[interaction.user.id] = {
