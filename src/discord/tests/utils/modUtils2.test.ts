@@ -5,6 +5,7 @@ import {
 } from '../../utils/modUtils';
 import { dbMock } from '../../../vitest/utils/mockDb';
 import { stubInstance } from '../../../vitest/utils/discordStubs';
+import warningInteraction from '../../../vitest/utils/warningInteraction';
 
 const mocks = vi.hoisted(() => ({
   trustScore: vi.fn(), getMember: vi.fn(), counts: vi.fn(), rows: vi.fn(),
@@ -416,21 +417,82 @@ describe('acknowledgeButton', () => {
       channels: { fetch: vi.fn(async () => { if (threadFetch === 'fail') throw new Error('Unknown'); return thread; }) },
     };
     dbMock.users.upsert.mockResolvedValue({ id: 'uid', mod_thread_id: threadFetch === 'none' ? null : 'thread1' } as never);
-    const interaction = {
-      user: { id: ID, username: 'user', toString: (): string => '<@user>' },
-      message: { embeds: [new EmbedBuilder().setTitle('Warned')] },
-      update: updateFails ? vi.fn().mockRejectedValue(new Error('gone')) : vi.fn(),
-    };
-    return { interaction: interaction as never, raw: interaction, thread };
+    return { ...warningInteraction('warning-message', updateFails), thread };
   }
 
   it('tells the mod thread and swaps the buttons for a receipt', async () => {
     const s = setup();
     await acknowledgeButton(s.interaction);
     expect(JSON.stringify(s.thread.send.mock.calls[0][0])).toContain('has **acknowledged** their warning');
-    const [{ components, embeds }] = s.raw.update.mock.calls[0] as unknown as [{ components: unknown[]; embeds: unknown[] }];
+    const [receipt] = s.raw.editReply.mock.calls[1];
+    const { components, embeds } = receipt;
     expect(components).toEqual([]);
     expect(embeds).toHaveLength(2);
+  });
+
+  it('claims simultaneous clicks on the same warning before notifying moderators', async () => {
+    const s = setup();
+    const duplicate = { ...s.raw, deferUpdate: vi.fn() };
+    await Promise.all([acknowledgeButton(s.interaction), acknowledgeButton(duplicate as never)]);
+    expect(s.thread.send).toHaveBeenCalledTimes(1);
+    expect(s.raw.editReply).toHaveBeenCalledTimes(2);
+  });
+
+  it('ignores stale clicks after the warning buttons were removed', async () => {
+    const s = setup();
+    await acknowledgeButton(s.interaction);
+    await acknowledgeButton({ ...s.raw, deferred: false, deferUpdate: vi.fn() } as never);
+    expect(s.thread.send).toHaveBeenCalledTimes(1);
+    expect(s.raw.message.fetch).toHaveBeenCalledWith(true);
+  });
+
+  it.each(['deferred', 'replied'] as const)('ignores an interaction already %s', async state => {
+    const s = setup();
+    await acknowledgeButton({ ...s.raw, [state]: true } as never);
+    expect(s.raw.deferUpdate).not.toHaveBeenCalled();
+    expect(dbMock.users.upsert).not.toHaveBeenCalled();
+  });
+
+  it('acknowledges a repeated delivery of the same interaction only once', async () => {
+    const s = setup();
+    await Promise.all([acknowledgeButton(s.interaction), acknowledgeButton(s.interaction)]);
+    expect(s.raw.deferUpdate).toHaveBeenCalledTimes(1);
+    expect(s.thread.send).toHaveBeenCalledTimes(1);
+    expect(s.raw.editReply.mock.invocationCallOrder[0]).toBeLessThan(dbMock.users.upsert.mock.invocationCallOrder[0]);
+  });
+
+  it.each(['defer', 'fetch', 'claim'] as const)('permits a fresh retry after a failed %s', async stage => {
+    const s = setup();
+    const requests = { defer: s.raw.deferUpdate, fetch: s.raw.message.fetch, claim: s.raw.editReply };
+    requests[stage].mockRejectedValueOnce(new Error('request failed'));
+    await acknowledgeButton(s.interaction);
+    expect(s.thread.send).not.toHaveBeenCalled();
+    expect(dbMock.users.upsert).not.toHaveBeenCalled();
+    expect(s.message.components).toHaveLength(1);
+    await acknowledgeButton({ ...s.raw, deferred: false, deferUpdate: vi.fn() } as never);
+    expect(s.thread.send).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not claim a message containing unrelated buttons', async () => {
+    const s = setup();
+    s.message.components[0].components.forEach(button => button.setCustomId('unrelated'));
+    await acknowledgeButton(s.interaction);
+    expect(s.thread.send).not.toHaveBeenCalled();
+    expect(s.raw.editReply).not.toHaveBeenCalled();
+  });
+
+  it('recognizes a warning with only its refusal button remaining', async () => {
+    const s = setup();
+    s.message.components[0].components.shift();
+    await acknowledgeButton(s.interaction);
+    expect(s.thread.send).toHaveBeenCalledTimes(1);
+  });
+
+  it('allows responses to independent warning messages concurrently', async () => {
+    const s = setup();
+    const other = warningInteraction('other-warning');
+    await Promise.all([acknowledgeButton(s.interaction), acknowledgeButton(other.interaction)]);
+    expect(s.thread.send).toHaveBeenCalledTimes(2);
   });
 
   it('copes with missing or deleted mod threads and failed updates', async () => {
