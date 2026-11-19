@@ -102,6 +102,50 @@ jobs:
           name: jest-results
           path: jest-results.json
           retention-days: 1
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/lcov.info
+          if-no-files-found: error
+          retention-days: 1
+  sonar:
+    # Runs the same scan and quality gate as the post-merge PushToUat job, so a Sonar failure blocks the PR
+    # instead of showing up after the merge. Secrets are not available to PRs from forks, so those skip it.
+    name: SonarScan
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+      # The scanner needs the dependency and generated Prisma types to resolve types in the analysis
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+      - name: Generate Prisma clients
+        run: npm run db:generate
+      - name: Download coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage
+          path: coverage
+      - name: Verify coverage report
+        run: test -s coverage/lcov.info
+      - uses: SonarSource/sonarqube-scan-action@59202af334b4ba7b5db01b701b8e79f8b3bef0f4 # v8.5.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          args: >
+            -Dsonar.pullrequest.key=${{ github.event.pull_request.number }}
+            -Dsonar.pullrequest.branch=${{ github.event.pull_request.head.ref }}
+            -Dsonar.pullrequest.base=${{ github.event.pull_request.base.ref }}
   docker-build:
     name: Docker Build
     runs-on: ubuntu-latest
