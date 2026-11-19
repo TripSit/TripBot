@@ -1,8 +1,9 @@
 /* eslint-disable no-nested-ternary, sonarjs/no-duplicate-string */
-import { EmbedBuilder, GuildMember } from 'discord.js';
-import { acknowledgeReportButton, refusalButton } from '../../utils/modUtils';
+import { GuildMember } from 'discord.js';
+import { acknowledgeButton, acknowledgeReportButton, refusalButton } from '../../utils/modUtils';
 import { dbMock } from '../../../vitest/utils/mockDb';
 import { stubInstance } from '../../../vitest/utils/discordStubs';
+import warningInteraction from '../../../vitest/utils/warningInteraction';
 
 const mocks = vi.hoisted(() => ({ trustScore: vi.fn(), counts: vi.fn(), rows: vi.fn() }));
 vi.mock('../../utils/trustScore', () => ({ tripSitTrustScore: mocks.trustScore, default: mocks.trustScore }));
@@ -64,13 +65,8 @@ describe('refusalButton', () => {
       id: `uid-${args.where.discord_id}`, discord_id: args.where.discord_id, mod_thread_id: opts.modThread ? 'thread1' : null,
     })) as never);
     dbMock.user_actions.findFirst.mockResolvedValue((opts.lastWarningGuild ? { guild_id: opts.lastWarningGuild } : null) as never);
-    const interaction = {
-      user: { id: ID, username: 'rebel', toString: (): string => '<@rebel>' },
-      message: { embeds: [new EmbedBuilder().setTitle('Warned')] },
-      update: opts.updateFails ? vi.fn().mockRejectedValue(new Error('gone')) : vi.fn(),
-    };
     return {
-      interaction: interaction as never, raw: interaction, rebel, thread, modLog,
+      ...warningInteraction('warning-message', opts.updateFails), rebel, thread, modLog,
     };
   }
 
@@ -78,10 +74,37 @@ describe('refusalButton', () => {
     const s = setup({ modThread: true });
     await refusalButton(s.interaction);
     expect((s.rebel as unknown as { timeout: ReturnType<typeof vi.fn> }).timeout).toHaveBeenCalledWith(900000, expect.stringContaining('rejected the warning'));
-    expect(s.raw.update).toHaveBeenCalled();
+    expect(s.raw.editReply).toHaveBeenCalled();
     expect(dbMock.user_actions.create).toHaveBeenCalledWith({ data: expect.objectContaining({ type: 'TIMEOUT', guild_id: 'g1', user_id: `uid-${ID}` }) });
     expect(s.modLog.send).toHaveBeenCalled();
     expect(JSON.stringify(s.thread.send.mock.calls)).toContain('rejected');
+  });
+
+  it('does not apply the timeout twice for simultaneous refusal clicks', async () => {
+    const s = setup({ modThread: true });
+    const duplicate = { ...s.raw, deferUpdate: vi.fn() };
+    await Promise.all([refusalButton(s.interaction), refusalButton(duplicate as never)]);
+    expect(s.rebel?.timeout).toHaveBeenCalledTimes(1);
+    expect(dbMock.user_actions.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not reject a warning while its acknowledgement is being claimed', async () => {
+    const s = setup({ modThread: true });
+    const rejection = { ...s.raw, deferUpdate: vi.fn() };
+    await Promise.all([acknowledgeButton(s.interaction), refusalButton(rejection as never)]);
+    expect(s.rebel?.timeout).not.toHaveBeenCalled();
+    expect(dbMock.user_actions.create).not.toHaveBeenCalled();
+    expect(s.thread.send).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not acknowledge a warning while its refusal is being claimed, or after completion', async () => {
+    const s = setup({ modThread: true });
+    const acceptance = { ...s.raw, deferUpdate: vi.fn() };
+    await Promise.all([refusalButton(s.interaction), acknowledgeButton(acceptance as never)]);
+    await acknowledgeButton({ ...acceptance, deferred: false } as never);
+    expect(s.rebel?.timeout).toHaveBeenCalledTimes(1);
+    expect(dbMock.user_actions.create).toHaveBeenCalledTimes(1);
+    expect(JSON.stringify(s.thread.send.mock.calls)).not.toContain('acknowledged');
   });
 
   it('creates a mod thread for first-time offenders and reports the rejection there', async () => {
@@ -108,7 +131,7 @@ describe('refusalButton', () => {
     const s = setup({ member: longer, modThread: true });
     await refusalButton(s.interaction);
     expect((longer as unknown as { timeout: ReturnType<typeof vi.fn> }).timeout).not.toHaveBeenCalled();
-    expect(JSON.stringify(s.raw.update.mock.calls[0][0])).toContain('Your existing timeout still expires');
+    expect(JSON.stringify(s.raw.editReply.mock.calls[1][0])).toContain('Your existing timeout still expires');
     expect(JSON.stringify(s.thread.send.mock.calls)).toContain('already timed out until');
     const noThread = setup({ member: targetMember({ communicationDisabledUntilTimestamp: Date.now() + 7 * 86_400_000 }) });
     await expect(refusalButton(noThread.interaction)).resolves.toBeUndefined();
@@ -117,7 +140,7 @@ describe('refusalButton', () => {
   it('reports users who left the guild, or when the guild cannot be fetched', async () => {
     const left = setup({ member: 'left', modThread: true });
     await refusalButton(left.interaction);
-    expect(JSON.stringify(left.raw.update.mock.calls[0][0])).toContain('the team has been told');
+    expect(JSON.stringify(left.raw.editReply.mock.calls[1][0])).toContain('the team has been told');
     expect(JSON.stringify(left.thread.send.mock.calls)).toContain('no longer in Guild');
     const noGuild = setup({ guild: 'fail', modThread: true, lastWarningGuild: 'other-guild' });
     await refusalButton(noGuild.interaction);
