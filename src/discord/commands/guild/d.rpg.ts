@@ -1370,14 +1370,13 @@ export async function rpgBounties(
 
     // Award tokens to the user
     personaData.tokens += tokens;
-    personaData[dbKey as 'last_quest' | 'last_dungeon' | 'last_raid'] = new Date();
-
-    await db.personas.upsert({
-      where: {
-        id: personaData.id,
+    // Only the changed columns are written, and the reward is added to the live balance
+    await db.personas.update({
+      where: { id: personaData.id },
+      data: {
+        tokens: { increment: tokens },
+        [dbKey as 'last_quest' | 'last_dungeon' | 'last_raid']: new Date(),
       },
-      create: personaData,
-      update: personaData,
     });
 
     return {
@@ -1939,14 +1938,15 @@ export async function rpgMarketAccept(
     return marketBlockedReply(interaction, '**You do not have enough tokens to buy this item.**', itemData);
   }
 
-  personaData.tokens -= itemCost;
-  await db.personas.upsert({
-    where: {
-      id: personaData.id,
-    },
-    create: personaData,
-    update: personaData,
+  // Charge against the live balance in one statement, so two clicks cannot both spend the same tokens
+  const charged = await db.personas.updateMany({
+    where: { id: personaData.id, tokens: { gte: itemCost } },
+    data: { tokens: { decrement: itemCost } },
   });
+  if (charged.count !== 1) {
+    return marketBlockedReply(interaction, '**You do not have enough tokens to buy this item.**', itemData);
+  }
+  personaData.tokens -= itemCost;
 
   if (itemData.value !== 'PremiumMembership') {
     // Add the item to the user's inventory
@@ -1980,12 +1980,9 @@ export async function rpgMarketAccept(
     } catch {
       personaData.tokens += itemCost;
 
-      await db.personas.upsert({
-        where: {
-          id: personaData.id,
-        },
-        create: personaData,
-        update: personaData,
+      await db.personas.update({
+        where: { id: personaData.id },
+        data: { tokens: { increment: itemCost } },
       });
     }
   }
@@ -2893,12 +2890,9 @@ export async function rpgHomeSell(
 
   personaData.tokens += sellPrice;
 
-  await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: personaData,
-    update: personaData,
+  await db.personas.update({
+    where: { id: personaData.id },
+    data: { tokens: { increment: sellPrice } },
   });
   log.debug(F, `itemName: ${JSON.stringify(itemName, null, 2)}`);
   const { embeds, components, files } = await rpgHome(interaction, `**You have sold ${itemName} for ${sellPrice} TripTokens!**\n`);
@@ -3280,7 +3274,7 @@ async function rpgGift(interaction: ChatInputCommandInteraction) {
   const giftAmount = interaction.options.getInteger('amount') ?? 0;
 
   if (!targetUser) throw new Error('Target user not found');
-  if (targetUser === commandUser) {
+  if (targetUser.id === commandUser.id) {
     return {
       embeds: [embedTemplate()
         .setAuthor(null)
@@ -3305,58 +3299,55 @@ async function rpgGift(interaction: ChatInputCommandInteraction) {
   // Get the current token amounts for the command user and the target user
   const commandUserTokens = userPersona.tokens;
 
-  // Check if the amount is negative
-  if (giftAmount < 0) {
+  // Check if the amount is at least one token
+  if (giftAmount < 1) {
     return {
       embeds: [embedTemplate()
         .setAuthor(null)
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
         .setTitle(`${emojiGet('buttonBetHuge')} Gift Unsuccessful`)
         .setDescription(stripIndents`
-            **You can't gift negative tokens!**
+            **You have to gift at least 1 token!**
           `)
         .setColor(Colors.Red)],
       components: [],
     };
   }
+
+  const notEnough = () => ({
+    embeds: [embedTemplate()
+      .setAuthor(null)
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
+      .setTitle(`${emojiGet('buttonBetHuge')} Gift Unsuccessful`)
+      .setDescription(stripIndents`
+          **You don't have enough tokens!**
+
+          ${emojiGet('buttonBetSmall')} **Wallet:** ${userPersona.tokens}
+        `)
+      .setColor(Colors.Red)],
+    components: [],
+  });
 
   // Check if the command user has enough tokens
-  if (commandUserTokens < giftAmount) {
-    return {
-      embeds: [embedTemplate()
-        .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
-        .setTitle(`${emojiGet('buttonBetHuge')} Gift Unsuccessful`)
-        .setDescription(stripIndents`
-            **You don't have enough tokens!**
+  if (commandUserTokens < giftAmount) return notEnough();
 
-            ${emojiGet('buttonBetSmall')} **Wallet:** ${userPersona.tokens}
-          `)
-        .setColor(Colors.Red)],
-      components: [],
-    };
-  }
-  // Remove the tokens from the command user
+  // Both wallets change together, and only if the sender still has the tokens at this moment
+  const moved = await db.$transaction(async tx => {
+    const debited = await tx.personas.updateMany({
+      where: { id: userPersona.id, tokens: { gte: giftAmount } },
+      data: { tokens: { decrement: giftAmount } },
+    });
+    if (debited.count !== 1) return false;
+    await tx.personas.update({
+      where: { id: targetPersona.id },
+      data: { tokens: { increment: giftAmount } },
+    });
+    return true;
+  });
+  if (!moved) return notEnough();
+
   userPersona.tokens -= giftAmount;
-  // Add the tokens to the target user
   targetPersona.tokens += giftAmount;
-  // Save the data
-
-  await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: userPersona,
-    update: userPersona,
-  });
-
-  await db.personas.upsert({
-    where: {
-      user_id: targetData.id,
-    },
-    create: targetPersona,
-    update: targetPersona,
-  });
 
   return {
     embeds: [embedTemplate()
