@@ -630,6 +630,7 @@ enum user_action_type {
   CONTRIBUTOR_BAN
   APPEAL_ACCEPT
   APPEAL_REJECT
+  ACKN_REPORT
 }
 
 enum appeal_status {

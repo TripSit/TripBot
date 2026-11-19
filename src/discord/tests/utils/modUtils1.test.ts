@@ -90,6 +90,14 @@ describe('userInfoEmbed', () => {
     expect(mocks.trustScore).toHaveBeenCalledWith('111111111111111111');
   });
 
+  it('includes persisted report acknowledgements in its action counts', async () => {
+    dbMock.user_actions.groupBy.mockResolvedValue([{ type: 'ACKN_REPORT', _count: { _all: 2 } }] as never);
+    const embed = await userInfoEmbed(actor(), member(), targetData(), 'INFO', true);
+    expect(embed.data.fields).toContainEqual({
+      name: '# of Report Acknowledgements', value: '2', inline: true,
+    });
+  });
+
   it('keeps large moderation histories and long trust explanations within Discord limits', async () => {
     dbMock.user_actions.groupBy.mockResolvedValue([
       { type: 'NOTE', _count: { _all: 100000 } },
