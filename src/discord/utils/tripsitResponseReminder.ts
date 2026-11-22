@@ -101,7 +101,7 @@ async function deliverReminders(ticket: ReminderTicket, thread: ThreadChannel, u
   if (!state) return;
   if (!state.team_reminded_at) await sendTeamReminder(ticket, thread, userId);
   const current = await reminderState(ticket);
-  if (!current || !current.team_reminded_at || current.user_reminded_at) return;
+  if (!current?.team_reminded_at || current.user_reminded_at) return;
   await thread.send({
     content: [
       `Hey there <@${userId}>, we're sending out another alert.`,
