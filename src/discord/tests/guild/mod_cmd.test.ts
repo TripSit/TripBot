@@ -140,7 +140,7 @@ describe('watchuser / unwatchuser', () => {
     mocks.watch.mockResolvedValueOnce(true);
     const ok = await run('watchuser', { target, notification_method: 'dm', alert_channel: text });
     expect(content(ok.stub)).toContain('notified when this user');
-    expect(ok.log.send).toHaveBeenCalled();
+    expect(ok.log.send).toHaveBeenCalledWith({ content: expect.stringContaining('used /watch on'), allowedMentions: { parse: [] } });
     mocks.watch.mockResolvedValueOnce(false);
     expect(content((await run('watchuser', { target, notification_method: 'dm', alert_channel: text })).stub)).toContain('already watching');
   });

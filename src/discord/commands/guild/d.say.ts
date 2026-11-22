@@ -96,8 +96,11 @@ export const dSay: SlashCommand = {
 
     const channelBotlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     if (channelBotlog) {
-      await channelBotlog.send(`${member.displayName} made me say '${say}' \
-        in ${target.name}`);
+      // What was said can contain pings, which must not fire in the log channel
+      await channelBotlog.send({
+        content: `${member.displayName} made me say '${say}' in ${target.name}`,
+        allowedMentions: { parse: [] },
+      });
     }
 
     return true;

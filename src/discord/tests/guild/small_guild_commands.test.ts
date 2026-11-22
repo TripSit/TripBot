@@ -95,7 +95,10 @@ describe('say', () => {
       expect(chan.send).not.toHaveBeenCalled();
       await vi.advanceTimersByTimeAsync(3000);
       expect(chan.send).toHaveBeenCalledWith(expect.objectContaining({ content: 'hello' }));
-      expect(botlog.send).toHaveBeenCalled();
+      expect(botlog.send).toHaveBeenCalledWith({
+        content: expect.stringContaining("made me say 'hello'"),
+        allowedMentions: { parse: [] },
+      });
       // no bot log channel
       const quiet = slashStub({ guild: guildWith(null), options: { say: 'x', channel: text() } });
       expect(await dSay.execute(quiet as never)).toBe(true);
