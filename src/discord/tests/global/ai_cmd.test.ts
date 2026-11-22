@@ -272,6 +272,16 @@ describe('aiMessage', () => {
     await aiMessage(m as never);
     expect(m.reply).toHaveBeenCalledWith(expect.stringContaining('trouble thinking'));
   });
+
+  it('does not throw when the message was deleted before the apology could be sent', async () => {
+    enabled();
+    agreed();
+    mocks.chat.mockRejectedValue(new Error('down'));
+    const m = msg();
+    m.reply.mockRejectedValue(new Error('Unknown message'));
+    await expect(aiMessage(m as never)).resolves.toBeUndefined();
+    expect(m.reply).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('aiReaction', () => {

@@ -173,6 +173,10 @@ export async function giveMilestone(
 
   const role = await member.guild?.roles.fetch(roleDefs[levelTier as keyof typeof roleDefs].role) as Role;
 
+  // A member who rejoined holds no level role at all, and getting their tier back is not a level-up to celebrate.
+  // Checked before the lower roles below are removed.
+  const hadLevelRole = Object.values(roleDefs).some(def => member.roles.cache.has(def.role));
+
   if (levelTier >= 1) {
     // Get a list of roleDefs below the users current tier
     const previousRoles = Object.keys(roleDefs)
@@ -199,7 +203,7 @@ export async function giveMilestone(
   }
   if (!member.roles.cache.has(role.id)) {
     await member.roles.add(role);
-    if (levelTier >= 2) {
+    if (levelTier >= 2 && hadLevelRole) {
       const channel = await member.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
       await channel.send(`${emojis} **${member} has reached Total level ${levelTier}0!** ${emojis}`);
     }

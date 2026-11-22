@@ -118,12 +118,21 @@ describe('giveMilestone', () => {
     expect(roleSend).not.toHaveBeenCalled();
   });
 
-  it('announces tier 2 and above in the VIP lounge', async () => {
-    const { member, roles } = makeMember();
+  it('announces tier 2 and above in the VIP lounge when promoting from a lower tier', async () => {
+    const { member, roles } = makeMember([e.ROLE_VIP_10]);
     withExp(25000);
     await giveMilestone(member);
     expect(roles.add).toHaveBeenCalledWith({ id: e.ROLE_VIP_20 });
     expect(roleSend).toHaveBeenCalledWith(expect.stringContaining('Total level 20'));
+  });
+
+  it('restores the tier role of a returning member quietly, without a level-up announcement', async () => {
+    // They left and rejoined, so they hold no level role at all
+    const { member, roles } = makeMember();
+    withExp(25000);
+    await giveMilestone(member);
+    expect(roles.add).toHaveBeenCalledWith({ id: e.ROLE_VIP_20 });
+    expect(roleSend).not.toHaveBeenCalled();
   });
 });
 
