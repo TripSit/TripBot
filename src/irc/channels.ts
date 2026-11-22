@@ -182,7 +182,7 @@ export function registerIrcChannels(client: Client): void {
     const length = Number(client.network.supports('TOPICLEN')) || DEFAULT_TOPIC_LENGTH;
     const topic = normalizeTopic(row.topic, length);
     if (currentTopics.get(key(channel)) === topic) return;
-    currentTopics.set(key(channel), topic);
+    // The cache only learns the new topic from the server's own topic event, so a refused change is retried later
     client.raw('TOPIC', channel, topic);
   };
 
