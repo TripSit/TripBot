@@ -16,6 +16,8 @@ import {
   ComboData,
 } from 'tripsit_drug_db';
 import path from 'path';
+import loadedCombinedDb from '../../../assets/data/combinedDB.json';
+import loadedTripsitDb from '../../../assets/data/tripsitDB.json';
 import { getOrCreateUser } from './dbRecords';
 import {
   CbSubstance,
@@ -746,6 +748,19 @@ export async function syncDrugNames(combinedDb: CbSubstance[]): Promise<void> {
   log.info(F, `Added ${added} new drugs to drug_names`);
 }
 
+/**
+ * The drug data is loaded from the JSON files once, when each module is first imported, so a refreshed file on
+ * disk would never be seen until a restart. Every importer holds the same module object, so replacing its
+ * contents in place makes /drug, /combo and the API serve the new data immediately.
+ */
+function refreshLoadedData(combinedDb: CbSubstance[], tsData: { [key: string]: Drug }): void {
+  const combined = loadedCombinedDb as unknown as CbSubstance[];
+  combined.splice(0, combined.length, ...combinedDb);
+  const tripsit = loadedTripsitDb as unknown as Record<string, Drug>;
+  Object.keys(tripsit).forEach(key => { delete tripsit[key]; });
+  Object.assign(tripsit, tsData);
+}
+
 export default async function updateDrugDb():Promise<void> {
   const combinedDb = [] as CbSubstance[];
   // Check if the assets folder exists and if not, create  it
@@ -760,6 +775,7 @@ export default async function updateDrugDb():Promise<void> {
   await combineTs(tsData, combinedDb);
   const filePath = await saveData(combinedDb, 'combinedDB');
   log.info(F, `Updated combinedDB of ${combinedDb.length} drugs to ${filePath}`);
+  refreshLoadedData(combinedDb, tsData);
 
   try {
     await syncDrugNames(combinedDb);
