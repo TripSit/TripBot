@@ -158,6 +158,7 @@ describe('countMessage', () => {
 
   beforeEach(() => {
     db.counting.upsert = vi.fn() as never;
+    db.counting.updateMany = vi.fn().mockResolvedValue({ count: 1 }) as never;
     db.personas.upsert = vi.fn() as never;
     mocks.user.mockResolvedValue({ id: 'dbu' });
     mocks.sleep.mockResolvedValue(undefined);
@@ -265,6 +266,39 @@ describe('countMessage', () => {
       expect(p).toBe(share);
     });
     expect(m.react).toHaveBeenCalledWith('👍');
+  });
+
+  it('claims the next number with a guarded update on the previous number', async () => {
+    data({ current_number: 5 });
+    await countMessage(message('6') as never);
+    expect(db.counting.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ current_number: 5 }),
+      data: expect.objectContaining({ current_number: 6, current_number_message_author: 'me' }),
+    }));
+  });
+
+  it('treats a number someone else just counted as a wrong number instead of counting it twice', async () => {
+    data({ current_number: 5, record_number: 0 });
+    db.counting.updateMany = vi.fn().mockResolvedValue({ count: 0 }) as never;
+    // The row has already moved on to 6 by the time this duplicate 6 is processed
+    db.counting.findFirst = vi.fn()
+      .mockResolvedValueOnce(row({ current_number: 5 }))
+      .mockResolvedValueOnce(row({ current_number: 6, current_number_message_author: 'other' })) as never;
+    const duplicate = message('6');
+    await countMessage(duplicate as never);
+    expect(duplicate.react).not.toHaveBeenCalled();
+    const broken = (duplicate.channel.send as ReturnType<typeof vi.fn>).mock.calls.filter(c => c[0]?.embeds?.[0]?.data?.title === 'Combo Broken!');
+    expect(broken).toHaveLength(1);
+  });
+
+  it('does nothing when the counting row disappeared while claiming', async () => {
+    data({ current_number: 5 });
+    db.counting.updateMany = vi.fn().mockResolvedValue({ count: 0 }) as never;
+    db.counting.findFirst = vi.fn().mockResolvedValueOnce(row({ current_number: 5 })).mockResolvedValueOnce(null) as never;
+    const gone = message('6');
+    await countMessage(gone as never);
+    expect(gone.react).not.toHaveBeenCalled();
+    expect(gone.channel.send).not.toHaveBeenCalled();
   });
 
   describe('wrong numbers', () => {
