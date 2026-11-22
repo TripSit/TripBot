@@ -31,7 +31,28 @@ function calcTotalPot(
   return Math.floor((number * 10));
 }
 
-const warnedUsers = [] as string[];
+// Remembers who was already welcomed, per channel. Bounded (oldest first), and lost on restart, which only
+// means a newcomer can be welcomed once more.
+const MAX_WARNED_USERS = 1000;
+const warnedUsers = new Set<string>();
+const warnedKey = (channelId: string, userId: string) => `${channelId}:${userId}`;
+
+// When each user last had a number counted in each channel. The hourly Token limit used to depend on finding that
+// message among the last 50 in the channel, which an active channel pushes out of reach.
+const ONE_HOUR_MS = 60 * 60 * 1000;
+const lastCounted = new Map<string, number>();
+/** Forgets what the counting game remembers in memory (used by tests, and harmless otherwise). */
+export function resetCountingMemory(): void {
+  lastCounted.clear();
+  warnedUsers.clear();
+}
+
+function rememberCounted(channelId: string, userId: string): void {
+  lastCounted.set(warnedKey(channelId, userId), Date.now());
+  if (lastCounted.size > MAX_WARNED_USERS) {
+    lastCounted.delete(lastCounted.keys().next().value as string);
+  }
+}
 
 export async function countingSetup(
   channel:TextChannel,
@@ -322,7 +343,7 @@ async function warnNewcomer(context: CountingContext, totalPot: number): Promise
   } = context;
   if (!countingData.current_stakeholders
     || countingData.current_stakeholders.split(',').includes(message.author.id)
-    || warnedUsers.includes(message.author.id)) {
+    || warnedUsers.has(warnedKey(channel.id, message.author.id))) {
     return false;
   }
   const messageReply = `Hey ${message.member?.displayName}, welcome to the counting game!
@@ -336,7 +357,8 @@ async function warnNewcomer(context: CountingContext, totalPot: number): Promise
   countingData.current_stakeholders = addStakeholder(countingData.current_stakeholders, message.author.id);
   await saveCountingData(context);
 
-  warnedUsers.push(message.author.id);
+  warnedUsers.add(warnedKey(channel.id, message.author.id));
+  if (warnedUsers.size > MAX_WARNED_USERS) warnedUsers.delete(warnedUsers.values().next().value as string);
 
   await channel.send({
     content: messageReply,
@@ -554,6 +576,8 @@ async function acceptNumber(context: CountingContext, number: number): Promise<v
 
   await saveCountingData(context);
 
+  rememberCounted(context.channel.id, message.author.id);
+
   await message.react('👍');
 }
 
@@ -580,7 +604,8 @@ async function rejectionReason(message: Message, channel: TextChannel, countingD
     .sort((a, b) => b.createdTimestamp - a.createdTimestamp) // Sorted by most recent
     .first(); // Get the first one
 
-  if (lastMessage && countingData.type === 'TOKEN' && !isOwner) {
+  const countedRecently = (lastCounted.get(warnedKey(channel.id, message.author.id)) ?? 0) > Date.now() - ONE_HOUR_MS;
+  if ((lastMessage || countedRecently) && countingData.type === 'TOKEN' && !isOwner) {
     return 'You can only count once every hour in the Token game!';
   }
   return undefined;
