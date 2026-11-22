@@ -48,8 +48,8 @@ npx prisma generate --schema ./src/prisma/tripbot/schema.prisma
 npx prisma generate --schema ./src/prisma/moodle/schema.prisma
 npx tsc --noEmit --pretty false
 
-# Run the active Jest suite
-npm run tripbot:test -- --runInBand
+# Run the active Vitest suite
+npm run tripbot:test
 ```
 
 See [AGENTS.md](AGENTS.md#verification-matrix) for the full verification matrix mapping change type to the minimum

@@ -33,7 +33,7 @@ Fully Typescript
 Postgres Relational Database
 Prisma ORM and Client
 Discord.js
-Jest Testing
+Vitest Testing
 SonarQube Code Quality
 Docker Containerized
 ESlint Linting
@@ -66,8 +66,9 @@ host machine or inside the container show up in both places.
 
 **Start the bot**
 
-Nothing to do here — the devcontainer's `postStartCommand` runs `npm run tripbot:dev` automatically once the
-container is up, compiling with `tsc-watch` and running the bot in a `tmux` session.
+Nothing to do here — the devcontainer's `postStartCommand` runs `npm run tripbot:start` automatically once the
+container is up, compiling with `tsc-watch` and running the bot in a detached `tmux` session. (`npm run tripbot:dev`
+does the same and then attaches to the logs; `npm run tripbot:restart` stops, starts and attaches.)
 
 **View logs**
 
@@ -77,8 +78,9 @@ This attaches to the `tmux` session and shows you the bot's live output. Detach 
 
 **Deploy commands**
 
-Registering slash commands with Discord is *not* automatic — run this once after first setup, and again any time you
-add a command or change an existing command's options:
+The bot registers its slash commands with Discord automatically every time it starts, and skips the Discord call when
+the definitions have not changed since the last deploy, so restarting the bot after you add a command or change its
+options is enough. To deploy them manually (for example from outside the container), run:
 
 ```npm run tripbot:deployCommands```
 
@@ -90,15 +92,29 @@ cross the Windows/Mac-to-Linux bind mount) and rebuilds/restarts the bot when yo
 **Lint**
 
 It's /highly/ recommended to use the eslint extension, and allow vscode the auto-fix your linting errors.
-Jest tests are a WIP.
 
 ```npm run tripbot:lint```
 
 **Test**
 
-Jest tests are a WIP and while appreciated it's not required to add tests to your code
+Tests run with [Vitest](https://vitest.dev). Behavior you add or change needs tests, and CI enforces a coverage
+threshold (see `vitest.config.mts`), so new code paths should be covered.
 
 ```npm run tripbot:test```
+
+Run one file with `npx vitest run path/to/file.test.ts` and coverage with `npx vitest run --coverage`. Tests live next
+to the layer they cover:
+
+```
+src/vitest/              : Shared test infrastructure (the Discord.js mock and a mocked Prisma client)
+src/discord/tests/       : Discord command, event and util tests (global/ and guild/ mirror src/discord/commands)
+src/global/tests/        : Business-logic (g.*) and util tests
+src/irc/tests/           : IRC connection and bridge tests
+src/api/*.test.ts        : API route tests
+```
+
+Add a `tsconfig.json` that extends `tsconfig.vitest.json` to any new test folder, and check test code with
+`npx tsc --noEmit --project tsconfig.vitest.json`.
 
 ### Folder Structure ##
 ```
@@ -110,7 +126,7 @@ src/discord  : Discord specific code, see "How commands work" below
 src/docker   : Dockerfiles for the various containers
 src/global   : Global functions that are used by multiple commands. See "How commands work" below
 src/irc      : IRC specific code, see "How commands work" below.
-src/jest     : Jest testing code.
+src/vitest   : Shared Vitest test infrastructure (tests themselves live in each layer's tests/ folder).
 src/matrix   : Matrix specific code, see "How commands work" below.
 src/pgadmin4 : PGAdmin4 webserver, used in database development, see "Database Development" below.
 src/postgres : Postgres startup script, used in database development, see "Database Development" below.
