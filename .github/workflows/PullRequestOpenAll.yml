@@ -124,6 +124,11 @@ jobs:
           docker run --rm --network none --entrypoint node \
             --mount "type=bind,source=${{ github.workspace }}/src/docker/tests/pm2.smoke.js,target=/tmp/pm2.smoke.js,readonly" \
             tripbot:ci /tmp/pm2.smoke.js
+      - name: Smoke-test native modules and Prisma clients in the image
+        run: |
+          docker run --rm --network none --entrypoint node \
+            --mount "type=bind,source=${{ github.workspace }}/src/docker/tests/native.smoke.js,target=/tmp/native.smoke.js,readonly" \
+            tripbot:ci /tmp/native.smoke.js | grep -qx NATIVE_SMOKE_OK
   codeql:
     name: CodeQL
     runs-on: ubuntu-latest
