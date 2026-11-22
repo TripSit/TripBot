@@ -14,6 +14,7 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { globalTemplate } from '../../../global/commands/_g.template';
 import commandContext from '../../utils/context';
+import { awaitModal } from '../../utils/awaitModal';
 
 const F = f(__filename);
 
@@ -104,7 +105,7 @@ export const dTemplate: SlashCommand = {
     await interaction.showModal(modal);
 
     const filter = (i:ModalSubmitInteraction) => i.customId.includes('feedbackReportModal') && i.customId.split('~')[1] === interaction.id;
-    interaction.awaitModalSubmit({ filter, time: 0 })
+    awaitModal(interaction, filter)
       .then(async i => {
         await i.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
         const input = i.fields.getTextInputValue('modalInput');

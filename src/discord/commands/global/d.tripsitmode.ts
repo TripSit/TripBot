@@ -44,6 +44,7 @@ import {
   ensurePermissions, TRIPSIT_CHANNEL_PERMS, tripsitChannelOwnerMessage,
 } from '../../utils/checkPermissions';
 import { getOrCreateGuild, getOrCreateUser } from '../../../global/utils/dbRecords';
+import { awaitModal } from '../../utils/awaitModal';
 
 const F = f(__filename);
 
@@ -211,7 +212,7 @@ async function tripsitmodeOn(
     ));
 
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('tripsitmeSubmit') && i.customId.split('~')[1] === interaction.id;
-  await interaction.awaitModalSubmit({ filter, time: 0 })
+  await awaitModal(interaction, filter)
     .then(async i => {
       await i.deferReply({ flags: MessageFlags.Ephemeral });
       const triage = i.fields.getTextInputValue('triageInput');

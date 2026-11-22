@@ -32,6 +32,7 @@ import { embedTemplate, errorEmbed } from '../../utils/embedTemplate';
 import { missingPermission } from '../../utils/checkPermissions';
 import { getOrCreateGuild, getOrCreateUser } from '../../../global/utils/dbRecords';
 import { replyGuildOnly } from '../../utils/guildOnly';
+import { awaitModal } from '../../utils/awaitModal';
 
 const F = f(__filename);
 
@@ -144,7 +145,7 @@ export async function setupCustomReactionRole(
   // Collect a modal submit interaction
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"')
     && i.customId.includes(`"II":"${interaction.id}"`);
-  interaction.awaitModalSubmit({ filter, time: 0 })
+  awaitModal(interaction, filter)
     .then(async i => {
       await i.deferReply({ flags: MessageFlags.Ephemeral });
       const button = new ButtonBuilder()
@@ -200,7 +201,7 @@ async function removeReactionRoleWithReason(
   // Collect a modal submit interaction
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"')
     && i.customId.includes(`"II":"${interaction.id}"`);
-  interaction.awaitModalSubmit({ filter, time: 0 })
+  awaitModal(interaction, filter)
     .then(async i => {
       await i.deferReply({ flags: MessageFlags.Ephemeral });
 
@@ -612,7 +613,7 @@ export async function buttonReactionRole(
     // Collect a modal submit interaction
     const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"')
     && i.customId.includes(`"II":"${interaction.id}"`);
-    interaction.awaitModalSubmit({ filter, time: 0 })
+    awaitModal(interaction, filter)
       .then(async i => {
         await i.deferReply({ flags: MessageFlags.Ephemeral });
 

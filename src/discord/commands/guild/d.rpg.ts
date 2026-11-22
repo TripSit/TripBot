@@ -46,6 +46,7 @@ import { bigBrother } from '../../../global/utils/thoughtPolice';
 import { getOrCreatePersona, getOrCreateUser } from '../../../global/utils/dbRecords';
 import { randomItem } from '../../../global/utils/random';
 import { sleep } from '../../utils/sleep';
+import { awaitModal } from '../../utils/awaitModal';
 
 const tripSitProfileImage = 'tripsit-profile-image.png';
 const tripSitProfileImageAttachment = 'attachment://tripsit-profile-image.png';
@@ -2418,7 +2419,7 @@ export async function rpgHomeNameChange(
   const modalFilter = (i:ModalSubmitInteraction) => (i.customId.startsWith('rpgNameModal')
     && i.customId.split('~')[1] === interaction.id
     && i.guild !== null);
-  await interaction.awaitModalSubmit({ filter: modalFilter, time: 0 })
+  await awaitModal(interaction, modalFilter)
     .then(async i => {
       const choice = i.fields.getTextInputValue('rpgNewName');
       await i.deferReply({ flags: MessageFlags.Ephemeral });
