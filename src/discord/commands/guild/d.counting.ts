@@ -260,6 +260,15 @@ type CountingContext = {
   countingData: CountingData;
 };
 
+/**
+ * A counting attempt is a message that is only a whole number. Text that merely starts with digits
+ * ("3pm works", "2 minutes ago") is ordinary chat and must not break the combo.
+ */
+export function parseCountedNumber(text: string): number | null {
+  const trimmed = text.trim();
+  return /^\d+$/.test(trimmed) ? Number(trimmed) : null;
+}
+
 async function saveCountingData({ guild, channel, countingData }: CountingContext): Promise<void> {
   await db.counting.upsert({
     where: {
@@ -396,8 +405,6 @@ async function breakCombo(context: CountingContext): Promise<void> {
   const {
     message, channel, countingData,
   } = context;
-  await channel.messages.fetch(countingData.current_number_message_id);
-
   const stakeholderNumber = countingData.current_stakeholders
     ? countingData.current_stakeholders.split(',').length
     : 1;
@@ -552,7 +559,7 @@ async function rejectionReason(message: Message, channel: TextChannel, countingD
   );
   const lastMessage = channelMessages
     .filter(m => m.author.id === message.author.id) // Messages sent by the user
-    .filter(m => !Number.isNaN(parseInt(m.cleanContent, 10))) // That are numbers
+    .filter(m => parseCountedNumber(m.cleanContent) !== null) // That are numbers
     .filter(m => m.createdTimestamp > Date.now() - (1000 * 60 * 60)) // That are within one hour
     .sort((a, b) => b.createdTimestamp - a.createdTimestamp) // Sorted by most recent
     .first(); // Get the first one
@@ -578,9 +585,9 @@ export async function countMessage(message: Message): Promise<void> {
   // Process the new message. If it's the next number after current_number, then update the DB
   // If it's not the next number, then still update the db with the user who broke the combo
 
-  const number = parseInt(message.cleanContent, 10);
+  const number = parseCountedNumber(message.cleanContent);
 
-  if (Number.isNaN(number)) {
+  if (number === null) {
     return;
   }
 

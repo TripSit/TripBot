@@ -174,6 +174,22 @@ describe('countMessage', () => {
     expect(db.counting.upsert).not.toHaveBeenCalled();
   });
 
+  it.each(['5 lol', '3pm works', '2 minutes ago', '-4', '6.5', '1e3', '0x10'])('treats "%s" as chat, not a counting attempt', async text => {
+    data();
+    const chat = message(text);
+    await countMessage(chat as never);
+    expect(chat.reply).not.toHaveBeenCalled();
+    expect(chat.react).not.toHaveBeenCalled();
+    expect(db.counting.upsert).not.toHaveBeenCalled();
+  });
+
+  it('counts a number with surrounding whitespace', async () => {
+    data();
+    const padded = message(' 6\n');
+    await countMessage(padded as never);
+    expect(padded.react).toHaveBeenCalled();
+  });
+
   it('waits for a new game and stops self-counting', async () => {
     data({ current_number: -1 });
     const waiting = message('6');
@@ -252,6 +268,19 @@ describe('countMessage', () => {
   });
 
   describe('wrong numbers', () => {
+    it('still breaks the combo when the current-number message was deleted', async () => {
+      data({ current_number: 20, record_number: 5 });
+      const wrong = message('99');
+      // Looking the old message up by id fails once it was deleted; counting must not depend on it
+      (wrong.channel.messages.fetch as ReturnType<typeof vi.fn>).mockImplementation(async (arg: unknown) => {
+        if (typeof arg === 'string') throw new Error('Unknown Message');
+        return collectionOf({});
+      });
+      await countMessage(wrong as never);
+      const broken = (wrong.channel.send as ReturnType<typeof vi.fn>).mock.calls.filter(c => c[0]?.embeds?.[0]?.data?.title === 'Combo Broken!');
+      expect(broken).toHaveLength(1);
+    });
+
     it('first warns an unknown newcomer instead of breaking the combo', async () => {
       for (const type of ['NORMAL', 'TOKEN', 'HARDCORE']) {
         data({ type, current_stakeholders: 'a,b' });
