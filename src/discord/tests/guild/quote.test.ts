@@ -185,6 +185,45 @@ describe('quote delete', () => {
     expect(db.quotes.delete).toHaveBeenCalled();
   });
 
+  it('prefers the caller\'s own matching quote over the first match by someone else', async () => {
+    const { stub } = setup({}, 'author');
+    db.users.findFirst = vi.fn().mockResolvedValue({ id: 'dbu' }) as never;
+    db.quotes.findFirst = vi.fn(async (args: { where: { user_id?: string } }) => (
+      args.where.user_id ? quoteRow({ id: 'mine' }) : quoteRow({ id: 'theirs' })
+    )) as never;
+    await dQuote.execute(stub as never);
+    expect(db.quotes.delete).toHaveBeenCalledWith({ where: { id: 'mine' } });
+  });
+
+  it('still finds another member\'s quote for moderators when the caller has no match', async () => {
+    const { stub } = setup({ roles: { cache: new Set(['mod']) } }, 'someone');
+    db.users.findFirst = vi.fn().mockResolvedValue(null) as never;
+    await dQuote.execute(stub as never);
+    expect(db.quotes.delete).toHaveBeenCalledWith({ where: { id: 'q1' } });
+  });
+
+  it('deletes the quote of a member who left, using a global user lookup', async () => {
+    const { stub } = setup({ roles: { cache: new Set(['mod']) } }, 'someone');
+    (stub.guild as { members: { fetch: unknown } }).members.fetch = vi.fn(async () => { throw new Error('Unknown Member'); });
+    (global as unknown as { discordClient: { users?: unknown } }).discordClient.users = {
+      fetch: vi.fn(async () => ({ displayAvatarURL: () => 'https://gone-av' })),
+    };
+    await dQuote.execute(stub as never);
+    expect(db.quotes.delete).toHaveBeenCalled();
+    expect(JSON.stringify(replyArg(stub))).toContain('https://gone-av');
+  });
+
+  it('deletes without an avatar when the author can no longer be fetched at all', async () => {
+    const { stub } = setup({ roles: { cache: new Set(['mod']) } }, 'someone');
+    (stub.guild as { members: { fetch: unknown } }).members.fetch = vi.fn(async () => { throw new Error('Unknown Member'); });
+    (global as unknown as { discordClient: { users?: unknown } }).discordClient.users = {
+      fetch: vi.fn(async () => { throw new Error('Unknown User'); }),
+    };
+    await dQuote.execute(stub as never);
+    expect(db.quotes.delete).toHaveBeenCalled();
+    expect(JSON.stringify(replyArg(stub))).not.toContain('thumbnail');
+  });
+
   it('unknown subcommands', async () => {
     const stub = slashStub({ subcommand: 'zzz' });
     expect(await dQuote.execute(stub as never)).toBe(true);
@@ -294,7 +333,7 @@ describe('quote edge cases', () => {
     expect(embeds(stub)[1].image.url).toBe('https://cdn/2.png');
   });
 
-  it('get and delete quietly stop for authors without a Discord id', async () => {
+  it('get stops quietly, and delete explains, for authors without a Discord id', async () => {
     db.users.findFirstOrThrow = vi.fn().mockResolvedValue({ id: 'dbu', discord_id: null }) as never;
     db.quotes.findFirst = vi.fn().mockResolvedValue(quoteRow()) as never;
     const get = slashStub({ subcommand: 'get', options: { quote: 'x' } });
@@ -302,7 +341,8 @@ describe('quote edge cases', () => {
     expect(get.deferReply).not.toHaveBeenCalled();
     const del = slashStub({ subcommand: 'delete', options: { quote: 'x' } });
     await dQuote.execute(del as never);
-    expect(del.reply).not.toHaveBeenCalled();
+    expect(replyArg(del).content).toContain('can\'t tell who saved');
+    expect(db.quotes.delete).not.toHaveBeenCalled();
   });
 
   it('lets the owner save their own message but not anyone else', async () => {

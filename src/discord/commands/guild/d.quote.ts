@@ -422,6 +422,21 @@ async function random(interaction:ChatInputCommandInteraction) {
   });
 }
 
+/** The caller's own matching quote wins, so a fragment another member also used never hides it. */
+async function findQuoteToDelete(callerDiscordId: string, text: string) {
+  const caller = await db.users.findFirst({ where: { discord_id: callerDiscordId }, select: { id: true } });
+  const own = caller
+    ? await db.quotes.findFirst({ where: { quote: { contains: text }, user_id: caller.id } })
+    : null;
+  return own ?? db.quotes.findFirst({ where: { quote: { contains: text } } });
+}
+
+/** The author may have left the server, so fall back to a global user lookup. */
+async function fetchQuoteAuthor(guild: Guild, discordId: string) {
+  const member = await guild.members.fetch(discordId).catch(() => null);
+  return member?.user ?? await discordClient.users.fetch(discordId).catch(() => null);
+}
+
 async function del(interaction:ChatInputCommandInteraction) {
   if (!interaction.guild) return;
   if (!interaction.member) return;
@@ -429,13 +444,7 @@ async function del(interaction:ChatInputCommandInteraction) {
 
   log.debug(F, `Searching for quote: ${quote}`);
 
-  const quoteData = await db.quotes.findFirst({
-    where: {
-      quote: {
-        contains: quote,
-      },
-    },
-  });
+  const quoteData = await findQuoteToDelete(interaction.user.id, quote);
 
   if (!quoteData) {
     log.debug(F, 'Quote not found');
@@ -454,9 +463,15 @@ async function del(interaction:ChatInputCommandInteraction) {
     },
   });
 
-  if (!targetData.discord_id) return; // Just to type safe
+  if (!targetData.discord_id) {
+    await interaction.reply({
+      content: 'I can\'t tell who saved that quote, so it can\'t be deleted from here.',
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
 
-  const target = await interaction.guild.members.fetch(targetData.discord_id);
+  const targetUser = await fetchQuoteAuthor(interaction.guild, targetData.discord_id);
 
   const guildData = await db.discord_guilds.findFirstOrThrow({
     where: {
@@ -466,7 +481,7 @@ async function del(interaction:ChatInputCommandInteraction) {
 
   const actor = interaction.member as GuildMember;
 
-  const isOwner = target.id === interaction.user.id;
+  const isOwner = targetData.discord_id === interaction.user.id;
   const isModerator = guildData.role_moderator && actor.roles.cache.has(guildData.role_moderator);
 
   if (!isOwner && !isModerator) {
@@ -484,19 +499,20 @@ async function del(interaction:ChatInputCommandInteraction) {
     },
   });
 
-  const quoteLog = await discordClient.channels.fetch(env.CHANNEL_QUOTE_LOG) as TextChannel;
-  quoteLog.send({
-    embeds: [
-      {
-        thumbnail: {
-          url: target.user.displayAvatarURL(),
-        },
-        description: stripIndents`${target}
+  const thumbnail = targetUser ? { thumbnail: { url: targetUser.displayAvatarURL() } } : {};
+  const description = stripIndents`<@${targetData.discord_id}>
       
         > **${quoteData.quote}**
         
         - ${quoteData.url}
-        `,
+        `;
+
+  const quoteLog = await discordClient.channels.fetch(env.CHANNEL_QUOTE_LOG) as TextChannel;
+  quoteLog.send({
+    embeds: [
+      {
+        ...thumbnail,
+        description,
         footer: {
           text: `Deleted by ${actor.displayName} (${actor.id})`,
           icon_url: interaction.user.displayAvatarURL(),
@@ -508,15 +524,8 @@ async function del(interaction:ChatInputCommandInteraction) {
 
   await interaction.reply({
     embeds: [{
-      thumbnail: {
-        url: target.user.displayAvatarURL(),
-      },
-      description: stripIndents`${target}
-    
-      > **${quoteData.quote}**
-      
-      - ${quoteData.url}
-      `,
+      ...thumbnail,
+      description,
       footer: {
         text: 'Deleted from the /quote database!',
       },
