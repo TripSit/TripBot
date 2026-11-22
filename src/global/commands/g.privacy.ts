@@ -72,6 +72,7 @@ function scrubUserData(userData: UserRecord): void {
     username: null,
     timezone: null,
     birthday: null,
+    birthday_wished_at: null,
     roles: '',
     mindset_role: null,
     mindset_role_expires_at: null,

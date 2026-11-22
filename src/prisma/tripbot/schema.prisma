@@ -19,6 +19,7 @@ model users {
   matrix_id                                                 String?
   timezone                                                  String?
   birthday                                                  DateTime?            @db.Timestamptz(6)
+  birthday_wished_at                                        DateTime?            @db.Timestamptz(6)
   roles                                                     String?
   mindset_role                                              String?
   mindset_role_expires_at                                   DateTime?            @db.Timestamptz(6)
