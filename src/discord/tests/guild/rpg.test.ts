@@ -716,6 +716,44 @@ describe('rpg command routing and edge cases', () => {
     expect(stub.editReply).toHaveBeenCalledTimes(1);
   });
 
+  describe('refund', () => {
+    const runAs = async (userId: string, options: Record<string, unknown> = { item: 'OldFont' }) => {
+      const stub = slashStub({
+        subcommand: 'refund',
+        options,
+        user: { id: userId },
+        member: member(),
+        guild: { members: { fetch: vi.fn(async () => member()) }, channels: { fetch: vi.fn(async () => ({ id: 'rpg' })) } },
+        extra: { channelId: 'elsewhere' },
+      });
+      const result = await dRpg.execute(stub as never);
+      return { stub, result };
+    };
+
+    it('is for the bot owner only', async () => {
+      const { stub, result } = await runAs('someone-else');
+      expect(result).toBe(false);
+      expect(JSON.stringify(stub.editReply.mock.calls[0][0])).toContain('Only the bot owner');
+      expect(db.rpg_inventory.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it('removes the item everywhere and reports what was refunded', async () => {
+      db.rpg_inventory.findMany = vi.fn().mockResolvedValue([{ persona_id: 'p1', cost: 300 }, { persona_id: 'p2', cost: 300 }]) as never;
+      db.rpg_inventory.deleteMany = vi.fn().mockResolvedValue({ count: 2 }) as never;
+      const { stub, result } = await runAs(e.DISCORD_OWNER_ID);
+      expect(result).toBe(true);
+      expect(JSON.stringify(stub.editReply.mock.calls[0][0])).toContain('2 inventories and refunded 600 tokens');
+      expect(stub.deferReply).toHaveBeenCalledWith({ flags: expect.anything() });
+    });
+
+    it('says so when nobody owns the item', async () => {
+      db.rpg_inventory.findMany = vi.fn().mockResolvedValue([]) as never;
+      db.rpg_inventory.deleteMany = vi.fn().mockResolvedValue({ count: 0 }) as never;
+      const { stub } = await runAs(e.DISCORD_OWNER_ID, { item: 'Ghost' });
+      expect(stub.editReply).toHaveBeenCalledWith({ content: 'Nobody owns "Ghost".' });
+    });
+  });
+
   it('gift needs a target', async () => {
     const stub = slashStub({
       subcommand: 'gift', options: { amount: 5 }, member: member(), guild: { channels: { fetch: vi.fn(async () => ({ id: 'rpg' })) } }, extra: { channelId: 'rpg' },
