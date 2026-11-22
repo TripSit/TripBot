@@ -110,6 +110,33 @@ afterEach(() => {
   e.NODE_ENV = originalEnv;
 });
 
+describe('updateDrugDb refreshes the data the bot serves', () => {
+  beforeEach(() => {
+    e.NODE_ENV = 'test';
+    mocks.writeFile.mockResolvedValue(undefined);
+    mockNetwork();
+  });
+
+  it('makes a refreshed database visible to drug() without a restart', async () => {
+    vi.resetModules();
+    const updateDb = (await import('../../utils/updateDb')).default;
+    const { drug } = await import('../../commands/g.drug');
+    expect(await drug('Bare')).toBeUndefined();
+
+    await updateDb();
+    expect((await drug('Bare'))?.name).toBe('Bare');
+
+    // A second run with different upstream data replaces what the first one loaded
+    vi.mocked(axios.get).mockImplementation(async (url: string) => ({
+      data: url.endsWith('combos.json') ? {} : { Quux: { name: 'quux', pretty_name: 'Quux', properties: {} } },
+    }));
+    mocks.request.mockResolvedValue({ substances: [] });
+    await updateDb();
+    expect(await drug('Bare')).toBeUndefined();
+    expect((await drug('Quux'))?.name).toBe('quux');
+  });
+});
+
 describe('updateDrugDb', () => {
   beforeEach(() => {
     e.NODE_ENV = 'test';
