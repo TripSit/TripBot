@@ -52,24 +52,21 @@ export const optionType = {
   10: Number,
 } as Options;
 
+type OptionWithNested = ToAPIApplicationCommandOptions & { options?: ToAPIApplicationCommandOptions[] };
+
 function getNestedOptions(
   options:ToAPIApplicationCommandOptions[],
 ):ToAPIApplicationCommandOptions[] {
-  // log.debug(F, `options: ${JSON.stringify(options, null, 2)}`);
   // This gets a flat array of options, including nested options
   return options.reduce((
     allOptions:ToAPIApplicationCommandOptions[],
     option:ToAPIApplicationCommandOptions,
-  ) => { // @ts-ignore
-    // log.debug(F, `allOptions: ${JSON.stringify(allOptions, null, 2)}`);
-    // log.debug(F, `option: ${JSON.stringify(option, null, 2)}`); // @ts-ignore
-    if (option.options) return [...allOptions, option, ...option.options]; // @ts-ignore TODO
-    // log.debug(F, 'option.options passed'); // @ts-ignore
-    if (!option.toJSON().options) return [...allOptions, option]; // @ts-ignore
-    // log.debug(F, 'option.toJSON().options passed'); // @ts-ignore
-    const nestedOptions = getNestedOptions(option.toJSON().options); // @ts-ignore
-    // log.debug(F, `nestedOptions: ${JSON.stringify(nestedOptions, null, 2)}`); // @ts-ignore
-    return [...allOptions, option, ...nestedOptions]; // @ts-ignore
+  ) => {
+    const { options: directOptions } = option as OptionWithNested;
+    if (directOptions) return [...allOptions, option, ...directOptions];
+    const jsonOptions = (option.toJSON() as { options?: ToAPIApplicationCommandOptions[] }).options;
+    if (!jsonOptions) return [...allOptions, option];
+    return [...allOptions, option, ...getNestedOptions(jsonOptions)];
   }, []);
 }
 
