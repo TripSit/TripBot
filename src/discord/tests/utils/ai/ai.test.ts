@@ -211,6 +211,16 @@ describe('AiFunction.createPrompt', () => {
     expect(JSON.stringify(prompt[2])).not.toContain('@TripBot');
   });
 
+  it.each(['Trip(Bot', 'Bot+', '[Bot]', 'Bot?', 'T.B'])('strips a nickname with regex characters: %s', async nickname => {
+    const message = setup([{
+      id: '1', author: 'u', text: `@${nickname} what is LSD?`, mentions: true,
+    }]) as unknown as { guild: { members: { me: { nickname: string } } } };
+    message.guild.members.me.nickname = nickname;
+    const prompt = await AiFunction.createPrompt(message as never, 'tripbot');
+    expect(JSON.stringify(prompt[2])).toContain('what is LSD?');
+    expect(JSON.stringify(prompt[2])).not.toContain(nickname);
+  });
+
   it('drops messages from users without AI consent, and the bot replies to them', async () => {
     mocks.consented.mockResolvedValue(new Set(['yes']));
     const message = setup([
