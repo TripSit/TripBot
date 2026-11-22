@@ -17,6 +17,7 @@ import { getOrCreateUser } from '../../global/utils/dbRecords';
 import { touchLastSeen } from '../../global/utils/lastSeen';
 import { aiMessage } from '../commands/global/d.ai';
 import { botBannedUsers } from '../utils/populateBotBans';
+import { recordTripSitResponse } from '../utils/tripsitResponseReminder';
 
 const F = f(__filename); // eslint-disable-line
 
@@ -62,6 +63,9 @@ export const messageCreate: MessageCreateEvent = {
 
     const userData = await getOrCreateUser(message.author.id);
     if (!message.author.bot) touchLastSeen(userData);
+    await recordTripSitResponse(message).catch(error => {
+      log.error(F, `Failed to track a help-thread response: ${error}`);
+    });
 
     if (userData?.discord_bot_ban) {
       return;

@@ -52,6 +52,7 @@ import {
   TicketIconStatus,
 } from './ticketIcons';
 import { awaitModal } from './awaitModal';
+import { tripSitReminderState } from './tripsitResponseReminder';
 
 const F = f(__filename);
 
@@ -1217,6 +1218,7 @@ export async function tripSitMe(
       first_message_id: newTicketData.first_message_id,
       archived_at: newTicketData.archived_at,
       deleted_at: newTicketData.deleted_at,
+      ...tripSitReminderState('TRIPSIT', 'OPEN', threadHelpUser.createdAt ?? undefined),
     },
   });
 
@@ -1242,6 +1244,7 @@ interface ReopenTicketOptions {
 export async function reopenTicket({
   interaction, target, guildData, ticketData, threadHelpUser, helpMessage, metaSubject, status = 'OPEN',
 }: ReopenTicketOptions): Promise<user_tickets> {
+  const reopenedAt = new Date();
   const iconStatus: TicketIconStatus = status === 'OWNED' ? 'inProgress' : 'reopened';
   let roleTripsitter = {} as Role;
   let roleHelper = {} as Role;
@@ -1314,7 +1317,8 @@ export async function reopenTicket({
     },
     data: {
       status: status as ticket_status,
-      reopened_at: new Date(),
+      reopened_at: reopenedAt,
+      ...tripSitReminderState(ticketData.type, status, reopenedAt),
       archived_at: archivedAt,
       deleted_at: deletedAt,
     },
