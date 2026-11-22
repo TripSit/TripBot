@@ -70,14 +70,30 @@ export async function runPager(
     time: timeoutMs,
   });
 
+  // Clicks are handled one at a time, in order: a slow render of an earlier page can never finish after, and
+  // overwrite, a later one, and nothing is edited once the collector has ended and the buttons were disabled.
+  let ended = false;
+  let queue: Promise<unknown> = Promise.resolve();
+  const enqueue = (task: () => Promise<void>): Promise<void> => {
+    const run = queue.then(task);
+    queue = run.catch(() => undefined);
+    return run;
+  };
+
   collector.on('collect', async (i: ButtonInteraction) => {
     await i.deferUpdate();
-    page = i.customId === nextId ? Math.min(page + 1, pageCount - 1) : Math.max(page - 1, 0);
-    const payload = await renderPage(page);
-    await interaction.editReply({ ...payload, components: [buildRow(page)] });
+    await enqueue(async () => {
+      if (ended) return;
+      page = i.customId === nextId ? Math.min(page + 1, pageCount - 1) : Math.max(page - 1, 0);
+      const payload = await renderPage(page);
+      if (ended) return;
+      await interaction.editReply({ ...payload, components: [buildRow(page)] });
+    });
   });
 
   collector.on('end', async () => {
+    ended = true;
+    await queue;
     const disabledRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
       ...buildRow(page).components.map(button => button.setDisabled(true)),
     );
