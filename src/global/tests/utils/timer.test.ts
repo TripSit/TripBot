@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
   profile: vi.fn(),
   stats: vi.fn(),
   parseURL: vi.fn(),
-  remindTicket: vi.fn(async () => undefined),
+  remindTicket: vi.fn(async (): Promise<void> => undefined),
 }));
 
 vi.mock('../../utils/updateDb', () => ({ default: mocks.updateDb }));

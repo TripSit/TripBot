@@ -212,7 +212,7 @@ describe('reopenTicket', () => {
   });
 
   it.each([
-    ['TRIPSIT', 'OPEN', true], ['TRIPSIT', 'OWNED', false], ['PRIVATE', 'OPEN', false],
+    ['TRIPSIT', 'OPEN', true], ['TRIPSIT', 'OWNED', false], ['TECH', 'OPEN', false],
   ] as const)('resets reminder state for %s tickets reopened as %s', async (type, status, scheduled) => {
     const s = setup();
     await run(s, baseTicket({ type }), { status });

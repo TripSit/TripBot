@@ -100,7 +100,7 @@ it('initializes reminder state only for open TRIPSIT requests', () => {
   });
   expect(tripSitReminderState('TRIPSIT', 'OPEN').response_due_at).toEqual(tripSitResponseDueAt());
   expect(tripSitReminderState('TRIPSIT', 'OWNED', START).response_due_at).toBeNull();
-  expect(tripSitReminderState('PRIVATE', 'OPEN', START).response_due_at).toBeNull();
+  expect(tripSitReminderState('TECH', 'OPEN', START).response_due_at).toBeNull();
 });
 
 it('sends one team alert and the requested user follow-up at the deadline', async () => {
@@ -127,7 +127,7 @@ it('sends one team alert and the requested user follow-up at the deadline', asyn
 });
 
 it.each([
-  { type: 'PRIVATE' }, { status: 'OWNED' }, { status: 'PAUSED' }, { status: 'CLOSED' },
+  { type: 'TECH' }, { status: 'OWNED' }, { status: 'PAUSED' }, { status: 'CLOSED' },
   { response_due_at: null }, { response_due_at: new Date(NOW.getTime() + 1) }, { responded_at: NOW },
   { team_reminded_at: NOW, user_reminded_at: NOW },
 ] as Partial<user_tickets>[])('ignores ineligible tickets: %j', async over => {
