@@ -82,6 +82,8 @@ describe('executeWatch', () => {
 describe('nightsWatch', () => {
   const flush = () => new Promise(resolve => { setImmediate(resolve); });
 
+  beforeEach(() => { dbMock.watch_request.deleteMany.mockResolvedValue({ count: 1 }); });
+
   function message(sendImpl: () => Promise<unknown> = async () => undefined) {
     const caller = { id: 'a', send: vi.fn(sendImpl) };
     const channelSend = vi.fn(sendImpl);
@@ -114,7 +116,7 @@ describe('nightsWatch', () => {
     await nightsWatch(msg);
     await flush();
     expect(caller.send).toHaveBeenCalled();
-    expect(dbMock.watch_request.delete).toHaveBeenCalledWith({ where: { id: 'r-a' } });
+    expect(dbMock.watch_request.deleteMany).toHaveBeenCalledWith({ where: { id: 'r-a' } });
   });
 
   it('still clears the request when the DM fails', async () => {
@@ -123,7 +125,7 @@ describe('nightsWatch', () => {
     await nightsWatch(msg);
     await flush();
     expect(caller.send).toHaveBeenCalled();
-    expect(dbMock.watch_request.delete).toHaveBeenCalled();
+    expect(dbMock.watch_request.deleteMany).toHaveBeenCalled();
   });
 
   it('posts channel notifications, tolerating send failures', async () => {
@@ -137,6 +139,36 @@ describe('nightsWatch', () => {
     await nightsWatch(bad.msg);
     await flush();
     expect(bad.channelSend).toHaveBeenCalled();
+  });
+
+  it('notifies once when two messages are handled at the same moment', async () => {
+    const { msg, caller } = message();
+    dbMock.users.findUnique.mockImplementation((async () => userWith([req('a')])) as never);
+    // Only the first claim of the request succeeds, as with the real database
+    dbMock.watch_request.deleteMany.mockResolvedValueOnce({ count: 1 }).mockResolvedValueOnce({ count: 0 });
+    await Promise.all([nightsWatch(msg), nightsWatch(msg)]);
+    expect(caller.send).toHaveBeenCalledTimes(1);
+  });
+
+  it('waits for every notification before finishing', async () => {
+    let release: () => void = () => undefined;
+    const { msg, caller } = message(() => new Promise<void>(resolve => { release = resolve; }));
+    dbMock.users.findUnique.mockImplementation((async () => userWith([req('a')])) as never);
+    let done = false;
+    const pending = nightsWatch(msg).then(() => { done = true; });
+    await vi.waitFor(() => expect(caller.send).toHaveBeenCalled());
+    expect(done).toBe(false);
+    release();
+    await pending;
+    expect(done).toBe(true);
+  });
+
+  it('ignores requests with an unknown notification method', async () => {
+    const { msg, caller, channelSend } = message();
+    dbMock.users.findUnique.mockResolvedValue(userWith([req('a', 'carrier-pigeon', null)]));
+    await nightsWatch(msg);
+    expect(caller.send).not.toHaveBeenCalled();
+    expect(channelSend).not.toHaveBeenCalled();
   });
 
   it('skips channel requests without a channel id', async () => {
