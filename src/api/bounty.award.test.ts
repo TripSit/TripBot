@@ -45,7 +45,6 @@ beforeEach(() => {
   mocks.auth.mockResolvedValue(true);
   mocks.lookup.mockResolvedValue({ id: 'd1' });
   mocks.award.mockResolvedValue(undefined);
-  dbMock.claimed_bounties.findFirst.mockResolvedValue(null);
   dbMock.claimed_bounties.create.mockResolvedValue({ id: 'claim1' } as never);
   dbMock.claimed_bounties.delete.mockResolvedValue({} as never);
   setGuild(contributor());
@@ -81,23 +80,35 @@ describe('POST /award-xp', () => {
     const response = await post(valid);
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({ success: true, discordUserId: 'd1', bountyAmount: 100 });
-    expect(dbMock.claimed_bounties.create).toHaveBeenCalledWith({ data: { type: 'GitHub:12#34', amount: 100, user_id: 'd1' } });
+    expect(dbMock.claimed_bounties.create).toHaveBeenCalledWith({
+      data: {
+        type: 'GitHub', amount: 100, user_id: 'd1', reference: '12#34',
+      },
+    });
     expect(mocks.award).toHaveBeenCalledTimes(1);
   });
 
   it('keeps accepting requests without a reference, as a plain GitHub claim', async () => {
     const response = await post({ github_username: 'octocat', bounty: 50 });
     expect(response.status).toBe(200);
-    expect(dbMock.claimed_bounties.findFirst).not.toHaveBeenCalled();
-    expect(dbMock.claimed_bounties.create).toHaveBeenCalledWith({ data: { type: 'GitHub', amount: 50, user_id: 'd1' } });
+    expect(dbMock.claimed_bounties.create).toHaveBeenCalledWith({
+      data: {
+        type: 'GitHub', amount: 50, user_id: 'd1', reference: null,
+      },
+    });
   });
 
-  it('refuses to pay the same bounty twice', async () => {
-    dbMock.claimed_bounties.findFirst.mockResolvedValue({ id: 'old' } as never);
+  it('refuses to pay the same bounty twice, relying on the unique reference', async () => {
+    dbMock.claimed_bounties.create.mockRejectedValue(Object.assign(new Error('Unique constraint failed'), { code: 'P2002' }));
     const response = await post(valid);
     expect(response.status).toBe(409);
-    expect(dbMock.claimed_bounties.findFirst).toHaveBeenCalledWith({ where: { type: 'GitHub:12#34' } });
-    expect(dbMock.claimed_bounties.create).not.toHaveBeenCalled();
+    expect(response.body.error).toContain('12#34');
+    expect(mocks.award).not.toHaveBeenCalled();
+  });
+
+  it('reports other database failures as errors, not as already awarded', async () => {
+    dbMock.claimed_bounties.create.mockRejectedValue(new Error('db down'));
+    expect((await post(valid)).status).toBe(500);
     expect(mocks.award).not.toHaveBeenCalled();
   });
 
