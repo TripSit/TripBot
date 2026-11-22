@@ -13,6 +13,7 @@ describe('About', () => {
     expect(About.support).toContain(About.patreon);
     expect(About.support).toContain(About.kofi);
     expect(About.support).toContain(About.learnUrl);
+    expect(About.support).toContain('/rpg Perks');
     expect(About.tripsitSessionsDesc).toContain(About.tripsitSessionsDoc);
     expect(About.experienceDesc).toContain(About.levelingCalculator);
     expect(About.credits).toContain(About.github);
