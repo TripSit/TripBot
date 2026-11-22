@@ -527,7 +527,23 @@ async function acceptNumber(context: CountingContext, number: number): Promise<v
   countingData.current_number_message_id = message.id;
   countingData.current_number_message_date = new Date();
   countingData.current_number_message_author = message.author.id;
-  await saveCountingData(context);
+
+  // Claim the number with one guarded update: if someone else counted this same number a moment ago the row has
+  // already moved on, and this message is then a wrong number like any other instead of being counted twice.
+  const claimed = await db.counting.updateMany({
+    where: { guild_id: context.guild.id, channel_id: context.channel.id, current_number: number - 1 },
+    data: {
+      current_number: number,
+      current_number_message_id: message.id,
+      current_number_message_date: countingData.current_number_message_date,
+      current_number_message_author: message.author.id,
+    },
+  });
+  if (claimed.count !== 1) {
+    const latest = await db.counting.findFirst({ where: { guild_id: context.guild.id, channel_id: context.channel.id } });
+    if (latest) await breakCombo({ ...context, countingData: latest });
+    return;
+  }
 
   await joinStakeholders(context);
 
