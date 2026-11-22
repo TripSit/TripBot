@@ -105,6 +105,7 @@ export default class About {
     - **Gold Lounge Access**: Gain entry to our exclusive donor space, #gold-lounge.
     - **Special Donor Colors**: Deck out your Discord persona with unique colors.
     - **Supporter Role (Patreon)**: Be shown at the top of the member list with a unique icon.
+    - **/rpg Perks**: Server boosters and Patreon supporters earn 10% more TripTokens from \`/rpg\` bounties and get a discount in the \`/rpg\` market (10% for boosters, 20% for Premium Members).
     - More surprises are in the works! Your suggestions are welcome.
     
     Your donations directly fuel our server costs, ensuring TripSit keeps doing what we do best.

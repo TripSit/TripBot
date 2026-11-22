@@ -104,6 +104,7 @@ export async function announcements(message:Message) {
     '**Tip:** You can report a user if they are breaking the rules or causing issues by using /report or by right-clicking their name > Apps > TripBot Report User.',
     '**Tip:** To report a user, click their name > Apps > TripBot Report User. To report a message, right-click the message > Apps > TripBot Report Message.',
     '**Tip:** Use `/help` to learn more about the bot and its commands.',
+    '**Tip:** Our website, https://tripsit.me, has drug information, combos and more. Our wiki lives at https://wiki.tripsit.me, our courses at https://learn.tripsit.me, and you can chat from the browser at https://chat.tripsit.me!',
     '**Tip:** Check out the <id:guide> for more tips and server info!',
     '**Tip:** Go to <id:customize> to change your name color and mindset role icon!',
     '**Tip:** Use the "ephemeral" option in TripBot commands to use them privately.',
