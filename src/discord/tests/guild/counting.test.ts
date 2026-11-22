@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-syntax, max-len, sonarjs/no-duplicate-string */
 import { TextChannel } from 'discord.js';
 import {
-  counting, countingReset, countingScores, countingSetup, countMessage,
+  counting, countingReset, countingScores, countingSetup, countMessage, resetCountingMemory,
 } from '../../commands/guild/d.counting';
 import { slashStub } from '../../../vitest/utils/commandStubs';
 import { collectionOf, stubInstance } from '../../../vitest/utils/discordStubs';
@@ -157,6 +157,7 @@ describe('countMessage', () => {
   const saved = (): Row => (db.counting.upsert as unknown as ReturnType<typeof vi.fn>).mock.calls.at(-1)?.[0].update;
 
   beforeEach(() => {
+    resetCountingMemory();
     db.counting.upsert = vi.fn() as never;
     db.counting.updateMany = vi.fn().mockResolvedValue({ count: 1 }) as never;
     db.personas.upsert = vi.fn() as never;
@@ -189,6 +190,63 @@ describe('countMessage', () => {
     const padded = message(' 6\n');
     await countMessage(padded as never);
     expect(padded.react).toHaveBeenCalled();
+  });
+
+  it('limits the token game to one count per hour even when the earlier number is out of the fetched history', async () => {
+    data({ type: 'TOKEN', current_number: 5 });
+    const mine = message('6');
+    await countMessage(mine as never);
+    expect(mine.react).toHaveBeenCalledWith('👍');
+    // Someone else moved the game on; the channel history no longer shows my number
+    data({ type: 'TOKEN', current_number: 7, current_number_message_author: 'other' });
+    const again = message('8');
+    await countMessage(again as never);
+    expect(again.reply).toHaveBeenCalledWith(expect.stringContaining('once every hour'));
+    expect(again.react).not.toHaveBeenCalled();
+  });
+
+  it('lets the owner and other games ignore the in-memory hourly limit', async () => {
+    data({ type: 'NORMAL', current_number: 5 });
+    await countMessage(message('6') as never);
+    data({ type: 'NORMAL', current_number: 7, current_number_message_author: 'other' });
+    const again = message('8');
+    await countMessage(again as never);
+    expect(again.react).toHaveBeenCalledWith('👍');
+  });
+
+  it('forgets the oldest remembered counts and welcomes beyond the memory limit', async () => {
+    for (let i = 0; i < 1002; i += 1) {
+      data({ type: 'TOKEN', current_number: 5, current_stakeholders: '' });
+      // eslint-disable-next-line no-await-in-loop
+      await countMessage(message('6', { author: { id: `user${i}` } }) as never);
+    }
+    // user0's record was pushed out, so it may count again; the newest is still limited
+    data({ type: 'TOKEN', current_number: 5, current_number_message_author: 'other' });
+    const old = message('6', { author: { id: 'user0' } });
+    await countMessage(old as never);
+    expect(old.react).toHaveBeenCalledWith('👍');
+    const recent = message('6', { author: { id: 'user1001' } });
+    await countMessage(recent as never);
+    expect(recent.reply).toHaveBeenCalledWith(expect.stringContaining('once every hour'));
+  });
+
+  it('welcomes a newcomer once per channel, remembering only a bounded number of them', async () => {
+    for (let i = 0; i < 1002; i += 1) {
+      data({ type: 'NORMAL', current_number: 5, current_stakeholders: 'xyz' });
+      // eslint-disable-next-line no-await-in-loop
+      await countMessage(message('99', { author: { id: `newcomer${i}` } }) as never);
+    }
+    // The newest newcomer is remembered (no second welcome, so the combo breaks instead)...
+    data({ type: 'NORMAL', current_number: 5, current_stakeholders: 'xyz' });
+    const recent = message('99', { author: { id: 'newcomer1001' } });
+    await countMessage(recent as never);
+    const welcomes = (recent.channel.send as ReturnType<typeof vi.fn>).mock.calls.filter(c => String(c[0]?.content).includes("you're breaking the combo"));
+    expect(welcomes).toHaveLength(0);
+    // ...while the oldest was forgotten and is welcomed again
+    data({ type: 'NORMAL', current_number: 5, current_stakeholders: 'xyz' });
+    const old = message('99', { author: { id: 'newcomer0' } });
+    await countMessage(old as never);
+    expect((old.channel.send as ReturnType<typeof vi.fn>).mock.calls.some(c => String(c[0]?.content).includes("you're breaking the combo"))).toBe(true);
   });
 
   it('waits for a new game and stops self-counting', async () => {
@@ -227,6 +285,8 @@ describe('countMessage', () => {
     expect(saved().current_stakeholders).toBe('me');
     expect(first.react).toHaveBeenCalledWith('👍');
     for (const type of ['NORMAL', 'TOKEN', 'HARDCORE']) {
+      // Each game type is its own channel in practice, so the in-memory hourly record starts empty
+      resetCountingMemory();
       data({ type, current_stakeholders: 'xyz' });
       const m = message('6');
       // eslint-disable-next-line no-await-in-loop
