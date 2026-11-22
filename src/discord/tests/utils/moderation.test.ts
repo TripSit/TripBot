@@ -124,7 +124,10 @@ describe('thoughtPolice', () => {
     await thoughtPolice(message);
     expect(raw.delete).toHaveBeenCalled();
     expect(channelSend).toHaveBeenCalledWith(expect.stringContaining('non-offensive language'));
-    expect(modlog?.send).toHaveBeenCalledWith(expect.stringContaining('Ally said "NAZI" in lounge'));
+    expect(modlog?.send).toHaveBeenCalledWith({
+      content: expect.stringContaining('Ally said "NAZI" in lounge'),
+      allowedMentions: { parse: [] },
+    });
   });
 
   it('copes with a missing mod log channel', async () => {

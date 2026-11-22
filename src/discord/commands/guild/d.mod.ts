@@ -83,7 +83,10 @@ async function watchUser(interaction: ChatInputCommandInteraction, guild: Guild)
 
     const channelBotlog = await guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     if (channelBotlog) {
-      await channelBotlog.send(`${(interaction.member as GuildMember).displayName} used /watch on ${targetUser}`);
+      await channelBotlog.send({
+        content: `${(interaction.member as GuildMember).displayName} used /watch on ${targetUser}`,
+        allowedMentions: { parse: [] },
+      });
     }
   } else {
     // eslint-disable-next-line max-len

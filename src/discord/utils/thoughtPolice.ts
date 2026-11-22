@@ -26,10 +26,14 @@ export async function thoughtPolice(message:Message): Promise<void> {
         Please use non-offensive language so we can all have a good time, thank you for cooperating!
         `);
     if (channelModlog) {
-      await channelModlog.send(stripIndents`
+      // The quoted text can contain pings, which must not fire in the log channel
+      await channelModlog.send({
+        content: stripIndents`
             ${message.member?.displayName} said "${message.cleanContent}" in ${(message.channel as TextChannel).name}
             I removed it but keep an eye on them!
-            `);
+            `,
+        allowedMentions: { parse: [] },
+      });
     }
     // case 'harm':
     //   if (channelModerators) {
