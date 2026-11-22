@@ -42,7 +42,6 @@ jobs:
           
           // Method 1: Parse PR body and title for issue references
           const issuePattern = /(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s*:?\s*#(\d+)/gi;
-          const mentionPattern = /#(\d+)/g;
           
           // Look for closing keywords + issue numbers
           const closingMatches = [...(prTitle + ' ' + prBody).matchAll(issuePattern)];
@@ -52,17 +51,10 @@ jobs:
             linkedIssues.add(issueNumber);
           }
           
-          // If no closing references found, look for any issue mentions
-          if (linkedIssues.size === 0) {
-            const mentions = [...(prTitle + ' ' + prBody).matchAll(mentionPattern)];
-            for (const match of mentions) {
-              const issueNumber = parseInt(match[1]);
-              console.log(`Found mention of issue #${issueNumber}`);
-              linkedIssues.add(issueNumber);
-            }
-          }
+          // A bare #N mention ("see #496") does not make a PR the fix for that issue, so only
+          // closing keywords and the explicit Development links below count.
           
-          // Method 2: Also try timeline API (backup)
+          // Method 2: Issues explicitly linked to this PR (Development sidebar / closing keywords)
           try {
             const { data: events } = await github.rest.issues.listEventsForTimeline({
               owner: context.repo.owner,
@@ -75,10 +67,6 @@ jobs:
             for (const event of events) {
               if (event.event === 'connected' && event.source?.issue) {
                 console.log(`Timeline: Found connected issue #${event.source.issue.number}`);
-                linkedIssues.add(event.source.issue.number);
-              }
-              if (event.event === 'cross-referenced' && event.source?.issue) {
-                console.log(`Timeline: Found cross-referenced issue #${event.source.issue.number}`);
                 linkedIssues.add(event.source.issue.number);
               }
             }
@@ -134,7 +122,9 @@ jobs:
                     },
                     body: JSON.stringify({
                       'github_username': githubUsername,
-                      'bounty': bountyAmount
+                      'bounty': bountyAmount,
+                      // One payment per PR and issue, so re-runs and repeat references are rejected by the API
+                      'reference': `${context.payload.pull_request.number}#${issueNumber}`
                     })
                   });
                   
