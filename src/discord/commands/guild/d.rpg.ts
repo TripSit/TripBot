@@ -42,6 +42,7 @@ import getAsset from '../../utils/getAsset';
 import { customButton } from '../../utils/emoji';
 import { getProfilePreview } from './d.profile';
 import { aiFlairMod } from '../../../global/commands/g.ai';
+import { refundRpgItem } from '../../../global/commands/g.rpgRefund';
 import { bigBrother } from '../../../global/utils/thoughtPolice';
 import { getOrCreatePersona, getOrCreateUser } from '../../../global/utils/dbRecords';
 import { randomItem } from '../../../global/utils/random';
@@ -3399,6 +3400,23 @@ export async function rpgHelp(
   };
 }
 
+/** Bot-owner only: take a retired item out of every inventory and refund what was paid for it. */
+async function rpgRefund(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  if (interaction.user.id !== env.DISCORD_OWNER_ID) {
+    await interaction.editReply({ content: 'Only the bot owner can refund items.' });
+    return false;
+  }
+  const value = interaction.options.getString('item', true);
+  const { owners, tokens } = await refundRpgItem(value);
+  await interaction.editReply({
+    content: owners === 0
+      ? `Nobody owns "${value}".`
+      : `Removed "${value}" from ${owners} inventories and refunded ${tokens} tokens in total.`,
+  });
+  return true;
+}
+
 export const dRpg: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('rpg')
@@ -3454,10 +3472,18 @@ export const dRpg: SlashCommand = {
       .addIntegerOption(option => option
         .setName('amount')
         .setDescription('Amount of tokens to gift')
+        .setRequired(true)))
+    .addSubcommand(subcommand => subcommand
+      .setName('refund')
+      .setDescription('Bot owner only: remove a retired item from every inventory and refund it')
+      .addStringOption(option => option
+        .setName('item')
+        .setDescription('The item value to retire (for example AbrilFatFace)')
         .setRequired(true))),
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
+    if (interaction.options.getSubcommand() === 'refund') return rpgRefund(interaction);
     const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
     const ephemeral = channelRpg.id !== interaction.channelId ? MessageFlags.Ephemeral : undefined;
     await interaction.deferReply({ flags: ephemeral });
