@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, sonarjs/no-duplicate-string */
-import axios from 'axios';
 import { ChannelType, Collection } from 'discord.js';
 import runTimer from '../../utils/timer';
 import { dbMock } from '../../../vitest/utils/mockDb';
@@ -29,7 +28,7 @@ let scheduled: Scheduled[] = [];
 
 // Timer order inside runTimer
 const T = {
-  reminders: 0, tickets: 1, mindsets: 2, uptime: 3, rss: 4, voice: 5, moodle: 6, updateDb: 7, bans: 8, monthly: 9, birthdays: 10, retention: 11,
+  reminders: 0, tickets: 1, mindsets: 2, rss: 3, voice: 4, moodle: 5, updateDb: 6, bans: 7, monthly: 8, birthdays: 9, retention: 10,
 };
 
 const flush = async () => {
@@ -109,9 +108,9 @@ describe('runTimer', () => {
   it('sets presence and schedules every job', async () => {
     await runTimer();
     expect(client().user.setActivity).toHaveBeenCalled();
-    expect(scheduled).toHaveLength(12);
+    expect(scheduled).toHaveLength(11);
     expect(scheduled.map(s => s.ms)).toEqual([
-      5000, 10000, 5000, 5000, 5000, 5000, 5000, 48 * 3600000, 10000, 3600000, 3600000, 48 * 3600000,
+      5000, 10000, 5000, 5000, 5000, 5000, 48 * 3600000, 10000, 3600000, 3600000, 48 * 3600000,
     ]);
   });
 
@@ -119,7 +118,7 @@ describe('runTimer', () => {
     e.NODE_ENV = 'production';
     await runTimer();
     expect(scheduled.map(s => s.ms)).toEqual([
-      10000, 60000, 60000, 60000, 30000, 60000, 60000, 24 * 3600000, 12 * 3600000, 3600000, 3600000, 24 * 3600000,
+      10000, 60000, 60000, 30000, 60000, 60000, 24 * 3600000, 12 * 3600000, 3600000, 3600000, 24 * 3600000,
     ]);
   });
 
@@ -127,8 +126,8 @@ describe('runTimer', () => {
     dbMock.user_reminders.findMany.mockResolvedValue([]);
     const { initial } = await (async () => { await runTimer(); return { initial: scheduled.slice() }; })();
     await initial[T.reminders].fn();
-    expect(scheduled).toHaveLength(13);
-    expect(scheduled[12].ms).toBe(5000);
+    expect(scheduled).toHaveLength(12);
+    expect(scheduled[11].ms).toBe(5000);
   });
 
   it('re-arms a failed job and succeeds on its next run', async () => {
@@ -136,10 +135,10 @@ describe('runTimer', () => {
       .mockResolvedValue([]);
     const { initial } = await start();
     await expect(initial[T.reminders].fn()).resolves.toBeUndefined();
-    expect(scheduled).toHaveLength(13);
-    await scheduled[12].fn();
+    expect(scheduled).toHaveLength(12);
+    await scheduled[11].fn();
     expect(dbMock.user_reminders.findMany).toHaveBeenCalledTimes(2);
-    expect(scheduled).toHaveLength(14);
+    expect(scheduled).toHaveLength(13);
   });
 
   it('runs the retention purge on its schedule', async () => {
@@ -188,12 +187,12 @@ describe('reminders', () => {
     const pending = initial[T.reminders].fn();
     await flush();
     expect(sendBot).toHaveBeenCalledTimes(1);
-    expect(scheduled).toHaveLength(12);
+    expect(scheduled).toHaveLength(11);
     expect(dbMock.user_reminders.delete).not.toHaveBeenCalled();
 
     finishSend();
     await pending;
-    expect(scheduled).toHaveLength(13);
+    expect(scheduled).toHaveLength(12);
     expect(dbMock.user_reminders.delete).toHaveBeenCalledWith({ where: { id: 'r2' } });
   });
 
@@ -274,12 +273,12 @@ describe('tickets', () => {
     const pending = initial[T.tickets].fn();
     await flush();
     expect(member.roles.add).toHaveBeenCalledTimes(2);
-    expect(scheduled).toHaveLength(12);
+    expect(scheduled).toHaveLength(11);
     expect(dbMock.users.update).not.toHaveBeenCalled();
 
     finishRoles();
     await pending;
-    expect(scheduled).toHaveLength(13);
+    expect(scheduled).toHaveLength(12);
     expect(dbMock.users.update).toHaveBeenCalled();
   });
 
@@ -564,21 +563,6 @@ describe('rss', () => {
     await run('rss');
     expect(send).not.toHaveBeenCalled();
     expect(dbMock.rss.update).not.toHaveBeenCalled();
-  });
-});
-
-describe('uptime', () => {
-  it('pings the monitor only in production, ignoring failures', async () => {
-    vi.mocked(axios.get).mockResolvedValue({});
-    const dev = await start();
-    await dev.run('uptime');
-    expect(axios.get).not.toHaveBeenCalled();
-
-    e.NODE_ENV = 'production';
-    vi.mocked(axios.get).mockRejectedValueOnce(new Error('down'));
-    const prod = await start();
-    await prod.run('uptime');
-    expect(axios.get).toHaveBeenCalledWith(expect.stringContaining('ping=42'));
   });
 });
 
@@ -986,6 +970,6 @@ describe('birthdays', () => {
     dbMock.users.findMany.mockRejectedValue(new Error('db down'));
     const { initial } = await start();
     await expect(initial[T.birthdays].fn()).resolves.toBeUndefined();
-    expect(scheduled).toHaveLength(13);
+    expect(scheduled).toHaveLength(12);
   });
 });
