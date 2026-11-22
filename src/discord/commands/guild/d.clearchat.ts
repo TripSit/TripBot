@@ -4,12 +4,21 @@ import {
   MessageFlags,
   PermissionFlagsBits,
   TextChannel,
+  ThreadChannel,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { GUILD_ONLY_TEXT } from '../../utils/guildOnly';
 
 const F = f(__filename);
+
+/** Deletes the threads and waits for every deletion, logging the ones Discord rejects. */
+async function deleteAllThreads(threads: ThreadChannel[]): Promise<void> {
+  const results = await Promise.allSettled(threads.map(async thread => thread.delete()));
+  results.forEach(result => {
+    if (result.status === 'rejected') log.error(F, `Could not delete a thread: ${result.reason}`);
+  });
+}
 
 export const dClearchat: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -74,25 +83,13 @@ export const dClearchat: SlashCommand = {
     if (deleteThreads) {
       // Delete every thread in the channel
       const fetchedThreads = await (interaction.channel as TextChannel).threads.fetch();
-      fetchedThreads.threads.forEach(async thread => {
-        try {
-          thread.delete();
-        } catch (err) {
-          log.error(F, `${err}`);
-        }
-      });
+      await deleteAllThreads([...fetchedThreads.threads.values()]);
     }
 
     if (deleteArchived) {
       // Delete every archived thread in the channel
       const archivedThreads = await (interaction.channel as TextChannel).threads.fetchArchived();
-      archivedThreads.threads.forEach(async thread => {
-        try {
-          thread.delete();
-        } catch (err) {
-          log.error(F, `${err}`);
-        }
-      });
+      await deleteAllThreads([...archivedThreads.threads.values()]);
     }
     return true;
   },

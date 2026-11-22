@@ -410,4 +410,28 @@ describe('subcommand defaults and thread cleanup failures', () => {
     await flushPromises();
     expect(boom.delete).toHaveBeenCalledTimes(2);
   });
+
+  it('clear-chat waits for every thread deletion and keeps going after an async rejection', async () => {
+    const order: string[] = [];
+    const slowOk = { delete: vi.fn(async () => { await flushPromises(); order.push('slow thread deleted'); }) };
+    const rejects = { delete: vi.fn(async () => { throw new Error('Unknown Channel'); }) };
+    const chan = {
+      bulkDelete: vi.fn(),
+      threads: {
+        fetch: vi.fn(async () => ({ threads: new Map([['a', rejects], ['b', slowOk]]) })),
+        fetchArchived: vi.fn(async () => ({ threads: new Map() })),
+      },
+    };
+    const stub = slashStub({
+      options: { 'delete-threads': true },
+      channel: chan,
+      extra: { memberPermissions: { has: () => true } },
+    });
+    stub.editReply.mockResolvedValue({ delete: vi.fn() });
+    const result = await dClearchat.execute(stub as never);
+    order.push('command returned');
+    expect(result).toBe(true);
+    expect(order).toEqual(['slow thread deleted', 'command returned']);
+    expect(rejects.delete).toHaveBeenCalledTimes(1);
+  });
 });
