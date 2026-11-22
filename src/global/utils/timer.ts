@@ -13,7 +13,6 @@ import {
 } from 'discord.js';
 import Parser from 'rss-parser';
 import { DateTime } from 'luxon';
-import axios from 'axios'; // eslint-disable-line
 import { stripIndents } from 'common-tags';
 import {
   experience_category, experience_type, ticket_status, ticket_type,
@@ -464,13 +463,6 @@ async function checkRss() { // eslint-disable-line @typescript-eslint/no-unused-
   })();
 }
 
-async function callUptime() { // eslint-disable-line @typescript-eslint/no-unused-vars
-  if (env.NODE_ENV !== 'production') return;
-  axios.get(`https://uptime.tripsit.me/api/push/B11H5MbsKx?status=up&msg=OK&ping=${discordClient.ws.ping}`).catch(e => {
-    log.debug(F, `Error when calling uptime monitor! ${e}`);
-  });
-}
-
 /** A member only earns voice exp when they are actually participating in the voice channel. */
 function isEligibleForVoiceExp(member: GuildMember, channelMemberCount: number): boolean {
   const { voice } = member;
@@ -884,7 +876,6 @@ async function runTimer() {
     { callback: checkReminders, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
     { callback: checkTickets, interval: env.NODE_ENV === 'production' ? seconds60 : seconds10 },
     { callback: checkMindsets, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
-    { callback: callUptime, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     { callback: checkRss, interval: env.NODE_ENV === 'production' ? seconds30 : seconds5 },
     { callback: checkVoice, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     // { callback: changeStatus, interval: env.NODE_ENV === 'production' ? hours24 : seconds5 },
