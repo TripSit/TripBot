@@ -345,6 +345,24 @@ describe('topics', () => {
     expect(client.raw.mock.calls.some(call => call[0] === 'TOPIC' && call[1] === '#a')).toBe(false);
   });
 
+  it('retries a topic the server refused, and stops once the server confirms it', () => {
+    const users = [{ nick: BOT }, { nick: 'x' }];
+    mappings.setMappings([row('#a', { topic: 'Wanted topic' })]);
+    register();
+    join('#a');
+    client.emit('topic', { channel: '#a', topic: 'Old topic' });
+    const topicCalls = () => client.raw.mock.calls.filter(call => call[0] === 'TOPIC' && call[1] === '#a').length;
+    client.emit('userlist', { channel: '#a', users });
+    expect(topicCalls()).toBe(1);
+    // The bot was not an operator yet, so the server never changed the topic; a later sync tries again
+    client.emit('userlist', { channel: '#a', users });
+    expect(topicCalls()).toBe(2);
+    // Once the server reports the new topic, nothing more is sent
+    client.emit('topic', { channel: '#a', topic: 'Wanted topic' });
+    client.emit('userlist', { channel: '#a', users });
+    expect(topicCalls()).toBe(2);
+  });
+
   it('flattens multi-line topics and respects the server topic length', () => {
     client.network.supports.mockImplementation((name: string) => (name === 'TOPICLEN' ? '10' : '50'));
     mappings.setMappings([row('#a', { topic: 'line one\n\nline   two is long' })]);
