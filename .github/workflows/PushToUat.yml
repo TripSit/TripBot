@@ -46,6 +46,8 @@ jobs:
         run: npm run db:generate
       - name: Type check
         run: npx tsc --noEmit
+      - name: Type check tests
+        run: npx tsc --noEmit --project tsconfig.vitest.json
   test:
     name: Test
     runs-on: ubuntu-latest
