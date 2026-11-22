@@ -11,6 +11,9 @@ const mocks = vi.hoisted(() => ({ trustScore: vi.fn() }));
 vi.mock('../../utils/trustScore', () => ({ tripSitTrustScore: mocks.trustScore, default: mocks.trustScore }));
 vi.mock('../../../global/commands/g.last', () => ({ last: vi.fn(), default: vi.fn() }));
 
+// The generated groupBy signature is generic, so Vitest's mock helpers are not on its type
+const groupByMock = dbMock.user_actions.groupBy as unknown as ReturnType<typeof vi.fn>;
+
 describe('msToHuman', () => {
   it.each([
     [0, ''],
@@ -64,7 +67,7 @@ describe('userInfoEmbed', () => {
   const actor = () => ({ displayName: 'Mod', user: { username: 'mod' }, guild: { id: 'g1' } }) as never;
 
   beforeEach(() => {
-    dbMock.user_actions.groupBy.mockResolvedValue(
+    groupByMock.mockResolvedValue(
       [...new Set(actions.map(action => action.type))].map(type => ({
         type, _count: { _all: actions.filter(action => action.type === type).length },
       })) as never,
@@ -91,7 +94,7 @@ describe('userInfoEmbed', () => {
   });
 
   it('includes persisted report acknowledgements in its action counts', async () => {
-    dbMock.user_actions.groupBy.mockResolvedValue([{ type: 'ACKN_REPORT', _count: { _all: 2 } }] as never);
+    groupByMock.mockResolvedValue([{ type: 'ACKN_REPORT', _count: { _all: 2 } }] as never);
     const embed = await userInfoEmbed(actor(), member(), targetData(), 'INFO', true);
     expect(embed.data.fields).toContainEqual({
       name: '# of Report Acknowledgements', value: '2', inline: true,
@@ -99,7 +102,7 @@ describe('userInfoEmbed', () => {
   });
 
   it('keeps large moderation histories and long trust explanations within Discord limits', async () => {
-    dbMock.user_actions.groupBy.mockResolvedValue([
+    groupByMock.mockResolvedValue([
       { type: 'NOTE', _count: { _all: 100000 } },
       { type: 'WARNING', _count: { _all: 5000 } },
     ] as never);
@@ -117,7 +120,7 @@ describe('userInfoEmbed', () => {
   });
 
   it('shows a clean record message and a plain thread mention without an actor guild', async () => {
-    dbMock.user_actions.groupBy.mockResolvedValue([]);
+    groupByMock.mockResolvedValue([]);
     const clean = await userInfoEmbed({ displayName: '', user: { username: 'mod' } } as never, 'someid', targetData({ mod_thread_id: 't1' }), 'INFO', true);
     expect(clean.data.description).toContain('<#t1>');
     expect(clean.data.description).toContain('Squeaky clean!');

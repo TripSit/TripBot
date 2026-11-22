@@ -283,10 +283,10 @@ describe('relayDiscordMessage', () => {
   it('checks visibility after the asynchronous privacy lookup', async () => {
     mappings.setMappings(bridgeRows().map(row => ({ ...row, source: 'auto' })));
     const permissions = new PermissionsBitField(PermissionFlagsBits.ViewChannel);
-    dbMock.users.findUnique.mockImplementationOnce(async () => {
+    dbMock.users.findUnique.mockImplementationOnce((async () => {
       permissions.remove(PermissionFlagsBits.ViewChannel);
       return null;
-    });
+    }) as never);
     await chatBridge.relayDiscordMessage(message({
       channel: {
         type: ChannelType.GuildText,
