@@ -519,11 +519,13 @@ model command_usage_parameter {
 }
 
 model claimed_bounties {
-  id      String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  type    String
-  amount  Int    @default(0)
-  user_id String
-  user    users  @relation("ClaimedBounties", fields: [user_id], references: [discord_id], onDelete: NoAction, onUpdate: NoAction)
+  id        String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  type      String
+  amount    Int     @default(0)
+  // "<pull request>#<issue>" for GitHub bounties; unique, so the same bounty can never be paid twice
+  reference String? @unique
+  user_id   String
+  user      users   @relation("ClaimedBounties", fields: [user_id], references: [discord_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 enum bridge_status {

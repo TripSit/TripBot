@@ -36,16 +36,23 @@ function validateAwardBody(body: Partial<AwardRequest>): string | null {
   return null;
 }
 
-/** Records the claim first, then awards the XP; the claim is released again if awarding fails. */
+/** Records the claim first (unique per reference), then awards the XP; the claim is released if awarding fails. */
 async function claimAndAward(guild: Guild, guildMember: GuildMember, body: AwardRequest): Promise<AwardResult> {
   const { bounty: bountyAmount, reference } = body;
-  const claimType = reference ? `GitHub:${reference}` : 'GitHub';
-  if (reference && await db.claimed_bounties.findFirst({ where: { type: claimType } })) {
-    return { status: 409, body: { error: `Bounty ${reference} was already awarded.` } };
+  // The unique index on `reference` makes this claim atomic: of two simultaneous requests only one can create it
+  let claim: { id: string };
+  try {
+    claim = await db.claimed_bounties.create({
+      data: {
+        type: 'GitHub', amount: bountyAmount, user_id: guildMember.id, reference: reference ?? null,
+      },
+    });
+  } catch (claimError) {
+    if ((claimError as { code?: string }).code === 'P2002') {
+      return { status: 409, body: { error: `Bounty ${reference} was already awarded.` } };
+    }
+    throw claimError;
   }
-  const claim = await db.claimed_bounties.create({
-    data: { type: claimType, amount: bountyAmount, user_id: guildMember.id },
-  });
 
   try {
     const announceChannel = await guild.channels.fetch(env.CHANNEL_DEVELOPMENT) as TextChannel;
