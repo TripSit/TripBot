@@ -320,6 +320,69 @@ describe('redacting relayed messages', () => {
     expect(client.raw).toHaveBeenCalledWith('REDACT', '#test200', 'newest');
   });
 
+  it('redacts a line whose echo arrives after the Discord message was already deleted', async () => {
+    await target.send('#lounge', outgoing({ sourceId: 'late', text: 'one\ntwo' }));
+    // Deleted after the first line was sent (the second is still queued), before any echo
+    await target.remove?.('#lounge', 'late');
+    expect(client.raw).not.toHaveBeenCalledWith('REDACT', expect.anything(), expect.anything());
+
+    echo('one', 'late-1');
+    expect(client.raw).toHaveBeenCalledWith('REDACT', '#lounge', 'late-1');
+    // Lines that never left the queue are not sent at all
+    await vi.advanceTimersByTimeAsync(bridge.IRC_MESSAGE_DELAY_MS * 2);
+    expect(client.raw.mock.calls.filter(call => call[0] === 'RELAYMSG')).toHaveLength(1);
+  });
+
+  it('keeps tracking normally for echoes that arrive before a deletion', async () => {
+    await target.send('#lounge', outgoing({ sourceId: 'early', text: 'hello' }));
+    echo('hello', 'early-1');
+    expect(client.raw).not.toHaveBeenCalledWith('REDACT', expect.anything(), expect.anything());
+    await target.remove?.('#lounge', 'early');
+    expect(client.raw).toHaveBeenCalledWith('REDACT', '#lounge', 'early-1');
+  });
+
+  it('redacts every in-flight line of a deleted multi-line message once its echoes arrive', async () => {
+    await target.send('#lounge', outgoing({ sourceId: 'multi', text: 'one\ntwo' }));
+    await vi.advanceTimersByTimeAsync(bridge.IRC_MESSAGE_DELAY_MS);
+    await target.remove?.('#lounge', 'multi');
+    expect(client.raw.mock.calls.filter(call => call[0] === 'RELAYMSG')).toHaveLength(2);
+
+    echo('one', 'multi-1');
+    expect(client.raw).toHaveBeenCalledWith('REDACT', '#lounge', 'multi-1');
+    // The second line is still in flight, so the deletion stays pending until its echo too
+    echo('two', 'multi-2');
+    expect(client.raw).toHaveBeenCalledWith('REDACT', '#lounge', 'multi-2');
+    client.raw.mockClear();
+    // Nothing is pending any more, so a later echo of identical text is tracked normally
+    await target.send('#lounge', outgoing({ sourceId: 'multi', text: 'one' }));
+    echo('one', 'multi-3');
+    expect(client.raw).not.toHaveBeenCalledWith('REDACT', expect.anything(), expect.anything());
+  });
+
+  it('does not redact in-flight lines while disconnected', async () => {
+    await target.send('#lounge', outgoing({ sourceId: 'offline', text: 'hello' }));
+    await target.remove?.('#lounge', 'offline');
+    (client as unknown as { connected: boolean }).connected = false;
+    echo('hello', 'offline-1');
+    expect(client.raw).not.toHaveBeenCalledWith('REDACT', expect.anything(), expect.anything());
+  });
+
+  it('forgets a pending deletion once its echo is no longer awaited', async () => {
+    await target.send('#old', outgoing({ sourceId: 'stale', text: 'x' }));
+    await target.remove?.('#old', 'stale');
+    // 200 newer lines push the stale line out of the pending-echo list
+    await Promise.all(Array.from({ length: 200 }, (_unused, index) => target.send(`#fill${index}`, outgoing({ sourceId: `f${index}`, text: 'y' }))));
+    echo('x', 'stale-1', { target: '#old' });
+    expect(client.raw).not.toHaveBeenCalledWith('REDACT', expect.anything(), expect.anything());
+    // The same source id sent again is tracked normally, not treated as deleted
+    await target.send('#old', outgoing({ sourceId: 'stale', text: 'x' }));
+    await vi.advanceTimersByTimeAsync(bridge.IRC_MESSAGE_DELAY_MS);
+    echo('x', 'stale-2', { target: '#old' });
+    expect(client.raw).not.toHaveBeenCalledWith('REDACT', expect.anything(), expect.anything());
+    await target.remove?.('#old', 'stale');
+    expect(client.raw).toHaveBeenCalledWith('REDACT', '#old', 'stale-2');
+  });
+
   it('forgets the oldest tracked message when the redaction history fills up', async () => {
     await Promise.all(Array.from({ length: 1001 }, (_, index) => {
       const channel = `#echo${index}`;
