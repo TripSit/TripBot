@@ -746,9 +746,9 @@ async function undoExpiredBans() {
 
 async function monthlySessionStats() {
   const now = new Date();
-  // Get the last day of current month (handles 28, 29, 30, or 31 days automatically)
-  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const currentDay = now.getDate();
+  // Get the last day of current month (handles 28, 29, 30, or 31 days automatically), in UTC like the schedule
+  const lastDayOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate();
+  const currentDay = now.getUTCDate();
 
   // Check if we're on the last day of the month
   if (currentDay === lastDayOfMonth) {
@@ -770,8 +770,8 @@ async function checkBirthdays() {
   try {
     // Get today's date in MM-DD format for comparison
     const today = new Date();
-    const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
-    const todayDay = String(today.getDate()).padStart(2, '0');
+    const todayMonth = String(today.getUTCMonth() + 1).padStart(2, '0');
+    const todayDay = String(today.getUTCDate()).padStart(2, '0');
     const todayMMDD = `${todayMonth}-${todayDay}`;
 
     // Find users whose birthday is today
@@ -789,8 +789,9 @@ async function checkBirthdays() {
       if (!user.birthday) return false;
 
       const birthdayDate = new Date(user.birthday);
-      const birthdayMonth = String(birthdayDate.getMonth() + 1).padStart(2, '0');
-      const birthdayDay = String(birthdayDate.getDate()).padStart(2, '0');
+      // Birthdays are stored as UTC midnight dates, so they are read in UTC too
+      const birthdayMonth = String(birthdayDate.getUTCMonth() + 1).padStart(2, '0');
+      const birthdayDay = String(birthdayDate.getUTCDate()).padStart(2, '0');
       const birthdayMMDD = `${birthdayMonth}-${birthdayDay}`;
 
       return birthdayMMDD === todayMMDD;
@@ -831,6 +832,22 @@ async function checkBirthdays() {
   }
 }
 
+/**
+ * Wraps a job that acts on a calendar day. The job is polled all day, but runs only during `hourUtc` and at most
+ * once per UTC day, so a restart or a drifting timer chain can no longer skip the day or fire around midnight.
+ * Nothing is persisted: a restart inside that one hour could repeat the job once.
+ */
+function oncePerUtcDay(job: () => Promise<void>, hourUtc = 12): () => Promise<void> {
+  let lastRunDay = '';
+  return async () => {
+    const now = new Date();
+    const day = now.toISOString().slice(0, 10);
+    if (now.getUTCHours() !== hourUtc || lastRunDay === day) return;
+    lastRunDay = day;
+    await job();
+  };
+}
+
 async function checkEvery(
   callback: () => Promise<void>,
   interval: number,
@@ -859,6 +876,7 @@ async function runTimer() {
   const seconds10 = 1000 * 10;
   const seconds30 = 1000 * 30;
   const seconds60 = 1000 * 60;
+  const hours1 = 1000 * 60 * 60;
   const hours24 = 1000 * 60 * 60 * 24;
   const hours48 = 1000 * 60 * 60 * 48;
 
@@ -876,8 +894,9 @@ async function runTimer() {
     { callback: updateDb, interval: env.NODE_ENV === 'production' ? hours24 : hours48 },
     // { callback: pruneInactiveHelpers, interval: env.NODE_ENV === 'production' ? hours48 : seconds60 },
     { callback: undoExpiredBans, interval: env.NODE_ENV === 'production' ? hours24 / 2 : seconds10 },
-    { callback: monthlySessionStats, interval: env.NODE_ENV === 'production' ? hours24 : hours24 / 3 }, // 8 hours on dev
-    { callback: checkBirthdays, interval: env.NODE_ENV === 'production' ? hours24 : hours24 / 3 }, // 8 hours on dev
+    // Calendar jobs are polled every hour and run once, at 12:00 UTC (see oncePerUtcDay)
+    { callback: oncePerUtcDay(monthlySessionStats), interval: hours1 },
+    { callback: oncePerUtcDay(checkBirthdays), interval: hours1 },
     {
       callback: async () => {
         await purgeInactiveUsers();
