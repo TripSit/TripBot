@@ -126,6 +126,26 @@ describe('getDiscordUserByGitHub', () => {
     expect(await mod.getDiscordUserByGitHub('gh')).toBeNull();
   });
 
+  it('stops paging at the first short page instead of requesting every possible page', async () => {
+    const { mod, users } = await load();
+    const full = Array.from({ length: 100 }, (_unused, i) => ({ id: `k${i}` }));
+    users.find.mockResolvedValueOnce(full).mockResolvedValueOnce([{ id: 'last' }]);
+    users.listFederatedIdentities.mockResolvedValue([github('other')]);
+    await mod.getDiscordUserByGitHub('gh');
+    expect(users.find).toHaveBeenCalledTimes(2);
+    expect(users.find).toHaveBeenNthCalledWith(1, expect.objectContaining({ first: 0, max: 100 }));
+    expect(users.find).toHaveBeenNthCalledWith(2, expect.objectContaining({ first: 100, max: 100 }));
+  });
+
+  it('never reads past the safety limit of 10000 users', async () => {
+    const { mod, users } = await load();
+    const full = Array.from({ length: 100 }, (_unused, i) => ({ id: `k${i}` }));
+    users.find.mockResolvedValue(full);
+    users.listFederatedIdentities.mockResolvedValue([]);
+    await mod.getDiscordUserByGitHub('gh');
+    expect(users.find).toHaveBeenCalledTimes(100);
+  });
+
   it('rethrows lookup failures', async () => {
     const { mod, users } = await load();
     users.find.mockRejectedValue(new Error('realm down'));

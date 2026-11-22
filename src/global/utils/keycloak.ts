@@ -121,47 +121,24 @@ export async function getDiscordIdFromFederatedIdentity(userId: string): Promise
   }
 }
 
-// Helper function to fetch all users in batches
+// Helper function to fetch all users, one page at a time, stopping at the first page that is not full
 async function fetchAllUsers(): Promise<UserRepresentation[]> {
   const adminClient = await getAdminClient();
   const max = 100;
   const maxUsers = 10000; // Safety limit
 
-  // Create an array of page numbers to fetch
-  const pageCount = Math.ceil(maxUsers / max);
-  const pageNumbers = Array.from({ length: pageCount }, (_, i) => i);
-
-  // Fetch pages in parallel batches
-  const PARALLEL_PAGES = 5; // Fetch 5 pages at a time
-
-  // Create all page batches
-  const pageBatches = [];
-  for (let i = 0; i < pageNumbers.length; i += PARALLEL_PAGES) {
-    pageBatches.push(pageNumbers.slice(i, i + PARALLEL_PAGES));
+  const users: UserRepresentation[] = [];
+  for (let first = 0; first < maxUsers; first += max) {
+    // eslint-disable-next-line no-await-in-loop
+    const page = await adminClient.users.find({
+      first,
+      max,
+      realm: process.env.KEYCLOAK_REALM ?? 'TripSit',
+    });
+    users.push(...page);
+    if (page.length < max) break;
   }
-
-  // Fetch all pages in parallel
-  const allPageResults = await Promise.all(
-    pageBatches.map(pageNumberBatch => Promise.all(
-      pageNumberBatch.map(pageNum => adminClient.users.find({
-        first: pageNum * max,
-        max,
-        realm: process.env.KEYCLOAK_REALM ?? 'TripSit',
-      })),
-    )),
-  );
-
-  // Process results and collect users
-  return allPageResults.reduce<UserRepresentation[]>((acc, batchResults, index) => {
-    const batchUsers = batchResults.flat();
-
-    // Only include results up to and including the first incomplete batch
-    if (index === 0 || !allPageResults.slice(0, index).some(batch => batch.flat().length < batch.length * max)) {
-      acc.push(...batchUsers);
-    }
-
-    return acc;
-  }, []);
+  return users;
 }
 
 // Helper function to check user identities for GitHub and Discord accounts
