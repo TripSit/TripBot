@@ -45,6 +45,11 @@ describe('privmsg commands', () => {
     expect(client.say).not.toHaveBeenCalled();
   });
 
+  it.each(['constructor', 'toString', '__proto__', 'hasOwnProperty', 'valueOf'])('ignores the inherited name %s', name => {
+    expect(() => send('someone', CHANNEL, `!${name} x`)).not.toThrow();
+    expect(client.say).not.toHaveBeenCalled();
+  });
+
   it('ignores its own messages', () => {
     send(BOT_NICK, CHANNEL, '!echo loop');
     expect(client.say).not.toHaveBeenCalled();
