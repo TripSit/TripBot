@@ -47,4 +47,13 @@ describe('syncDrugNames', () => {
     expect(first.summary).toBeNull();
     expect(first.psychonaut_wiki_url).toBeNull();
   });
+
+  it('creates a drug once when its name appears twice in the batch, or was an earlier drug\'s alias', async () => {
+    await syncDrugNames([
+      drug({ name: 'Foo' }), drug({ name: 'foo' }), drug({ name: ' FOO ' }),
+      drug({ name: 'Bar', aliases: ['Baz'] }), drug({ name: 'baz' }),
+    ]);
+    const names = dbMock.drugs.create.mock.calls.map(call => (call[0] as { data: { drug_names: { create: Array<{ name: string }> } } }).data.drug_names.create[0].name);
+    expect(names).toEqual(['Foo', 'Bar']);
+  });
 });

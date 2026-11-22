@@ -712,33 +712,38 @@ export async function syncDrugNames(combinedDb: CbSubstance[]): Promise<void> {
 
   const botUser = await getOrCreateUser(env.DISCORD_CLIENT_ID);
 
+  let added = 0;
   for (const drug of missing) { // eslint-disable-line no-restricted-syntax
     const name = drug.name.trim();
-    known.add(name.toLowerCase());
-    const aliases = (drug.aliases ?? []).map(alias => alias.trim()).filter(alias => {
-      const isNew = !known.has(alias.toLowerCase());
-      known.add(alias.toLowerCase());
-      return isNew;
-    });
+    // The same name can appear twice in the batch, or as an earlier drug's alias; it must only be created once
+    if (!known.has(name.toLowerCase())) {
+      known.add(name.toLowerCase());
+      const aliases = (drug.aliases ?? []).map(alias => alias.trim()).filter(alias => {
+        const isNew = !known.has(alias.toLowerCase());
+        known.add(alias.toLowerCase());
+        return isNew;
+      });
 
-    // eslint-disable-next-line no-await-in-loop
-    await db.drugs.create({
-      data: {
-        summary: emptyToNull(drug.summary),
-        psychonaut_wiki_url: emptyToNull(drug.url),
-        errowid_experiences_url: emptyToNull(drug.experiencesUrl),
-        last_updated_by: botUser.id,
-        drug_names: {
-          create: [
-            { name, type: 'COMMON', is_default: true },
-            ...aliases.map(alias => ({ name: alias, type: 'COMMON' as const, is_default: false })),
-          ],
+      // eslint-disable-next-line no-await-in-loop
+      await db.drugs.create({
+        data: {
+          summary: emptyToNull(drug.summary),
+          psychonaut_wiki_url: emptyToNull(drug.url),
+          errowid_experiences_url: emptyToNull(drug.experiencesUrl),
+          last_updated_by: botUser.id,
+          drug_names: {
+            create: [
+              { name, type: 'COMMON', is_default: true },
+              ...aliases.map(alias => ({ name: alias, type: 'COMMON' as const, is_default: false })),
+            ],
+          },
         },
-      },
-    });
+      });
+      added += 1;
+    }
   }
 
-  log.info(F, `Added ${missing.length} new drugs to drug_names`);
+  log.info(F, `Added ${added} new drugs to drug_names`);
 }
 
 export default async function updateDrugDb():Promise<void> {
