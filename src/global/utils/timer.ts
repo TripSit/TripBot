@@ -779,6 +779,8 @@ async function checkBirthdays() {
     // Filter users whose birthday is today
     const todaysBirthdayUsers = birthdayUsers.filter((user: typeof birthdayUsers[0]) => {
       if (!user.birthday) return false;
+      // Already wished today (UTC)
+      if (user.birthday_wished_at?.toISOString().slice(0, 10) === today.toISOString().slice(0, 10)) return false;
 
       const birthdayDate = new Date(user.birthday);
       // Birthdays are stored as UTC midnight dates, so they are read in UTC too
@@ -810,6 +812,8 @@ async function checkBirthdays() {
         const vipLounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
         await vipLounge.send(`Happy Birthday, <@${user.discord_id}>! 🎉`);
         log.info(F, `Birthday message sent for user: ${user.discord_id}`);
+        // Remembered in the database, so a restart in the run hour cannot wish them a second time
+        await db.users.update({ where: { id: user.id }, data: { birthday_wished_at: new Date() } });
       } catch (messageError) {
         log.error(F, `Failed to send birthday message for user ${user.id}: ${messageError}`);
       }

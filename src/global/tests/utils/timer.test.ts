@@ -917,6 +917,23 @@ describe('birthdays', () => {
     expect(send).toHaveBeenCalledWith('Happy Birthday, <@d1>! 🎉');
   });
 
+  it('remembers the wish in the database and skips members already wished today', async () => {
+    dbMock.users.findMany.mockResolvedValue([
+      user({ id: 'u-new' }),
+      user({ id: 'u-done', discord_id: 'd2', birthday_wished_at: new Date(noonUtc - 60_000) }),
+      user({ id: 'u-last-year', discord_id: 'd3', birthday_wished_at: new Date(Date.UTC(2025, 6, 15, 12)) }),
+    ] as never);
+    const send = vi.fn();
+    client().channels.fetch = vi.fn(async () => ({ send }));
+    const { run } = await start();
+    await run('birthdays');
+    expect(send).toHaveBeenCalledTimes(2);
+    expect(send).not.toHaveBeenCalledWith('Happy Birthday, <@d2>! 🎉');
+    expect(dbMock.users.update).toHaveBeenCalledWith({ where: { id: 'u-new' }, data: { birthday_wished_at: expect.any(Date) } });
+    expect(dbMock.users.update).toHaveBeenCalledWith({ where: { id: 'u-last-year' }, data: { birthday_wished_at: expect.any(Date) } });
+    expect(dbMock.users.update).not.toHaveBeenCalledWith(expect.objectContaining({ where: { id: 'u-done' } }));
+  });
+
   it('only runs at 12:00 UTC and only once per day', async () => {
     dbMock.users.findMany.mockResolvedValue([user()] as never);
     const send = vi.fn();
