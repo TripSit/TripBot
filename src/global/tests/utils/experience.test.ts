@@ -148,6 +148,8 @@ describe('experience', () => {
     ...over,
   }) as unknown as ExpRow;
 
+  beforeEach(() => { dbMock.user_experience.updateMany.mockResolvedValue({ count: 1 }); });
+
   it('creates the first record and stops', async () => {
     const { member, guild } = makeMember();
     dbMock.user_experience.findFirst.mockResolvedValueOnce(null);
@@ -171,7 +173,7 @@ describe('experience', () => {
         dbMock.user_experience.findFirst.mockResolvedValueOnce(row());
         dbMock.user_experience.findMany.mockResolvedValueOnce([]);
         await experience(member, 'GENERAL' as never, 'TEXT' as never, textChannel(guild));
-        return dbMock.user_experience.update.mock.calls.at(-1)?.[0].data.total_points as number;
+        return dbMock.user_experience.updateMany.mock.calls.at(-1)?.[0].data.total_points as number;
       };
       const awarded = [await award(0), await award(0.999)];
       expect(awarded).toEqual([15, 25]);
@@ -198,8 +200,8 @@ describe('experience', () => {
     dbMock.user_experience.findFirst.mockResolvedValueOnce(row({ level_points: 5, total_points: 5 }));
     dbMock.user_experience.findMany.mockResolvedValueOnce([]);
     await experience(member, 'GENERAL' as never, 'VOICE' as never, textChannel(guild));
-    expect(dbMock.user_experience.update).toHaveBeenCalledWith(expect.objectContaining({
-      where: { id: 'x1' }, data: expect.objectContaining({ last_message_channel: 'chan', level: 0 }),
+    expect(dbMock.user_experience.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: 'x1', last_message_at: new Date(0) }, data: expect.objectContaining({ last_message_channel: 'chan', level: 0 }),
     }));
     expect(roles.add).toHaveBeenCalled();
   });
@@ -241,9 +243,26 @@ describe('experience', () => {
     dbMock.user_experience.findMany.mockResolvedValueOnce([]);
     botlog.mockRejectedValueOnce(new Error('Missing Access'));
     await expect(experience(member, 'GENERAL' as never, 'TEXT' as never, textChannel(guild))).resolves.toBeUndefined();
-    expect(dbMock.user_experience.update).toHaveBeenCalledWith(expect.objectContaining({
+    expect(dbMock.user_experience.updateMany).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ level: 4, last_message_at: expect.any(Date) }),
     }));
+  });
+
+  it('awards and announces once when two messages race for the same cooldown window', async () => {
+    const first = makeMember();
+    const second = makeMember();
+    // Each message reads its own copy of the same row, as two separate database reads would
+    dbMock.user_experience.findFirst.mockImplementation((async () => row({ level: 3, level_points: 10000, total_points: 10000 })) as never);
+    dbMock.user_experience.findMany.mockResolvedValue([]);
+    // Only the first write still sees the timestamp both messages read
+    dbMock.user_experience.updateMany.mockResolvedValueOnce({ count: 1 }).mockResolvedValueOnce({ count: 0 });
+    await Promise.all([
+      experience(first.member, 'GENERAL' as never, 'TEXT' as never, textChannel(first.guild)),
+      experience(second.member, 'GENERAL' as never, 'TEXT' as never, textChannel(second.guild)),
+    ]);
+    expect(botlog).toHaveBeenCalledTimes(1);
+    expect(first.roles.add).toHaveBeenCalled();
+    expect(second.roles.add).not.toHaveBeenCalled();
   });
 });
 
