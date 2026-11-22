@@ -11,6 +11,7 @@ import { notFound, errorHandler } from './middlewares/middlewares';
 
 import api1 from './v1';
 import api2 from './v2';
+import readinessRouter from './readiness.routes';
 
 const F = f(__filename);
 
@@ -74,6 +75,7 @@ app.use((req, res, next) => {
 });
 
 // Routes
+app.use('/api/health', readinessRouter);
 app.get('/api/ip', (request, response) => response.send(request.ip));
 app.get('/api', (req, res) => {
   res.json({
