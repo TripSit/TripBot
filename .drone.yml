@@ -111,6 +111,7 @@ steps:
       - apk add --no-cache git
       - cat docker-compose.host.yml
       - docker compose -f docker-compose.host.yml --project-name tripbot up tripbot -d --force-recreate --build --no-deps
+      - sh src/docker/wait-for-ready.sh
     environment:
       NODE_ENV:
         from_secret: NODE_ENV
@@ -175,6 +176,8 @@ steps:
 
   - name: discord notification
     image: appleboy/drone-discord
+    when:
+      status: [success, failure]
     settings:
       webhook_id:
         from_secret: WEBHOOK_ID
