@@ -30,6 +30,9 @@ import {
 
 const F = f(__filename); // eslint-disable-line
 
+// A server admin can set the bot's nickname to anything, including regex metacharacters
+const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 export class AiFunction {
   static getComponentById(
     interaction: ButtonInteraction | StringSelectMenuInteraction | ChannelSelectMenuInteraction,
@@ -254,7 +257,7 @@ export class AiFunction {
       ) {
         includedIds.add(msg.id);
         // Strip the mention/name to keep the prompt clean
-        const content = msg.cleanContent.replace(new RegExp(`@?${botNickname}`, 'gi'), '').trim();
+        const content = msg.cleanContent.replace(new RegExp(`@?${escapeRegExp(botNickname)}`, 'gi'), '').trim();
         messageList.push({
           role: 'user',
           content: [{ type: 'text', text: content }],
