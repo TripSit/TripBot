@@ -252,6 +252,15 @@ export async function discordAiModerate(messageData: Message): Promise<void> {
     );
   }
 }
+/** The message may have been deleted meanwhile (Unknown message); apologising must not raise a second error. */
+async function apologise(messageData: Message<boolean>): Promise<void> {
+  try {
+    await messageData.reply("I'm having trouble thinking right now. Try again in a minute.");
+  } catch (replyError) {
+    log.debug(F, `Could not send the AI error reply: ${replyError}`);
+  }
+}
+
 export async function aiMessage(messageData: Message<boolean>): Promise<void> {
   // Basic Filters
   if (messageData.author.bot || messageData.cleanContent.length < 1) return;
@@ -390,7 +399,7 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
     await reply.react('👎');
   } catch (err) {
     log.error(F, `AI Error: ${err}`);
-    await messageData.reply("I'm having trouble thinking right now. Try again in a minute.");
+    await apologise(messageData);
   }
 }
 
