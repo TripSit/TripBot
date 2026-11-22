@@ -49,6 +49,8 @@ const queues = new Map<string, ChannelQueue>();
 const pendingEchoes: PendingEcho[] = [];
 const relayedMessages = new Map<string, RelayedMessage[]>();
 const MAX_PENDING_ECHOES = 200;
+// Messages deleted on Discord after we sent them but before the server's echo gave us their msgid
+const pendingDeletions = new Set<string>();
 const MAX_TRACKED_MESSAGES = 1000;
 // A refusal (for example no channel op in one auto-created channel) pauses RELAYMSG for a while instead of until
 // the next reconnect, so the bridge retries and recovers once the bot has the privileges it needs.
@@ -83,7 +85,11 @@ function sendLine(client: Client, line: QueuedLine): void {
     action: relayMsg && action,
     sourceId,
   });
-  if (pendingEchoes.length > MAX_PENDING_ECHOES) pendingEchoes.shift();
+  if (pendingEchoes.length > MAX_PENDING_ECHOES) {
+    // A line whose echo we stopped waiting for can no longer be redacted when it shows up, so forget the deletion too
+    const dropped = pendingEchoes.shift() as PendingEcho;
+    if (!pendingEchoes.some(pending => pending.sourceId === dropped.sourceId)) pendingDeletions.delete(dropped.sourceId);
+  }
 }
 
 function drain(client: Client, key: string): void {
@@ -131,6 +137,10 @@ export function createIrcBridgeTarget(client: Client): BridgeTarget {
       // Lines still waiting in the queue never reach IRC
       const queue = queues.get(channelKey(channel));
       if (queue) queue.lines = queue.lines.filter(line => line.sourceId !== sourceId);
+      // Lines already sent but not yet echoed have no msgid to redact yet; redact them when their echo arrives
+      if (pendingEchoes.some(pending => pending.sourceId === sourceId)) {
+        pendingDeletions.add(sourceId);
+      }
       const relayed = relayedMessages.get(sourceId);
       relayedMessages.delete(sourceId);
       if (!relayed || !client.connected) return;
@@ -155,6 +165,12 @@ function recordEcho(client: Client, event: MessageEvent, action: boolean): boole
     && pending.message === event.message && pending.action === action);
   if (!msgid || index === -1) return true;
   const [{ sourceId }] = pendingEchoes.splice(index, 1);
+  if (pendingDeletions.has(sourceId)) {
+    // The message was deleted while this line was in flight: redact it now instead of tracking it
+    if (client.connected) client.raw('REDACT', event.target, msgid);
+    if (!pendingEchoes.some(pending => pending.sourceId === sourceId)) pendingDeletions.delete(sourceId);
+    return true;
+  }
   const relayed = relayedMessages.get(sourceId) ?? [];
   relayed.push({ channel: event.target, msgid });
   // Re-insert so the oldest message is the first to be forgotten
