@@ -436,9 +436,15 @@ model user_tickets {
   archived_at                           DateTime      @default(dbgenerated("(CURRENT_TIMESTAMP + '1 day'::interval)")) @db.Timestamptz(6)
   deleted_at                            DateTime      @default(dbgenerated("(CURRENT_TIMESTAMP + '7 days'::interval)")) @db.Timestamptz(6)
   created_at                            DateTime      @default(now()) @db.Timestamptz(6)
+  response_due_at                       DateTime?     @db.Timestamptz(6)
+  responded_at                          DateTime?     @db.Timestamptz(6)
+  team_reminded_at                      DateTime?     @db.Timestamptz(6)
+  user_reminded_at                      DateTime?     @db.Timestamptz(6)
   users_user_tickets_closed_byTousers   users?        @relation("user_tickets_closed_byTousers", fields: [closed_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "usertickets_closedby_foreign")
   users_user_tickets_reopened_byTousers users?        @relation("user_tickets_reopened_byTousers", fields: [reopened_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "usertickets_reopenedby_foreign")
   users_user_tickets_user_idTousers     users         @relation("user_tickets_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "usertickets_userid_foreign")
+
+  @@index([thread_id], map: "user_tickets_thread_id_idx")
 }
 
 model appeals {
