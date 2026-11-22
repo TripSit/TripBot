@@ -25,6 +25,7 @@ import { profile } from '../commands/g.learn';
 import getTripSitStatistics from '../commands/g.tripsitstats';
 import { getOrCreateGuild } from './dbRecords';
 import { pruneCommandParameters, pruneModerationActions, purgeInactiveUsers } from '../commands/g.privacy';
+import { remindUnansweredTripSitTicket } from '../../discord/utils/tripsitResponseReminder';
 
 const F = f(__filename);
 
@@ -247,6 +248,7 @@ async function processTicket(ticket: TicketRow): Promise<void> {
   ) {
     await deleteTicket(ticket);
   }
+  await remindUnansweredTripSitTicket(ticket);
 }
 
 async function deleteStaleThread(thread: ThreadChannel, channel: TextChannel): Promise<void> {

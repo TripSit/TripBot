@@ -41,7 +41,7 @@ describe('tripSitMe', () => {
     const owner = { send: vi.fn() };
     const message = { pin: opts.pinFails ? vi.fn().mockRejectedValue(new Error('Missing Permissions')) : vi.fn() };
     const thread = {
-      id: 'thread1', name: 'thread', send: vi.fn(async () => message), toString: (): string => '<#thread1>',
+      id: 'thread1', name: 'thread', createdAt: new Date('2030-01-01T12:00:00Z'), send: vi.fn(async () => message), toString: (): string => '<#thread1>',
     };
     const metaSend = vi.fn();
     const tripsit = { id: 'ts-chan', threads: { create: vi.fn(async () => thread) } };
@@ -135,7 +135,11 @@ describe('tripSitMe', () => {
     expect(s.metaSend).toHaveBeenCalledWith(expect.objectContaining({ embeds: [expect.anything()] }));
     expect(dbMock.user_tickets.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        thread_id: 'thread1', type: 'TRIPSIT', status: 'OPEN', archived_at: expiry.archivedAt,
+        thread_id: 'thread1',
+        type: 'TRIPSIT',
+        status: 'OPEN',
+        archived_at: expiry.archivedAt,
+        response_due_at: new Date('2030-01-01T12:05:00Z'),
       }),
     });
   });
@@ -166,7 +170,7 @@ describe('tripSitMe', () => {
 
 describe('reopenTicket', () => {
   const baseTicket = (over: Record<string, unknown> = {}) => ({
-    id: 't1', created_at: new Date(Date.now() - 3_600_000), reopened_at: null, meta_thread_id: null, ...over,
+    id: 't1', type: 'TRIPSIT', created_at: new Date(Date.now() - 3_600_000), reopened_at: null, meta_thread_id: null, ...over,
   });
 
   function setup(opts: { metaFetch?: 'ok' | 'fail' } = {}) {
@@ -205,6 +209,21 @@ describe('reopenTicket', () => {
     expect(dbMock.user_tickets.update).toHaveBeenCalledWith({
       where: { id: 't1' }, data: expect.objectContaining({ status: 'OPEN', archived_at: expiry.archivedAt }),
     });
+  });
+
+  it.each([
+    ['TRIPSIT', 'OPEN', true], ['TRIPSIT', 'OWNED', false], ['TECH', 'OPEN', false],
+  ] as const)('resets reminder state for %s tickets reopened as %s', async (type, status, scheduled) => {
+    const s = setup();
+    await run(s, baseTicket({ type }), { status });
+    const data = dbMock.user_tickets.update.mock.calls.at(-1)?.[0].data;
+    expect(data).toMatchObject({ responded_at: null, team_reminded_at: null, user_reminded_at: null });
+    if (!data || !(data.reopened_at instanceof Date)) throw new Error('Missing ticket reopen timestamp');
+    if (scheduled) {
+      expect(data?.response_due_at).toEqual(new Date(data.reopened_at.getTime() + 300000));
+    } else {
+      expect(data?.response_due_at).toBeNull();
+    }
   });
 
   it('skips the team ping for recent tickets, and marks team reopens as owned', async () => {

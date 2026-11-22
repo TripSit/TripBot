@@ -29,6 +29,7 @@ const mocks = vi.hoisted(() => ({
   karma: vi.fn(),
   imagesOnly: vi.fn(),
   helperActivity: vi.fn(),
+  trackResponse: vi.fn(async () => undefined),
   nightsWatch: vi.fn(),
   experience: vi.fn(),
   announcements: vi.fn(),
@@ -65,6 +66,9 @@ vi.mock('../../utils/youAre', () => ({ youAre: mocks.youAre }));
 vi.mock('../../utils/karma', () => ({ karma: mocks.karma }));
 vi.mock('../../utils/imagesOnly', async importOriginal => ({ ...(await importOriginal<object>()), imagesOnly: mocks.imagesOnly }));
 vi.mock('../../utils/helperActivityUpdate', () => ({ helperActivityUpdate: mocks.helperActivity }));
+vi.mock('../../utils/tripsitResponseReminder', async importOriginal => ({
+  ...(await importOriginal<object>()), recordTripSitResponse: mocks.trackResponse,
+}));
 vi.mock('../../../global/commands/g.watchuser', () => ({ nightsWatch: mocks.nightsWatch }));
 vi.mock('../../../global/utils/experience', () => ({ experience: mocks.experience }));
 vi.mock('../../utils/announcements', () => ({ announcements: mocks.announcements }));
@@ -377,7 +381,7 @@ describe('messageCreate', () => {
     const m = msg();
     await messageCreate.execute(m as never);
     [mocks.messageCommand, mocks.relayDiscordMessage, mocks.aiMessage, mocks.countMessage, mocks.youAre, mocks.karma,
-      mocks.helperActivity, mocks.nightsWatch, mocks.announcements].forEach(fn => expect(fn).toHaveBeenCalledWith(m));
+      mocks.helperActivity, mocks.trackResponse, mocks.nightsWatch, mocks.announcements].forEach(fn => expect(fn).toHaveBeenCalledWith(m));
     expect(mocks.experience).toHaveBeenCalledWith(m.member, 'GENERAL', 'TEXT', m.channel);
   });
 
@@ -396,6 +400,14 @@ describe('messageCreate', () => {
     await messageCreate.execute(msg({ guild: null }) as never);
     expect(mocks.experience).not.toHaveBeenCalled();
     expect(mocks.announcements).toHaveBeenCalledTimes(4);
+  });
+
+  it('continues processing messages when response tracking fails', async () => {
+    mocks.trackResponse.mockRejectedValueOnce(new Error('database unavailable'));
+    const m = msg();
+    await expect(messageCreate.execute(m as never)).resolves.toBeUndefined();
+    expect(mocks.aiMessage).toHaveBeenCalledWith(m);
+    expect(mocks.announcements).toHaveBeenCalledWith(m);
   });
 
   it('logs instead of crashing when AI handling rejects', async () => {

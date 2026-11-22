@@ -10,9 +10,13 @@ const mocks = vi.hoisted(() => ({
   profile: vi.fn(),
   stats: vi.fn(),
   parseURL: vi.fn(),
+  remindTicket: vi.fn(async (): Promise<void> => undefined),
 }));
 
 vi.mock('../../utils/updateDb', () => ({ default: mocks.updateDb }));
+vi.mock('../../../discord/utils/tripsitResponseReminder', async importOriginal => ({
+  ...(await importOriginal<object>()), remindUnansweredTripSitTicket: mocks.remindTicket,
+}));
 vi.mock('../../../discord/utils/checkPermissions', () => ({ checkChannelPermissions: mocks.checkPerms }));
 vi.mock('../../utils/experience', () => ({ experience: mocks.experience }));
 vi.mock('../../commands/g.learn', () => ({ profile: mocks.profile }));
@@ -245,6 +249,29 @@ describe('tickets', () => {
 
   beforeEach(() => {
     dbMock.discord_guilds.findMany.mockResolvedValue([]);
+  });
+
+  it('checks unanswered help requests as part of the existing ticket timer', async () => {
+    const open = ticket({ archived_at: future(), type: 'TRIPSIT' });
+    dbMock.user_tickets.findMany.mockResolvedValue([open] as never);
+    const { run } = await start();
+    await run('tickets');
+    expect(mocks.remindTicket).toHaveBeenCalledWith(open);
+  });
+
+  it('waits for help reminders before scheduling another ticket check', async () => {
+    const open = ticket({ archived_at: future(), type: 'TRIPSIT' });
+    dbMock.user_tickets.findMany.mockResolvedValue([open] as never);
+    let finish = () => {};
+    mocks.remindTicket.mockImplementationOnce(() => new Promise<void>(resolve => { finish = resolve; }));
+    const { initial } = await start();
+    const pending = initial[T.tickets].fn();
+    await flush();
+    expect(mocks.remindTicket).toHaveBeenCalledWith(open);
+    expect(scheduled).toHaveLength(11);
+    finish();
+    await pending;
+    expect(scheduled).toHaveLength(12);
   });
 
   it('archives expired tickets with sane defaults, archives the thread and restores roles', async () => {
