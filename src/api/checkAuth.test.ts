@@ -11,8 +11,8 @@ function run(authorization?: string) {
   return checkAuth(req, res as unknown as Response).then(ok => ({ ok, res }));
 }
 
-const basic = (user: string, password: string) => {
-  const encoded = Buffer.from(`${user}:${password}`).toString('base64');
+const basic = (user: string, second: string) => {
+  const encoded = Buffer.from(`${user}:${second}`).toString('base64');
   return `Basic ${encoded}`;
 };
 
