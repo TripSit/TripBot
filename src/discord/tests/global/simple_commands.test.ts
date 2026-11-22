@@ -56,6 +56,18 @@ describe('simple fun commands', () => {
     const kipp = await run(dKipp);
     expect(JSON.stringify(lastReply(kipp.stub))).toContain('Keep It Positive Please!');
   });
+
+  it('kipp shows two rows of eight different happy emojis around the message', async () => {
+    const kipp = await run(dKipp);
+    const { description } = (lastReply(kipp.stub).embeds as Array<{ data: { description: string } }>)[0].data;
+    const [top, middle, bottom] = description.split('\n').filter(Boolean);
+    expect(middle).toBe('💜Keep It Positive Please!💜');
+    [top, bottom].forEach(row => {
+      const emojis = row.split(' ');
+      expect(emojis).toHaveLength(8);
+      expect(new Set(emojis).size).toBe(8);
+    });
+  });
 });
 
 describe('invite', () => {
