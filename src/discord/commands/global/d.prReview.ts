@@ -10,6 +10,7 @@ import {
   LabelBuilder,
 } from 'discord.js';
 import { mergePr, postPrRejectionComment } from '../../../global/commands/g.prReview';
+import { MODAL_TIMEOUT_MS } from '../../utils/awaitModal';
 
 const F = f(__filename);
 
@@ -106,7 +107,7 @@ export async function prReviewButton(interaction: ButtonInteraction): Promise<vo
 
     const overrideFilter = (i: ModalSubmitInteraction) => i.customId.startsWith('"ID":"PR","T":"ACCEPTOVERRIDE"')
       && i.customId.includes(`"II":"${interaction.id}"`);
-    interaction.awaitModalSubmit({ filter: overrideFilter, time: 0 })
+    interaction.awaitModalSubmit({ filter: overrideFilter, time: MODAL_TIMEOUT_MS })
       .then(async i => {
         await i.deferReply({ flags: MessageFlags.Ephemeral });
 
@@ -154,7 +155,7 @@ export async function prReviewButton(interaction: ButtonInteraction): Promise<vo
 
   const filter = (i: ModalSubmitInteraction) => i.customId.startsWith('"ID":"PR","T":"REJECTMODAL"')
     && i.customId.includes(`"II":"${interaction.id}"`);
-  interaction.awaitModalSubmit({ filter, time: 0 })
+  interaction.awaitModalSubmit({ filter, time: MODAL_TIMEOUT_MS })
     .then(async i => {
       const { N: modalPrNumberString } = JSON.parse(`{${i.customId}}`) as { N: string };
 

@@ -19,6 +19,7 @@ import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 import tripsitInfo from '../../../global/commands/g.about';
+import { awaitModal } from '../../utils/awaitModal';
 
 const F = f(__filename);
 
@@ -38,7 +39,7 @@ export async function feedbackReportModal(
   );
 
   const filter = (i:ModalSubmitInteraction) => i.customId.includes('feedbackReportModal') && i.customId.split('~')[1] === interaction.id;
-  interaction.awaitModalSubmit({ filter, time: 0 })
+  awaitModal(interaction, filter)
     .then(async i => {
       await i.deferReply({ flags: MessageFlags.Ephemeral });
       const guildName = ` in ${i.guild?.name}`;

@@ -16,6 +16,7 @@ import {
 import { botmod } from '../../../global/commands/g.botmod';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
+import { awaitModal } from '../../utils/awaitModal';
 
 const F = f(__filename);
 
@@ -150,7 +151,7 @@ export const dBotmod: SlashCommand = {
     await interaction.showModal(modal);
 
     const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('botModModal') && i.customId.split('~')[1] === interaction.id;
-    interaction.awaitModalSubmit({ filter, time: 0 })
+    awaitModal(interaction, filter)
       .then(async i => {
         await i.deferReply({ flags: MessageFlags.Ephemeral });
         const toggle = interaction.options.getString('toggle') ?? 'on' as 'on' | 'off';

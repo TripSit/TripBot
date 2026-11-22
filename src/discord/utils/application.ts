@@ -37,6 +37,7 @@ import commandContext from './context'; // eslint-disable-line @typescript-eslin
 import { missingPermission } from './checkPermissions';
 import { getOrCreateGuild } from '../../global/utils/dbRecords';
 import { replyGuildOnly } from './guildOnly';
+import { awaitModal } from './awaitModal';
 
 const F = f(__filename);
 
@@ -200,7 +201,7 @@ export async function applicationSetup(
     ));
 
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('appModal') && i.customId.split('~')[1] === interaction.id;
-  interaction.awaitModalSubmit({ filter, time: 0 })
+  awaitModal(interaction, filter)
     .then(async i => {
       await i.deferReply({ flags: MessageFlags.Ephemeral });
 
@@ -350,7 +351,7 @@ export async function applicationStart(
 
   // Collect a modal submit interaction
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('applicationSubmit') && i.customId.split('~')[1] === interaction.id;
-  interaction.awaitModalSubmit({ filter, time: 0 })
+  awaitModal(interaction, filter)
     .then(async i => {
       await i.deferReply({ flags: MessageFlags.Ephemeral });
 

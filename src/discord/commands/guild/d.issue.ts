@@ -16,6 +16,7 @@ import { SlashCommand } from '../../@types/commandDef';
 import { issue } from '../../../global/commands/g.issue';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
+import { awaitModal } from '../../utils/awaitModal';
 
 const F = f(__filename);
 
@@ -78,7 +79,7 @@ export const dIssue: SlashCommand = {
         ),
     );
     const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('issueModal') && i.customId.split('~')[1] === interaction.id;
-    interaction.awaitModalSubmit({ filter, time: 0 })
+    awaitModal(interaction, filter)
       .then(async i => {
         await i.deferReply({ flags: MessageFlags.Ephemeral });
         const issueBody = `${i.fields.getTextInputValue('issueBody')}

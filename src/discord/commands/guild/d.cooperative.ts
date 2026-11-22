@@ -28,6 +28,7 @@ import { missingPermission } from '../../utils/checkPermissions';
 import commandContext from '../../utils/context';
 import { getOrCreateGuild } from '../../../global/utils/dbRecords';
 import { GUILD_ONLY_TEXT } from '../../utils/guildOnly';
+import { awaitModal } from '../../utils/awaitModal';
 
 const F = f(__filename);
 
@@ -164,7 +165,7 @@ export async function cooperativeApplyButton(
         .setCustomId('info')),
     ));
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('cooperativeApply~') && i.customId.split('~')[1] === interaction.id;
-  interaction.awaitModalSubmit({ filter, time: 0 })
+  awaitModal(interaction, filter)
     .then(async i => {
       await i.deferReply({ flags: MessageFlags.Ephemeral });
 

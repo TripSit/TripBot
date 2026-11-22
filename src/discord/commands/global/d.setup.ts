@@ -32,6 +32,7 @@ import { embedTemplate } from '../../utils/embedTemplate';
 import { profile } from '../../../global/commands/g.learn';
 import tripsitInfo from '../../../global/commands/g.about';
 import { getOrCreateGuild, getOrCreateUser } from '../../../global/utils/dbRecords';
+import { awaitModal } from '../../utils/awaitModal';
 
 const F = f(__filename);
 
@@ -200,7 +201,7 @@ async function tripsit(
     ));
 
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('tripsitmeModal') && i.customId.split('~')[1] === interaction.id;
-  interaction.awaitModalSubmit({ filter, time: 0 })
+  awaitModal(interaction, filter)
     .then(async i => {
       if (!i.guild) return;
       await i.deferReply({ flags: MessageFlags.Ephemeral });
@@ -345,7 +346,7 @@ async function techhelp(
     ));
 
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('helpdeskModal') && i.customId.split('~')[1] === interaction.id;
-  interaction.awaitModalSubmit({ filter, time: 0 })
+  awaitModal(interaction, filter)
     .then(async i => {
       if (!i.guild) return;
       await i.deferReply({ flags: MessageFlags.Ephemeral });
@@ -696,7 +697,7 @@ export async function helperButton(
 
   // Collect a modal submit interaction
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"');
-  interaction.awaitModalSubmit({ filter, time: 0 })
+  awaitModal(interaction, filter)
     .then(async i => {
       await i.deferReply({ flags: MessageFlags.Ephemeral });
       const {
