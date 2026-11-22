@@ -1,12 +1,15 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import {
   // Guild,
+  ChannelType,
   Colors,
   EmbedBuilder,
   GuildMember,
   MessageFlags,
   PermissionsBitField,
   SlashCommandBuilder,
+  SlashCommandSubcommandBuilder,
+  SlashCommandSubcommandsOnlyBuilder,
   TextChannel,
   VoiceBasedChannel,
 } from 'discord.js';
@@ -384,8 +387,19 @@ function tentProblem(
   return undefined;
 }
 
+/** Every subcommand gets an optional `tent`, so moderators can act on a Tent without being in it. */
+function withTentOption(builder: SlashCommandSubcommandsOnlyBuilder): SlashCommandSubcommandsOnlyBuilder {
+  builder.options.forEach(subcommand => {
+    (subcommand as SlashCommandSubcommandBuilder).addChannelOption(option => option
+      .setName('tent')
+      .setDescription('Moderators only: the Tent to act on, instead of the one you are in')
+      .addChannelTypes(ChannelType.GuildVoice, ChannelType.GuildStageVoice));
+  });
+  return builder;
+}
+
 export const dVoice: SlashCommand = {
-  data: new SlashCommandBuilder()
+  data: withTentOption(new SlashCommandBuilder()
     .setName('tent')
     .setDescription('Control your Campfire Tent')
     .addSubcommand(subcommand => subcommand
@@ -450,7 +464,7 @@ export const dVoice: SlashCommand = {
         .setRequired(true)))
     .addSubcommand(subcommand => subcommand
       .setName('ping')
-      .setDescription('Ping the Join VC role')),
+      .setDescription('Ping the Join VC role'))),
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
@@ -465,7 +479,15 @@ export const dVoice: SlashCommand = {
 
     // Determine the voice channel
     let voiceChannel = member.voice.channel;
-    if (!voiceChannel && member.roles.cache.has(env.ROLE_MODERATOR)) {
+    const chosenTent = interaction.options.getChannel('tent');
+    const isModerator = member.roles.cache.has(env.ROLE_MODERATOR);
+    if (chosenTent && !isModerator) {
+      await interaction.editReply({ embeds: [tentError('Only moderators can act on a Tent they are not in.')] });
+      return false;
+    }
+    if (chosenTent) {
+      voiceChannel = chosenTent as VoiceBasedChannel;
+    } else if (!voiceChannel && isModerator) {
       // If the user is a moderator and not in a voice channel, use the channel where the command was executed
       if (!interaction.channel?.isVoiceBased()) {
         await interaction.editReply({

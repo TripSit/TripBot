@@ -73,6 +73,46 @@ describe('tent guards', () => {
   });
 });
 
+describe('tent target channel', () => {
+  const mod = (channel: unknown = null) => memberIn(channel, { roles: { cache: new Set([e.ROLE_MODERATOR]) } });
+
+  it('lets a moderator act on a chosen Tent without being in it', async () => {
+    const chosen = tent();
+    const { result, stub } = await run('lock', null, { tent: chosen }, mod());
+    expect(result).toBe(true);
+    expect(chosen.permissionOverwrites.edit).toHaveBeenCalled();
+    expect(title(stub)).toMatch(/lock/i);
+  });
+
+  it('prefers the chosen Tent over the one the moderator is currently in', async () => {
+    const current = tent();
+    const chosen = tent();
+    await run('lock', current, { tent: chosen }, mod(current));
+    expect(chosen.permissionOverwrites.edit).toHaveBeenCalled();
+    expect(current.permissionOverwrites.edit).not.toHaveBeenCalled();
+  });
+
+  it('refuses anyone else who names a Tent', async () => {
+    const chosen = tent();
+    const mine = tent();
+    const { result, stub } = await run('lock', mine, { tent: chosen });
+    expect(result).toBe(false);
+    expect(title(stub)).toBe('Error');
+    expect(chosen.permissionOverwrites.edit).not.toHaveBeenCalled();
+    expect(mine.permissionOverwrites.edit).not.toHaveBeenCalled();
+  });
+
+  it('offers the optional tent option on every subcommand', () => {
+    const subcommands = dVoice.data.toJSON().options ?? [];
+    expect(subcommands.length).toBeGreaterThan(0);
+    subcommands.forEach(subcommand => {
+      const options = (subcommand as { options?: Array<{ name: string; required?: boolean }> }).options ?? [];
+      expect(options.find(option => option.name === 'tent')?.required).toBeFalsy();
+      expect(options.some(option => option.name === 'tent')).toBe(true);
+    });
+  });
+});
+
 describe('tent name', () => {
   it('renames unless the name is flagged', async () => {
     const c = tent();
