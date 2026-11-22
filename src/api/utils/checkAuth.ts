@@ -3,6 +3,40 @@ import { Request, Response } from 'express';
 
 const F = f(__filename);
 
+type AuthFailure = { status: number; message: string };
+
+/** Compares in constant time, so the response time does not reveal how much of a secret was right. */
+function safeEqual(given: string, expected: string): boolean {
+  const givenBuf = Buffer.from(given);
+  const expectedBuf = Buffer.from(expected);
+  return givenBuf.length === expectedBuf.length && crypto.timingSafeEqual(givenBuf, expectedBuf);
+}
+
+function checkBasic(authToken: string): AuthFailure | null {
+  if (!env.API_USERNAME || !env.API_PASSWORD) {
+    log.error(F, 'API_USERNAME or API_PASSWORD not configured on server');
+    return { status: 500, message: 'Server authentication misconfigured' };
+  }
+  const myToken = Buffer.from(`${env.API_USERNAME}:${env.API_PASSWORD}`).toString('base64');
+  if (!safeEqual(authToken, myToken)) {
+    log.error(F, 'Authorization token is not valid');
+    return { status: 401, message: 'Authorization token is not valid' };
+  }
+  return null;
+}
+
+function checkBearer(authToken: string): AuthFailure | null {
+  if (!env.TRIPBOT_API_TOKEN) {
+    log.error(F, 'TRIPBOT_API_TOKEN not configured');
+    return { status: 500, message: 'Server authentication misconfigured' };
+  }
+  if (!safeEqual(authToken, env.TRIPBOT_API_TOKEN)) {
+    log.error(F, 'Bearer token is not valid');
+    return { status: 401, message: 'Bearer token is not valid' };
+  }
+  return null;
+}
+
 export default async function checkAuth(
   req: Request,
   res: Response,
@@ -37,37 +71,17 @@ export default async function checkAuth(
   // log.debug(F, 'Authorization header has a token!')
 
   // Handle different authentication types
+  let failure: AuthFailure | null;
   if (authType === 'Basic') {
-    if (!env.API_USERNAME || !env.API_PASSWORD) {
-      log.error(F, 'API_USERNAME or API_PASSWORD not configured on server');
-      res.status(500).send('Server authentication misconfigured');
-      return false;
-    }
-    const myToken = Buffer.from(`${env.API_USERNAME}:${env.API_PASSWORD}`).toString('base64');
-    const authBuf = Buffer.from(authToken);
-    const expectedBuf = Buffer.from(myToken);
-
-    if (authBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(authBuf, expectedBuf)) {
-      log.error(F, 'Authorization token is not valid');
-      res.status(401).send('Authorization token is not valid');
-      return false;
-    }
+    failure = checkBasic(authToken);
   } else if (authType === 'Bearer') {
-    // New Bearer token logic
-    if (!env.TRIPBOT_API_TOKEN) {
-      log.error(F, 'TRIPBOT_API_TOKEN not configured');
-      res.status(500).send('Server authentication misconfigured');
-      return false;
-    }
-
-    if (authToken !== env.TRIPBOT_API_TOKEN) {
-      log.error(F, 'Bearer token is not valid');
-      res.status(401).send('Bearer token is not valid');
-      return false;
-    }
+    failure = checkBearer(authToken);
   } else {
+    failure = { status: 401, message: 'Unsupported authorization type' };
     log.error(F, `Unsupported authorization type: ${authType}`);
-    res.status(401).send('Unsupported authorization type');
+  }
+  if (failure) {
+    res.status(failure.status).send(failure.message);
     return false;
   }
 

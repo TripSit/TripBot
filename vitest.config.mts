@@ -75,7 +75,6 @@ export default defineConfig({
         'src/irc/archive/**',
         'src/global/@types/**',
         'src/api/v2/**',
-        'src/api/utils/**',
       ],
     },
   },
