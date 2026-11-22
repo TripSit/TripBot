@@ -321,12 +321,16 @@ export async function experience(
     experienceData.level_points -= expToLevel;
   }
 
+  const previousAwardAt = experienceData.last_message_at;
   experienceData.last_message_at = new Date();
   experienceData.last_message_channel = channel.id;
 
-  await db.user_experience.update({
+  // Only the first of several simultaneous messages may award: the write is guarded on the timestamp that was read,
+  // so a second message that read the same row matches nothing and neither double-awards nor re-announces
+  const saved = await db.user_experience.updateMany({
     where: {
       id: experienceData.id,
+      last_message_at: previousAwardAt,
     },
     data: {
       level: experienceData.level,
@@ -336,6 +340,7 @@ export async function experience(
       last_message_channel: experienceData.last_message_channel,
     },
   });
+  if (saved.count !== 1) return;
 
   // Saved first: an announcement that cannot be sent must never cost the user their points or level
   if (leveledUp) {
