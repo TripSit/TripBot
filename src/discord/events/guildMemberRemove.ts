@@ -21,6 +21,9 @@ const DURATION_UNITS: [string, number][] = [
   ['second', 1000],
 ];
 
+// Discord did not exist before 2015; anything earlier is the placeholder a privacy scrub leaves behind
+const MIN_REAL_JOIN_TIMESTAMP = Date.UTC(2015, 0, 1);
+
 /** Builds a "1 year, 2 days, 5 seconds" style description, skipping units that are zero. */
 function describeDuration(durationMs: number): string {
   let remaining = durationMs;
@@ -40,18 +43,6 @@ export const guildMemberRemove: GuildMemberRemoveEvent = {
     if (member.guild.id !== env.DISCORD_GUILD_ID) return;
     log.info(F, `${member} left guild: ${member.guild.name} (id: ${member.guild.id})`);
 
-    const { joinedTimestamp } = member;
-
-    const embed = errorEmbed();
-
-    if (joinedTimestamp) {
-      const duration = describeDuration(Math.abs(Date.now() - joinedTimestamp));
-      // eslint-disable-next-line max-len
-      embed.setDescription(`${member} (${orDefault(member.displayName, member.user?.tag)}) has left the guild after ${duration}`);
-    } else {
-      embed.setDescription(`${member} (${orDefault(member.displayName, member.user?.tag)}) has left the guild`);
-    }
-
     const targetData = await db.users.upsert({
       where: {
         discord_id: member.id,
@@ -64,6 +55,21 @@ export const guildMemberRemove: GuildMemberRemoveEvent = {
         removed_at: new Date(),
       },
     });
+
+    // A member that was not in the cache when they left has no joinedTimestamp, so fall back to the join date the
+    // bot stored. A scrubbed record carries a 1970 placeholder, which is not a real join date.
+    const storedJoin = targetData.joined_at?.getTime() > MIN_REAL_JOIN_TIMESTAMP ? targetData.joined_at.getTime() : null;
+    const joinedTimestamp = member.joinedTimestamp ?? storedJoin;
+
+    const embed = errorEmbed();
+
+    if (joinedTimestamp) {
+      const duration = describeDuration(Math.abs(Date.now() - joinedTimestamp));
+      // eslint-disable-next-line max-len
+      embed.setDescription(`${member} (${orDefault(member.displayName, member.user?.tag)}) has left the guild after ${duration}`);
+    } else {
+      embed.setDescription(`${member} (${orDefault(member.displayName, member.user?.tag)}) has left the guild`);
+    }
 
     const guildData = await getOrCreateGuild(member.guild.id);
 
