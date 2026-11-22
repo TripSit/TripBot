@@ -116,39 +116,32 @@ export async function nightsWatch(message: Message) {
     return;
   }
 
-  watchRequests.forEach(async watchRequestObj => {
+  // Each request is claimed by deleting it before anything is sent, and the deletion succeeds only once, so two
+  // messages handled at the same moment cannot both notify the watcher.
+  await Promise.all(watchRequests.map(async watchRequestObj => {
+    const claimed = await db.watch_request.deleteMany({ where: { id: watchRequestObj.id } });
+    if (claimed.count !== 1) return;
+
     const target = await message.client.users.fetch(user.discord_id as string);
+    const caller = await message.client.users.fetch(watchRequestObj.caller_id);
+    const text = `Hey ${caller}, the user ${target} which you were watching has been active recently in ${message.channel}.`;
 
     if (watchRequestObj.notification_method === 'dm') {
-      const caller = await message.client.users.fetch(watchRequestObj.caller_id);
-      if (caller) {
-        try {
-          await caller.send(
-            `Hey ${caller}, the user ${target} which you were watching has been active recently in ${message.channel}.`,
-          );
-        } catch {
-          log.debug(F, 'Failed to fulfill Watch Request. Likely can\'t DM user.');
-        }
-
-        await deleteWatchRequest(user.discord_id as string, caller.id);
+      try {
+        await caller.send(text);
+      } catch {
+        log.debug(F, 'Failed to fulfill Watch Request. Likely can\'t DM user.');
       }
-    } else if (watchRequestObj.notification_method === 'channel') {
+    } else if (watchRequestObj.notification_method === 'channel' && watchRequestObj.channel_id) {
       const tripsitGuild = await message.client.guilds.fetch(env.DISCORD_GUILD_ID);
-      if (watchRequestObj.channel_id) {
-        // eslint-disable-next-line max-len
-        const notificationChannel = await tripsitGuild.channels.fetch(watchRequestObj.channel_id) as TextChannel;
-        const caller = await message.client.users.fetch(watchRequestObj.caller_id);
-        try {
-          await notificationChannel.send(
-            `Hey ${caller}, the user ${target} which you were watching has been active recently in ${message.channel}.`,
-          );
-        } catch {
-          log.debug(F, 'Failed to fulfill Watch Request. Notification sending failed.');
-        }
-        await deleteWatchRequest(user.discord_id as string, caller.id);
+      const notificationChannel = await tripsitGuild.channels.fetch(watchRequestObj.channel_id) as TextChannel;
+      try {
+        await notificationChannel.send(text);
+      } catch {
+        log.debug(F, 'Failed to fulfill Watch Request. Notification sending failed.');
       }
     }
-  });
+  }));
 }
 
 export async function executeWatch(
