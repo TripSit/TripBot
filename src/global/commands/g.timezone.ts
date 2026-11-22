@@ -56,20 +56,17 @@ export async function timezone(
 
     return 'updated';
   }
-  let gmtValue = '';
-
   const userData = await getOrCreateUser(memberId);
 
   if (userData.timezone !== null) {
     const tzCode = userData.timezone;
-    for (const zone of timezones) { // eslint-disable-line no-restricted-syntax
-      if (zone.tzCode === tzCode) {
-        gmtValue = zone.offset;
-      }
-    }
-    // get the user's timezone from the database
-    const timestring = new Date().toLocaleTimeString('en-US', { timeZone: tzCode, hour: '2-digit', minute: '2-digit' });
-    response = `It's ${timestring} (GMT${gmtValue})`;
+    const now = new Date();
+    // The time and the offset come from the same formatter and date, so daylight saving applies to both
+    const timestring = now.toLocaleTimeString('en-US', { timeZone: tzCode, hour: '2-digit', minute: '2-digit' });
+    // Formats like '7/15/2026, GMT-04:00', or a bare 'GMT' for UTC
+    const offset = new Intl.DateTimeFormat('en-US', { timeZone: tzCode, timeZoneName: 'longOffset' })
+      .format(now).split('GMT')[1] || '+00:00';
+    response = `It's ${timestring} (GMT${offset})`;
   }
   log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   return response;
