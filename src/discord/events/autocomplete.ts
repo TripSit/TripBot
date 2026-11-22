@@ -115,8 +115,8 @@ async function autocompleteBenzos(interaction: AutocompleteInteraction) {
       aliases: [] as string[],
     };
     if (Object.hasOwn(drugDataTripsit[drugName as keyof typeof drugDataTripsit], 'aliases')) {
-      // @ts-ignore
-      drugObj.aliases = drugDataTripsit[drugName as keyof typeof drugDataTripsit].aliases;
+      // hasOwn above guarantees the aliases list exists on this entry
+      drugObj.aliases = (drugDataTripsit[drugName as keyof typeof drugDataTripsit] as { aliases: string[] }).aliases;
     }
     return drugObj;
   });
