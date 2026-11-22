@@ -218,8 +218,9 @@ describe('reopenTicket', () => {
     await run(s, baseTicket({ type }), { status });
     const data = dbMock.user_tickets.update.mock.calls.at(-1)?.[0].data;
     expect(data).toMatchObject({ responded_at: null, team_reminded_at: null, user_reminded_at: null });
+    if (!data || !(data.reopened_at instanceof Date)) throw new Error('Missing ticket reopen timestamp');
     if (scheduled) {
-      expect(data?.response_due_at).toEqual(new Date((data?.reopened_at as Date).getTime() + 300000));
+      expect(data?.response_due_at).toEqual(new Date(data.reopened_at.getTime() + 300000));
     } else {
       expect(data?.response_due_at).toBeNull();
     }
