@@ -69,36 +69,45 @@ export default {
         ? 30 * 1000 // 30 seconds
         : 90 * 24 * 60 * 60 * 1000; // 3 months
 
-      const latestAppeal = await db.appeals.findFirst({
-        where: {
-          user_id: user.id,
-          guild_id: data.guild_id,
-          created_at: {
-            gte: new Date(Date.now() - cooldownPeriod),
+      // The cooldown check and the insert run in one transaction that first locks the user's row, so two quick
+      // submissions (a double-clicked form) are handled one after the other and the second sees the first
+      const outcome = await db.$transaction(async tx => {
+        await tx.$queryRaw`SELECT id FROM users WHERE id = ${user.id}::uuid FOR UPDATE`;
+
+        const latestAppeal = await tx.appeals.findFirst({
+          where: {
+            user_id: user.id,
+            guild_id: data.guild_id,
+            created_at: {
+              gte: new Date(Date.now() - cooldownPeriod),
+            },
           },
-        },
-        orderBy: {
-          created_at: 'desc',
-        },
+          orderBy: {
+            created_at: 'desc',
+          },
+        });
+
+        if (latestAppeal) return null;
+
+        // Create the new appeal
+        return tx.appeals.create({
+          data: {
+            guild_id: data.guild_id,
+            user_id: user.id, // Use the UUID
+            reason: data.reason,
+            solution: data.solution,
+            future: data.future,
+            extra: data.extra,
+            status: 'RECEIVED', // Received, Accepted, Denied
+          },
+        });
       });
 
-      if (latestAppeal) {
+      if (!outcome) {
         log.info(F, `User ${data.discord_id} tried to create appeal before 90 day cooldown`);
         return { success: false, error: 'COOLDOWN' };
       }
-
-      // Create the new appeal
-      const created = await db.appeals.create({
-        data: {
-          guild_id: data.guild_id,
-          user_id: user.id, // Use the UUID
-          reason: data.reason,
-          solution: data.solution,
-          future: data.future,
-          extra: data.extra,
-          status: 'RECEIVED', // Received, Accepted, Denied
-        },
-      });
+      const created = outcome;
 
       log.info(F, `Appeal created successfully for discord_id ${data.discord_id} (user_id: ${user.id})`);
       return { success: true, appealId: created.id };
