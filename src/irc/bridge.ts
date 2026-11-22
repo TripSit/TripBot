@@ -50,12 +50,15 @@ const pendingEchoes: PendingEcho[] = [];
 const relayedMessages = new Map<string, RelayedMessage[]>();
 const MAX_PENDING_ECHOES = 200;
 const MAX_TRACKED_MESSAGES = 1000;
-let relayMsgDenied = false;
+// A refusal (for example no channel op in one auto-created channel) pauses RELAYMSG for a while instead of until
+// the next reconnect, so the bridge retries and recovers once the bot has the privileges it needs.
+const RELAYMSG_DENIAL_MS = 10 * 60 * 1000;
+let relayMsgDeniedUntil = 0;
 
 const channelKey = (channel: string) => channel.toLowerCase();
 
 function canRelayMsg(client: Client): boolean {
-  return !relayMsgDenied && client.network.cap.isEnabled(RELAYMSG_CAP);
+  return Date.now() >= relayMsgDeniedUntil && client.network.cap.isEnabled(RELAYMSG_CAP);
 }
 
 const fallbackAction = (nick: string, text: string): string => `* ${nick} ${text}`;
@@ -192,13 +195,13 @@ export function registerIrcBridge(client: Client): void {
     }
     if (command !== 'FAIL' || params[0] !== 'RELAYMSG') return;
     // Without the relaymsg oper capability or channel op, fall back to `<nick> message`
-    if (!relayMsgDenied) {
-      log.error(F, `RELAYMSG refused (${params.slice(1).join(' ')}), falling back to plain messages`);
+    if (Date.now() >= relayMsgDeniedUntil) {
+      log.error(F, `RELAYMSG refused (${params.slice(1).join(' ')}), falling back to plain messages for 10 minutes`);
     }
-    relayMsgDenied = true;
+    relayMsgDeniedUntil = Date.now() + RELAYMSG_DENIAL_MS;
   });
   client.on('registered', () => {
-    relayMsgDenied = false;
+    relayMsgDeniedUntil = 0;
   });
 }
 

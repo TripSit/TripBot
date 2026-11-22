@@ -219,6 +219,16 @@ describe('registerIrcBridge', () => {
     expect(client.raw).toHaveBeenCalledWith('RELAYMSG', '#lounge', RELAYED_NICK, 'hello');
   });
 
+  it('retries RELAYMSG after the refusal expires, so one channel cannot degrade the bridge for good', async () => {
+    client.emit(UNKNOWN_COMMAND, { command: FAIL, params: ['RELAYMSG', PRIVS_NEEDED, 'nope'], tags: {} });
+    await sendToIrc(outgoing());
+    expect(client.say).toHaveBeenCalledWith('#lounge', FALLBACK_HELLO);
+    client.raw.mockClear();
+    await vi.advanceTimersByTimeAsync(10 * 60 * 1000 + bridge.IRC_MESSAGE_DELAY_MS);
+    await sendToIrc(outgoing());
+    expect(client.raw).toHaveBeenCalledWith('RELAYMSG', '#lounge', RELAYED_NICK, 'hello');
+  });
+
   it('ignores FAIL replies for other commands', async () => {
     client.emit(UNKNOWN_COMMAND, { command: FAIL, params: ['CHATHISTORY', 'x'], tags: {} });
     await sendToIrc(outgoing());

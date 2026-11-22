@@ -312,6 +312,25 @@ describe('creating channels', () => {
   });
 });
 
+describe('isRegistrationNotice', () => {
+  it.each([
+    ['Channel #new successfully registered', '#new', true],
+    ['Channel #new is already registered', '#new', true],
+    ['channel #NEW successfully registered', '#new', true],
+    ['Channel #food-chat successfully registered', '#food', false],
+    ['Channel #food successfully registered', '#food-chat', false],
+    ['Channel #new is not registered', '#new', false],
+    ['Channel #new is unregistered', '#new', false],
+    ['You cannot registered #new', '#new', false],
+    ['Channel #new was created', '#new', false],
+    ['Channel #newer successfully registered', '#new', false],
+    ['Channel #a.b successfully registered', '#a.b', true],
+    ['Channel #axb successfully registered', '#a.b', false],
+  ])('%s for %s -> %s', (message, channel, expected) => {
+    expect(channels.isRegistrationNotice(message, channel)).toBe(expected);
+  });
+});
+
 describe('topics', () => {
   const join = (channel: string) => client.emit('join', { nick: BOT, channel });
 

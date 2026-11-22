@@ -52,6 +52,17 @@ export function batchChannels(channels: string[]): string[][] {
  * changes at runtime, and sets up channels the bot itself creates. Every privileged step (creating channels,
  * SAJOIN, ChanServ) is allowed to fail; it is logged and the rest carries on.
  */
+const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * True when a ChanServ notice says this exact channel is (now) registered. The channel must be a whole token, so
+ * a notice about #food-chat never marks #food, and failures such as "is not registered" or "unregistered" do not count.
+ */
+export function isRegistrationNotice(message: string, channel: string): boolean {
+  const mentionsChannel = new RegExp(`(?:^|[^\\w#-])${escapeRegExp(channel)}(?![\\w#-])`, 'i').test(message);
+  return mentionsChannel && /\bregistered\b/i.test(message) && !/\b(?:not|un|cannot|can't|couldn't)\s*registered\b/i.test(message);
+}
+
 export function registerIrcChannels(client: Client): void {
   const joined = new Set<string>();
   const requested = new Set<string>();
@@ -202,8 +213,7 @@ export function registerIrcChannels(client: Client): void {
     if (nick.toLowerCase() !== 'chanserv') return;
     log.info(F, `ChanServ: ${message}`);
     // Covers both "successfully registered" and "already registered"
-    const match = getMappingRows().find(row => !row.irc_registered
-      && message.toLowerCase().includes(key(row.irc_channel)) && /\bregistered\b/i.test(message));
+    const match = getMappingRows().find(row => !row.irc_registered && isRegistrationNotice(message, row.irc_channel));
     if (match) markIrcRegistered(match.irc_channel).catch(err => log.error(F, `Failed to record registration: ${err}`));
   });
 
