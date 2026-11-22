@@ -297,6 +297,66 @@ describe('runPager', () => {
     await expect(handlers.end()).resolves.toBeUndefined();
   });
 
+  it('keeps page order when an earlier render finishes after a later one', async () => {
+    const { handlers, interaction } = setup();
+    const releases: Array<() => void> = [];
+    const renderPage = vi.fn((index: number) => (index === 0
+      ? Promise.resolve({ embeds: [{ page: index }] as never })
+      : new Promise<{ embeds: never }>(resolve => { releases.push(() => resolve({ embeds: [{ page: index }] as never })); })));
+    await runPager(interaction as never, { pageCount: 4, renderPage, idPrefix: 'p' });
+    interaction.editReply.mockClear();
+    const first = handlers.collect(click('pNext'));
+    const second = handlers.collect(click('pNext'));
+    await vi.waitFor(() => expect(releases).toHaveLength(1));
+    releases[0]();
+    await vi.waitFor(() => expect(releases).toHaveLength(2));
+    releases[1]();
+    await Promise.all([first, second]);
+    const pages = interaction.editReply.mock.calls.map(call => (call as unknown as [{ embeds: Array<{ page: number }> }])[0].embeds[0].page);
+    expect(pages).toEqual([1, 2]);
+  });
+
+  it('does not edit the message with a render that finishes after the collector ended', async () => {
+    const { handlers, interaction } = setup();
+    let release: () => void = () => undefined;
+    const renderPage = vi.fn((index: number) => (index === 0
+      ? Promise.resolve({ embeds: [{ page: index }] as never })
+      : new Promise<{ embeds: never }>(resolve => { release = () => resolve({ embeds: [{ page: index }] as never }); })));
+    await runPager(interaction as never, { pageCount: 3, renderPage, idPrefix: 'p' });
+    interaction.editReply.mockClear();
+    const pending = handlers.collect(click('pNext'));
+    await vi.waitFor(() => expect(renderPage).toHaveBeenCalledTimes(2));
+    const ending = handlers.end();
+    release();
+    await Promise.all([pending, ending]);
+    // Only the disabling edit happened; the late render did not re-enable the buttons
+    expect(interaction.editReply).toHaveBeenCalledTimes(1);
+    const only = interaction.editReply.mock.calls[0] as unknown as [{ components: Array<{ toJSON(): { components: Array<{ disabled: boolean }> } }>; embeds?: unknown }];
+    expect(only[0].embeds).toBeUndefined();
+    expect(only[0].components[0].toJSON().components.every(c => c.disabled)).toBe(true);
+  });
+
+  it('keeps handling clicks after one render fails', async () => {
+    const { handlers, interaction } = setup();
+    const renderPage = vi.fn(async (index: number) => {
+      if (index === 1) throw new Error('render failed');
+      return { embeds: [{ page: index }] as never };
+    });
+    await runPager(interaction as never, { pageCount: 4, renderPage, idPrefix: 'p' });
+    await expect(handlers.collect(click('pNext'))).rejects.toThrow('render failed');
+    await handlers.collect(click('pNext'));
+    expect(renderPage).toHaveBeenLastCalledWith(2);
+  });
+
+  it('ignores clicks that arrive after the collector ended', async () => {
+    const { handlers, interaction, renderPage } = setup();
+    await runPager(interaction as never, { pageCount: 3, renderPage, idPrefix: 'p' });
+    await handlers.end();
+    renderPage.mockClear();
+    await handlers.collect(click('pNext'));
+    expect(renderPage).not.toHaveBeenCalled();
+  });
+
   it('skips the controls for single pages', async () => {
     const { interaction, renderPage, message } = setup();
     await runPager(interaction as never, {
