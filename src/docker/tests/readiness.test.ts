@@ -77,6 +77,7 @@ it('gates only the UAT deployment after the container rebuild', () => {
   const [production, uat] = pipeline.split('\n---\n');
   expect(production).not.toContain('sh src/docker/wait-for-ready.sh');
   expect(uat).toContain('--build --no-deps\n      - sh src/docker/wait-for-ready.sh');
+  expect(uat).toContain('when:\n      status: [success, failure]');
 });
 
 it.each([

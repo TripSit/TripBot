@@ -176,6 +176,8 @@ steps:
 
   - name: discord notification
     image: appleboy/drone-discord
+    when:
+      status: [success, failure]
     settings:
       webhook_id:
         from_secret: WEBHOOK_ID
