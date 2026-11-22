@@ -31,6 +31,9 @@ describe('calc', () => {
     mocks.benzo.mockResolvedValue(2);
     const ok = await run('benzo', { i_have: 1, mg_of: 'a', and_i_want_the_dose_of: 'b' });
     expect(ok.embed.title).toBe('1 mg of a about equal to 2 mg of b');
+    // A way to learn more about both substances once the dose has been converted
+    expect(ok.embed.description).toContain('`/drug substance:a`');
+    expect(ok.embed.description).toContain('`/drug substance:b`');
     const low = await run('benzo', { i_have: 0.0001, mg_of: 'a', and_i_want_the_dose_of: 'b' });
     expect(low.embed.title).toBe('Invalid values supplied');
     mocks.benzo.mockResolvedValue(-1);
@@ -40,6 +43,7 @@ describe('calc', () => {
   it('dxm lays out plateaus', async () => {
     mocks.dxm.mockResolvedValue({ units: 'mg', data: { First: { min: 1, max: 2 }, Second: { min: 3, max: 4 } } });
     const { embed } = await run('dxm', { calc_weight: 70, units: 'kg', taking: 'Pure (mg)' });
+    expect(embed.description).toContain('`/drug substance:dxm`');
     expect(embed.fields).toHaveLength(6);
     expect(embed.fields?.[0].name).toBe('Plateau');
     expect(embed.fields?.[3].name).toBe('​');
