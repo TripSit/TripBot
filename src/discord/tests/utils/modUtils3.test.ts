@@ -154,11 +154,12 @@ describe('acknowledgeReportButton', () => {
 
   function setup(opts: {
     guild?: boolean; modThread?: string | null; threadFetch?: 'ok' | 'fail'; actor?: 'ok' | 'fail'; reportee?: 'member' | 'user' | 'none';
-    reporter?: 'ok' | 'left'; dmFails?: boolean; modLog?: string | null; modLogFetchFails?: boolean; editFails?: boolean; ackRow?: boolean;
+    reporter?: 'ok' | 'left'; dmFails?: boolean | 'closed'; modLog?: string | null; modLogFetchFails?: boolean; editFails?: boolean; ackRow?: boolean;
   } = {}) {
     const targetChan = { name: 'thread-name', send: vi.fn() };
     const modLog = { send: vi.fn() };
-    const reporter = { send: opts.dmFails ? vi.fn().mockRejectedValue(new Error('DMs closed')) : vi.fn() };
+    const dmError = opts.dmFails === 'closed' ? Object.assign(new Error('Cannot send messages to this user'), { code: 50007 }) : new Error('DMs closed');
+    const reporter = { send: opts.dmFails ? vi.fn().mockRejectedValue(dmError) : vi.fn(), toString: (): string => '<@reporter>' };
     (global as unknown as { discordClient: unknown }).discordClient = {
       channels: { fetch: vi.fn(async () => { if (opts.threadFetch === 'fail') throw new Error('Unknown'); return targetChan; }) },
       users: {
@@ -265,6 +266,16 @@ describe('acknowledgeReportButton', () => {
     expect(s.message.edit).not.toHaveBeenCalled();
     expect(s.modLog.send).not.toHaveBeenCalled();
     expect(JSON.stringify(s.targetChan.send.mock.calls.at(-1)?.[0])).toContain('there was an error');
+  });
+
+  it('tells the mods when the reporter has DMs turned off, instead of an unexplained error', async () => {
+    const closed = setup({ reportee: 'member', dmFails: 'closed' });
+    expect(await acknowledgeReportButton(closed.interaction)).toBe(false);
+    const message = JSON.stringify(closed.targetChan.send.mock.calls.at(-1)?.[0]);
+    expect(message).toContain('has direct messages turned off');
+    expect(message).toContain('not recorded');
+    expect(message).not.toContain('there was an error');
+    expect(dbMock.user_actions.create).not.toHaveBeenCalled();
   });
 
   it('handles DM failures and missing mod log channels', async () => {

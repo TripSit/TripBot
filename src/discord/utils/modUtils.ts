@@ -1468,8 +1468,14 @@ export async function acknowledgeReportButton(
     });
   } catch (error) {
     log.error(F, `Failed to acknowledge report for ${targetId}: ${error}`);
+    // Discord answers 50007 when the reporter has direct messages turned off or has blocked the bot, which is
+    // something the mods can act on, unlike an unexplained error
+    const cannotDm = (error as { code?: number }).code === RESTJSONErrorCodes.CannotSendMessagesToThisUser;
+    const reason = cannotDm
+      ? `${reporterUser} has direct messages turned off (or blocked the bot), so the thank-you message could not be sent and the acknowledgement was not recorded.`
+      : 'there was an error.';
     await targetChan.send({
-      embeds: [errorEmbed(`${buttonInt.user.username} tried to acknowledged ${reporteeData.username}'s report, but there was an error.`)],
+      embeds: [errorEmbed(`${buttonInt.user.username} tried to acknowledge ${reporteeData.username}'s report, but ${reason}`)],
     });
     return false;
   }
