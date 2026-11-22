@@ -72,6 +72,8 @@ async function dCalcBenzo(
   const embedDescription = stripIndents`
       **Research and test your substances before using them.**
       Start with a lower dose than the calculator shows. Everybody reacts differently.
+
+      More about these substances: \`/drug substance:${drugA}\` and \`/drug substance:${drugB}\`
       `;
   return buildCalcEmbed(embedTitle, embedDescription, Colors.Red, isError);
 }
@@ -99,7 +101,7 @@ async function dCalcDXM(
   const { units } = results;
 
   const embedTitle = 'DXM Dosages';
-  const embedDescription = `For a ${givenWeight}${weightUnits} individual taking ${taking}`;
+  const embedDescription = `For a ${givenWeight}${weightUnits} individual taking ${taking}\n\nMore about DXM: \`/drug substance:dxm\``;
   const embed = await buildCalcEmbed(embedTitle, embedDescription);
   let header = true;
   Object.keys(dosageData).forEach(key => {
