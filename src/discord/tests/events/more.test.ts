@@ -326,6 +326,27 @@ describe('guildMemberRemove', () => {
     expect(noJoin.modLogSend.mock.calls[0][0].embeds[0].data.description).toContain('(ally#1)');
   });
 
+  it('falls back to the stored join date when the member was not cached', async () => {
+    const { member, modLogSend } = setup(null, { modLog: 'log' });
+    dbMock.users.upsert.mockResolvedValue({ mod_thread_id: null, joined_at: new Date(Date.now() - 3 * DAY) } as never);
+    await guildMemberRemove.execute(member as never);
+    expect(modLogSend.mock.calls[0][0].embeds[0].data.description).toContain('has left the guild after 3 days');
+  });
+
+  it('ignores the 1970 placeholder a privacy scrub leaves as the stored join date', async () => {
+    const { member, modLogSend } = setup(null, { modLog: 'log' });
+    dbMock.users.upsert.mockResolvedValue({ mod_thread_id: null, joined_at: new Date(1970) } as never);
+    await guildMemberRemove.execute(member as never);
+    expect(modLogSend.mock.calls[0][0].embeds[0].data.description).not.toContain('after');
+  });
+
+  it('prefers the cached join date over the stored one', async () => {
+    const { member, modLogSend } = setup(2 * DAY, { modLog: 'log' });
+    dbMock.users.upsert.mockResolvedValue({ mod_thread_id: null, joined_at: new Date(Date.now() - 9 * DAY) } as never);
+    await guildMemberRemove.execute(member as never);
+    expect(modLogSend.mock.calls[0][0].embeds[0].data.description).toContain('after 2 days');
+  });
+
   it('handles members with no join date', async () => {
     const { member, modLogSend } = setup(null, { modLog: 'log' });
     await guildMemberRemove.execute(member as never);
