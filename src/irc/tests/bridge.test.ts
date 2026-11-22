@@ -364,7 +364,7 @@ describe('redacting relayed messages', () => {
     await target.remove?.('#lounge', 'offline');
     (client as unknown as { connected: boolean }).connected = false;
     echo('hello', 'offline-1');
-    expect(client.raw).not.toHaveBeenCalledWith('REDACT', expect.anything(), expect.anything());
+    expect(client.raw.mock.calls.filter(call => call[0] === 'REDACT')).toHaveLength(0);
   });
 
   it('forgets a pending deletion once its echo is no longer awaited', async () => {
