@@ -111,7 +111,7 @@ describe('runTimer', () => {
     expect(client().user.setActivity).toHaveBeenCalled();
     expect(scheduled).toHaveLength(12);
     expect(scheduled.map(s => s.ms)).toEqual([
-      5000, 10000, 5000, 5000, 5000, 5000, 5000, 48 * 3600000, 10000, 8 * 3600000, 8 * 3600000, 48 * 3600000,
+      5000, 10000, 5000, 5000, 5000, 5000, 5000, 48 * 3600000, 10000, 3600000, 3600000, 48 * 3600000,
     ]);
   });
 
@@ -119,7 +119,7 @@ describe('runTimer', () => {
     e.NODE_ENV = 'production';
     await runTimer();
     expect(scheduled.map(s => s.ms)).toEqual([
-      10000, 60000, 60000, 60000, 30000, 60000, 60000, 24 * 3600000, 12 * 3600000, 24 * 3600000, 24 * 3600000, 24 * 3600000,
+      10000, 60000, 60000, 60000, 30000, 60000, 60000, 24 * 3600000, 12 * 3600000, 3600000, 3600000, 24 * 3600000,
     ]);
   });
 
@@ -885,13 +885,13 @@ describe('monthly session stats', () => {
     mocks.stats.mockResolvedValue('stats text');
     vi.useFakeTimers({ toFake: ['Date'] });
 
-    vi.setSystemTime(new Date(2024, 1, 29, 12));
+    vi.setSystemTime(new Date(Date.UTC(2024, 1, 29, 12)));
     let send = channelFor(e.DISCORD_GUILD_ID);
     const { run } = await start();
     await run('monthly');
     expect(send).toHaveBeenCalledWith({ embeds: [expect.anything()] });
 
-    vi.setSystemTime(new Date(2024, 1, 10, 12));
+    vi.setSystemTime(new Date(Date.UTC(2024, 1, 10, 12)));
     send = channelFor(e.DISCORD_GUILD_ID);
     await run('monthly');
     expect(send).not.toHaveBeenCalled();
@@ -900,11 +900,13 @@ describe('monthly session stats', () => {
   it('does not post in other guilds or non-text channels', async () => {
     mocks.stats.mockResolvedValue('stats');
     vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(new Date(2024, 0, 31, 12));
+    vi.setSystemTime(new Date(Date.UTC(2024, 0, 31, 12)));
     const { run } = await start();
     let send = channelFor('someone-else');
     await run('monthly');
     expect(send).not.toHaveBeenCalled();
+    // Another month-end, since each day only runs once
+    vi.setSystemTime(new Date(Date.UTC(2024, 2, 31, 12)));
     send = channelFor(e.DISCORD_GUILD_ID, false);
     await run('monthly');
     expect(send).not.toHaveBeenCalled();
@@ -912,17 +914,54 @@ describe('monthly session stats', () => {
 });
 
 describe('birthdays', () => {
-  const today = () => { const d = new Date(); return new Date(2000, d.getMonth(), d.getDate(), 12); };
+  const noonUtc = Date.UTC(2026, 6, 15, 12);
+  beforeEach(() => { vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(noonUtc); });
+  afterEach(() => vi.useRealTimers());
+
+  // Birthdays are stored as UTC midnight dates
+  const today = () => new Date(Date.UTC(2000, 6, 15));
   const user = (over: object = {}) => ({
     id: 'u', discord_id: 'd1', birthday: today(), ...over,
   });
 
   it('wishes members a happy birthday in the VIP lounge', async () => {
-    dbMock.users.findMany.mockResolvedValue([user(), user({ discord_id: 'd2', birthday: new Date(2000, 0, 1) === today() ? null : new Date(1999, 11, 31) })] as never);
+    dbMock.users.findMany.mockResolvedValue([user(), user({ discord_id: 'd2', birthday: new Date(Date.UTC(1999, 11, 31)) })] as never);
     const send = vi.fn();
     client().channels.fetch = vi.fn(async () => ({ send }));
     const { run } = await start();
     await run('birthdays');
+    expect(send).toHaveBeenCalledWith('Happy Birthday, <@d1>! 🎉');
+  });
+
+  it('only runs at 12:00 UTC and only once per day', async () => {
+    dbMock.users.findMany.mockResolvedValue([user()] as never);
+    const send = vi.fn();
+    client().channels.fetch = vi.fn(async () => ({ send }));
+    const { run } = await start();
+    vi.setSystemTime(Date.UTC(2026, 6, 15, 11, 59));
+    await run('birthdays');
+    vi.setSystemTime(Date.UTC(2026, 6, 15, 13));
+    await run('birthdays');
+    expect(send).not.toHaveBeenCalled();
+    vi.setSystemTime(Date.UTC(2026, 6, 15, 12, 5));
+    await run('birthdays');
+    vi.setSystemTime(Date.UTC(2026, 6, 15, 12, 55));
+    await run('birthdays');
+    expect(send).toHaveBeenCalledTimes(1);
+    // The next day it runs again
+    vi.setSystemTime(Date.UTC(2026, 6, 16, 12));
+    dbMock.users.findMany.mockResolvedValue([user({ birthday: new Date(Date.UTC(1990, 6, 16)) })] as never);
+    await run('birthdays');
+    expect(send).toHaveBeenCalledTimes(2);
+  });
+
+  it('matches a birthday stored as UTC midnight on the UTC day, whatever the server timezone', async () => {
+    dbMock.users.findMany.mockResolvedValue([user({ birthday: new Date('1990-07-15T00:00:00.000Z') }), user({ discord_id: 'd9', birthday: new Date('1990-07-14T23:59:59.000Z') })] as never);
+    const send = vi.fn();
+    client().channels.fetch = vi.fn(async () => ({ send }));
+    const { run } = await start();
+    await run('birthdays');
+    expect(send).toHaveBeenCalledTimes(1);
     expect(send).toHaveBeenCalledWith('Happy Birthday, <@d1>! 🎉');
   });
 
