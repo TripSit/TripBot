@@ -126,6 +126,34 @@ describe('getDiscordUserByGitHub', () => {
     expect(await mod.getDiscordUserByGitHub('gh')).toBeNull();
   });
 
+  it('remembers a successful match for ten minutes, case-insensitively, without scanning Keycloak again', async () => {
+    const { mod, users } = await load();
+    users.find.mockResolvedValueOnce([{ id: 'k1' }]).mockResolvedValue([]);
+    users.listFederatedIdentities.mockResolvedValue([github('OctoCat'), discord('d1', 'cat')]);
+    const first = await mod.getDiscordUserByGitHub('octocat');
+    expect(await mod.getDiscordUserByGitHub('OCTOCAT')).toBe(first);
+    expect(users.find).toHaveBeenCalledTimes(1);
+
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(Date.now() + 11 * 60 * 1000);
+      users.find.mockResolvedValueOnce([{ id: 'k1' }]);
+      await mod.getDiscordUserByGitHub('octocat');
+      expect(users.find).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('does not remember a miss, so a freshly linked account is found on the next try', async () => {
+    const { mod, users } = await load();
+    users.find.mockResolvedValue([]);
+    expect(await mod.getDiscordUserByGitHub('newbie')).toBeNull();
+    users.find.mockResolvedValueOnce([{ id: 'k9' }]).mockResolvedValue([]);
+    users.listFederatedIdentities.mockResolvedValue([github('newbie'), discord('d9')]);
+    expect(await mod.getDiscordUserByGitHub('newbie')).toMatchObject({ id: 'd9' });
+  });
+
   it('stops paging at the first short page instead of requesting every possible page', async () => {
     const { mod, users } = await load();
     const full = Array.from({ length: 100 }, (_unused, i) => ({ id: `k${i}` }));

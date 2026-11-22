@@ -202,7 +202,7 @@ async function checkUserIdentities(user: UserRepresentation, githubUsername: str
  * @param {string} githubUsername - The GitHub username to search for
  * @returns {Object|null} - Discord user info or null if not found
  */
-export async function getDiscordUserByGitHub(githubUsername: string) {
+async function lookupDiscordUserByGitHub(githubUsername: string) {
   try {
     log.debug(F, `Looking up Discord user for GitHub username: ${githubUsername}`);
 
@@ -239,6 +239,24 @@ export async function getDiscordUserByGitHub(githubUsername: string) {
     log.error(F, `Error looking up Discord user by GitHub username ${githubUsername}: ${error}`);
     throw error;
   }
+}
+
+// A lookup by GitHub username scans every Keycloak user, so successful matches are remembered for a while.
+// Misses are not cached: a contributor who links their accounts right after a miss must be found on the next try.
+const GITHUB_CACHE_TTL = 10 * 60 * 1000;
+type GitHubMatch = NonNullable<Awaited<ReturnType<typeof lookupDiscordUserByGitHub>>>;
+const githubMatchCache = new Map<string, { match: GitHubMatch; timestamp: number }>();
+
+export async function getDiscordUserByGitHub(githubUsername: string) {
+  const cacheKey = githubUsername.toLowerCase();
+  const cached = githubMatchCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < GITHUB_CACHE_TTL) {
+    log.debug(F, 'Using cached GitHub to Discord match');
+    return cached.match;
+  }
+  const match = await lookupDiscordUserByGitHub(githubUsername);
+  if (match) githubMatchCache.set(cacheKey, { match, timestamp: Date.now() });
+  return match;
 }
 
 export default getDiscordUserByGitHub;
