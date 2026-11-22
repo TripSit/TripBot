@@ -9,7 +9,6 @@ on:
       - "**/legacy/**"
       - "**/matrix/**"
       - "**/telegram/**"
-      - "**/vitest/**"
       - "**/build/**"
       - "**/@prisma-moodle/**"
 jobs:
