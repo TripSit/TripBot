@@ -224,6 +224,37 @@ async function sendMilestoneAnnouncement(
   );
 }
 
+// Looked up at call time so the environment is read when it is needed
+const milestoneChannel = (category: experience_category): string => ({
+  GENERAL: env.CHANNEL_LOUNGE,
+  TRIPSITTER: env.CHANNEL_TRIPSITMETA,
+  DEVELOPER: env.CHANNEL_DEVELOPMENT,
+  TEAM: env.CHANNEL_TEAMTRIPSIT,
+  IGNORED: env.CHANNEL_BOTSPAM,
+} as Partial<Record<experience_category, string>>)[category] ?? '';
+
+/** Tells the bot log about a level-up, and the community on every tenth level. Never throws. */
+async function announceLevelUp(
+  member: GuildMember,
+  channel: TextChannel | VoiceChannel,
+  category: experience_category,
+  type: experience_type,
+  level: number,
+) {
+  const categoryName = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
+  const typeName = type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+  try {
+    const channelTripbotLogs = await channel.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+    await channelTripbotLogs.send(stripIndents`${member.displayName} has leveled up to ${categoryName} ${typeName} level ${level}!`);
+  } catch (err) {
+    log.error(F, `Could not announce a level-up: ${err}`);
+  }
+
+  if (level % 10 === 0) {
+    sendMilestoneAnnouncement(member, milestoneChannel(category), level, categoryName, typeName);
+  }
+}
+
 /**
  * This takes a message and gives the user experience
  * @param {Message} message The message object to check
@@ -274,9 +305,6 @@ export async function experience(
   if (experienceData.last_message_at.getTime() + expInterval > new Date().getTime()) {
     return;
   }
-  const categoryName = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase(); // eslint-disable-line max-len
-  const typeName = type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
-
   // If the time diff is over one bufferTime, increase the experience points
   experienceData.level_points += expPoints;
   experienceData.total_points += expPoints;
@@ -305,28 +333,7 @@ export async function experience(
 
   // Saved first: an announcement that cannot be sent must never cost the user their points or level
   if (leveledUp) {
-    try {
-      const channelTripbotLogs = await channel.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
-      await channelTripbotLogs.send(stripIndents`${member.displayName} has leveled up to ${categoryName} ${typeName} level ${experienceData.level}!`);
-    } catch (err) {
-      log.error(F, `Could not announce a level-up: ${err}`);
-    }
-
-    if (experienceData.level % 10 === 0) {
-      let id = '' as string;
-      if (category === 'GENERAL' as experience_category) {
-        id = env.CHANNEL_LOUNGE;
-      } else if (category === 'TRIPSITTER' as experience_category) {
-        id = env.CHANNEL_TRIPSITMETA;
-      } else if (category === 'DEVELOPER' as experience_category) {
-        id = env.CHANNEL_DEVELOPMENT;
-      } else if (category === 'TEAM' as experience_category) {
-        id = env.CHANNEL_TEAMTRIPSIT;
-      } else if (category === 'IGNORED' as experience_category) {
-        id = env.CHANNEL_BOTSPAM;
-      }
-      sendMilestoneAnnouncement(member, id, experienceData.level, categoryName, typeName);
-    }
+    await announceLevelUp(member, channel, category, type, experienceData.level);
   }
 
   // Try to give the appropriate role
