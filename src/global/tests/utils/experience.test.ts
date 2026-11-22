@@ -151,6 +151,32 @@ describe('experience', () => {
     expect(dbMock.user_experience.update).not.toHaveBeenCalled();
   });
 
+  it('rolls a fresh 15-25 point award each time in production, instead of one value per process', async () => {
+    const original = e.NODE_ENV;
+    e.NODE_ENV = 'production';
+    const random = vi.spyOn(Math, 'random');
+    try {
+      const award = async (roll: number) => {
+        random.mockReturnValueOnce(roll);
+        const { member, guild } = makeMember();
+        dbMock.user_experience.findFirst.mockResolvedValueOnce(row());
+        dbMock.user_experience.findMany.mockResolvedValueOnce([]);
+        await experience(member, 'GENERAL' as never, 'TEXT' as never, textChannel(guild));
+        return dbMock.user_experience.update.mock.calls.at(-1)?.[0].data.total_points as number;
+      };
+      const awarded = [await award(0), await award(0.999)];
+      expect(awarded).toEqual([15, 25]);
+      random.mockReturnValueOnce(0.5);
+      const fresh = makeMember();
+      dbMock.user_experience.findFirst.mockResolvedValueOnce(null);
+      await experience(fresh.member, 'GENERAL' as never, 'TEXT' as never, textChannel(fresh.guild));
+      expect(dbMock.user_experience.create).toHaveBeenLastCalledWith({ data: expect.objectContaining({ total_points: 20 }) });
+    } finally {
+      random.mockRestore();
+      e.NODE_ENV = original;
+    }
+  });
+
   it('does not award xp inside the cooldown', async () => {
     const { member, guild } = makeMember();
     dbMock.user_experience.findFirst.mockResolvedValueOnce(row({ last_message_at: new Date() }));

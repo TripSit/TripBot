@@ -19,10 +19,10 @@ export default experience;
 export const MIN_EXPERIENCE_LEVEL = 0;
 export const MAX_EXPERIENCE_LEVEL = 100;
 
-// Get random value between 15 and 25
-const expPoints = env.NODE_ENV === 'production'
+// A random value between 15 and 25 for every award (a fixed 30 outside production), not one value per process
+const rollExpPoints = () => (env.NODE_ENV === 'production'
   ? Math.floor(Math.random() * (25 - 15 + 1)) + 15
-  : 30;
+  : 30);
 
 // Value in milliseconds (1000 * 60 = 1 minute)
 const textExpInterval = env.NODE_ENV === 'production' ? 1000 * 60 * 1 : 1000 * 1;
@@ -277,13 +277,14 @@ export async function experience(
 
   // If the user has no experience, insert it, and we're done here
   if (!experienceData) {
+    const points = rollExpPoints();
     const newUser = {
       user_id: userData.id,
       category,
       type,
       level: 0,
-      level_points: expPoints,
-      total_points: expPoints,
+      level_points: points,
+      total_points: points,
       last_message_at: new Date(),
       last_message_channel: channel.id,
     } as user_experience;
@@ -306,8 +307,9 @@ export async function experience(
     return;
   }
   // If the time diff is over one bufferTime, increase the experience points
-  experienceData.level_points += expPoints;
-  experienceData.total_points += expPoints;
+  const points = rollExpPoints();
+  experienceData.level_points += points;
+  experienceData.total_points += points;
 
   const leveledUp = expToLevel <= experienceData.level_points;
   if (leveledUp) {
