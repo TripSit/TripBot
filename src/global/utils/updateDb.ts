@@ -39,6 +39,9 @@ import {
 
 // Limits API calls during development
 const useCache = env.NODE_ENV === 'development';
+const SOURCE_TIMEOUT_MS = 15_000;
+
+type SourceData<T> = { data: T; downloaded: boolean };
 
 const F = f(__filename);
 
@@ -63,14 +66,12 @@ async function saveData(data: any, fileName: string): Promise<string> {
   return Promise.resolve(filePath);
 }
 
-async function getTSData(): Promise<{
-  [key: string]: Drug;
-}> {
+async function getTSData(): Promise<SourceData<Record<string, Drug>>> {
   // Check if the cache exists, and if so, use it.
   if (useCache) {
     try {
       const rawData = await fs.readFile(path.join(dataFolder, 'tripsitDB.json'));
-      return JSON.parse(rawData.toString());
+      return { data: JSON.parse(rawData.toString()), downloaded: false };
     } catch (err) {
       log.error(F, `Error reading TripSit Drug Cache: ${err}`);
     }
@@ -81,49 +82,51 @@ async function getTSData(): Promise<{
   };
 
   try {
-    const data = await axios.get('https://raw.githubusercontent.com/TripSit/drugs/main/drugs.json');
+    const data = await axios.get('https://raw.githubusercontent.com/TripSit/drugs/main/drugs.json', {
+      timeout: SOURCE_TIMEOUT_MS,
+      signal: AbortSignal.timeout(SOURCE_TIMEOUT_MS),
+    });
     drugData = data.data as {
       [key: string]: Drug;
     };
-  } catch {
+  } catch (error) {
     log.error(F, 'Error getting data from TripSit API');
-    return {};
+    throw error;
   }
 
   log.info(F, `Got ${Object.keys(drugData).length} drugs from TripSit API!`);
 
-  await saveData(drugData, 'tripsitDB');
-
-  return drugData;
+  return { data: drugData, downloaded: true };
 }
 
-async function getTSCombos(): Promise<Combos> {
+async function getTSCombos(): Promise<SourceData<Combos>> {
   // Check if the cache exists, and if so, use it.
 
   if (useCache) {
     try {
       const rawData = await fs.readFile(path.join(dataFolder, 'tripsitCombos.json'));
-      return JSON.parse(rawData.toString());
+      return { data: JSON.parse(rawData.toString()), downloaded: false };
     } catch (err) {
       log.error(F, `Error reading TripSit Combo Cache: ${err}`);
     }
   }
 
-  const tsComboResponse = await axios.get('https://raw.githubusercontent.com/TripSit/drugs/main/combos.json');
+  const tsComboResponse = await axios.get('https://raw.githubusercontent.com/TripSit/drugs/main/combos.json', {
+    timeout: SOURCE_TIMEOUT_MS,
+    signal: AbortSignal.timeout(SOURCE_TIMEOUT_MS),
+  });
   const tsComboData = tsComboResponse.data as Combos;
 
   log.info(F, `Got ${Object.keys(tsComboData).length} combos from TripSit API!`);
 
-  await saveData(tsComboData, 'tripsitCombos');
-
-  return tsComboData;
+  return { data: tsComboData, downloaded: true };
 }
 
-async function getPWData(): Promise<PwSubstance[]> {
+async function getPWData(): Promise<SourceData<PwSubstance[]>> {
   if (useCache) {
     try {
       const rawData = await fs.readFile(path.join(dataFolder, 'psychonautDB.json'));
-      return JSON.parse(rawData.toString());
+      return { data: JSON.parse(rawData.toString()), downloaded: false };
     } catch (err) {
       log.error(F, `Error reading PW Cache: ${err}`);
     }
@@ -133,7 +136,9 @@ async function getPWData(): Promise<PwSubstance[]> {
     substances: PwSubstance[];
   };
   try {
-    pwResponse = await new GraphQLClient('https://api.psychonautwiki.org').request(`
+    pwResponse = await new GraphQLClient('https://api.psychonautwiki.org', {
+      signal: AbortSignal.timeout(SOURCE_TIMEOUT_MS),
+    }).request(`
     {
       substances(limit: 1000) {
         url
@@ -151,17 +156,16 @@ async function getPWData(): Promise<PwSubstance[]> {
         roa {oral {name dose {units threshold heavy common {min max} light {min max} strong {min max}} duration { afterglow {min max units} comeup {min max units} duration {min max units} offset {min max units} onset {min max units} peak {min max units} total {min max units}} bioavailability {min max}} sublingual {name dose {units threshold heavy common {min max} light {min max} strong {min max}} duration { afterglow {min max units} comeup {min max units} duration {min max units} offset {min max units} onset {min max units} peak {min max units} total {min max units}} bioavailability {min max}} buccal {name dose {units threshold heavy common {min max} light {min max} strong {min max}} duration { afterglow {min max units} comeup {min max units} duration {min max units} offset {min max units} onset {min max units} peak {min max units} total {min max units}} bioavailability {min max}} insufflated {name dose {units threshold heavy common {min max} light {min max} strong {min max}} duration { afterglow {min max units} comeup {min max units} duration {min max units} offset {min max units} onset {min max units} peak {min max units} total {min max units}} bioavailability {min max}} rectal {name dose {units threshold heavy common {min max} light {min max} strong {min max}} duration { afterglow {min max units} comeup {min max units} duration {min max units} offset {min max units} onset {min max units} peak {min max units} total {min max units}} bioavailability {min max}} transdermal {name dose {units threshold heavy common {min max} light {min max} strong {min max}} duration { afterglow {min max units} comeup {min max units} duration {min max units} offset {min max units} onset {min max units} peak {min max units} total {min max units}} bioavailability {min max}} subcutaneous {name dose {units threshold heavy common {min max} light {min max} strong {min max}} duration { afterglow {min max units} comeup {min max units} duration {min max units} offset {min max units} onset {min max units} peak {min max units} total {min max units}} bioavailability {min max}} intramuscular {name dose {units threshold heavy common {min max} light {min max} strong {min max}} duration { afterglow {min max units} comeup {min max units} duration {min max units} offset {min max units} onset {min max units} peak {min max units} total {min max units}} bioavailability {min max}} intravenous {name dose {units threshold heavy common {min max} light {min max} strong {min max}} duration { afterglow {min max units} comeup {min max units} duration {min max units} offset {min max units} onset {min max units} peak {min max units} total {min max units}} bioavailability {min max}} smoked {name dose {units threshold heavy common {min max} light {min max} strong {min max}} duration { afterglow {min max units} comeup {min max units} duration {min max units} offset {min max units} onset {min max units} peak {min max units} total {min max units}} bioavailability {min max}}}    }
     }
     `);
-  } catch {
+  } catch (error) {
     log.error(F, 'Error getting data from Psychonaut API');
-    return [];
+    throw error;
   }
 
   const { substances } = pwResponse;
 
   log.info(F, `Got ${substances.length} drugs from Psychonaut API!`);
 
-  await saveData(substances, 'psychonautDB');
-  return substances;
+  return { data: substances, downloaded: true };
 }
 
 async function formatTsDuration(
@@ -771,14 +775,31 @@ export default async function updateDrugDb():Promise<void> {
   //   fs.mkdirSync(assetFolder);
   // }
 
-  const tsCombos = await getTSCombos();
-  const pwData = await getPWData();
-  await combinePw(pwData, combinedDb);
-  const tsData = await getTSData();
-  await combineTs(tsData, combinedDb);
+  let tsCombos: SourceData<Combos>;
+  let pwData: SourceData<PwSubstance[]>;
+  let tsData: SourceData<Record<string, Drug>>;
+  try {
+    tsCombos = await getTSCombos();
+    pwData = await getPWData();
+    tsData = await getTSData();
+    await combinePw(pwData.data, combinedDb);
+    await combineTs(tsData.data, combinedDb);
+    if (!combinedDb.length || !Object.keys(tsData.data).length) {
+      throw new Error('Downloaded drug data is empty');
+    }
+  } catch (error) {
+    if (!loadedCombinedDb.length || !Object.keys(loadedTripsitDb).length) throw error;
+    log.warn(F, 'Drug data refresh failed; keeping cached data until the next update attempt.');
+    return;
+  }
+
+  // Publish only after every source has downloaded and combined successfully.
+  if (tsCombos.downloaded) await saveData(tsCombos.data, 'tripsitCombos');
+  if (pwData.downloaded) await saveData(pwData.data, 'psychonautDB');
+  if (tsData.downloaded) await saveData(tsData.data, 'tripsitDB');
   const filePath = await saveData(combinedDb, 'combinedDB');
   log.info(F, `Updated combinedDB of ${combinedDb.length} drugs to ${filePath}`);
-  refreshLoadedData(combinedDb, tsData, tsCombos);
+  refreshLoadedData(combinedDb, tsData.data, tsCombos.data);
 
   try {
     await syncDrugNames(combinedDb);
