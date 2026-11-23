@@ -30,6 +30,7 @@ jobs:
           # Privileged jobs load only the trusted workflow revision, never a PR checkout.
           ref: ${{ github.workflow_sha }}
           persist-credentials: false
+          sparse-checkout-cone-mode: false
           sparse-checkout: |
             /.github/scripts/
             /.github/cicd.json

@@ -3,6 +3,8 @@
 import base64
 import importlib.util
 import sys
+import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -14,6 +16,30 @@ spec.loader.exec_module(rollout)
 
 
 class RolloutTests(unittest.TestCase):
+    def test_privileged_sparse_checkout_materializes_controls_without_application_code(self):
+        for name in ['PromoteUatToMain.yml', 'RecordUatDeployment.yml',
+                     'QueueTrustedUatPR.yml', 'OpenUatToMainPR.yml']:
+            workflow = (rollout.ROOT / '.github/workflows' / name).read_text()
+            self.assertIn('sparse-checkout-cone-mode: false', workflow)
+            self.assertIn('ref: ${{ github.workflow_sha }}', workflow)
+        with tempfile.TemporaryDirectory(prefix='tripsit-checkout-test-') as directory:
+            root = Path(directory)
+            git = lambda *args: subprocess.run(['git', *args], cwd=root, check=True,
+                                                capture_output=True, text=True)
+            git('init', '--quiet')
+            for name in ['.github/scripts/release-policy.cjs', '.github/cicd.json', 'src/app.js']:
+                target = root / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text('fixture\n')
+            git('add', '.')
+            git('-c', 'user.name=CI', '-c', 'user.email=ci@example.invalid',
+                '-c', 'commit.gpgsign=false', 'commit', '--quiet', '-m', 'fixture')
+            git('sparse-checkout', 'init', '--no-cone')
+            git('sparse-checkout', 'set', '--no-cone', '/.github/scripts/', '/.github/cicd.json')
+            self.assertTrue((root / '.github/scripts/release-policy.cjs').is_file())
+            self.assertTrue((root / '.github/cicd.json').is_file())
+            self.assertFalse((root / 'src/app.js').exists())
+
     def test_invariants_have_no_bypass_even_for_the_promotion_app(self):
         invariants, main = rollout.desired('promotion', 42)
         self.assertEqual(invariants['bypass_actors'], [])
