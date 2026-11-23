@@ -58,9 +58,14 @@ jobs:
               }
               const reviews = await github.paginate(github.rest.pulls.listReviews,
                 {...context.repo, pull_number: prs[0].number, per_page: 100});
-              const review = policy.latestReviews(reviews).find(r =>
-                r.state === 'APPROVED' && r.commit_id === prs[0].head.sha);
-              if (!review) { core.info('Waiting for UAT testing and approval of the current commit.'); return; }
+              let approvals;
+              try {
+                approvals = await policy.trustedApprovals(reviews, prs[0].head.sha, prs[0].user.login,
+                  policy.client(github, context).permission);
+              } catch (error) {
+                core.info(`Waiting for an authorized current-commit sign-off: ${error.message}`); return;
+              }
+              const review = approvals[0];
               context.payload.pull_request = prs[0];
               context.payload.review = review;
             }
