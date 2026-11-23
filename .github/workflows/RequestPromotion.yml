@@ -1,0 +1,24 @@
+name: Request verified promotion
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  request:
+    if: >-
+      vars.CICD_PROMOTION_ENABLED == 'true' && github.event.review.state == 'approved' &&
+      github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'uat' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({...context.repo,
+              workflow_id: 'PromoteUatToMain.yml', ref: 'uat'});

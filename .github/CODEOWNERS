@@ -1,4 +1,19 @@
-# Code owners for TripBot.
-# See https://docs.github.com/articles/about-codeowners for syntax.
-
-* @TripSit/TripBot
+# Ordinary application PRs may enter the UAT queue without review.
+# Delivery controls require an independent code-owner approval.
+/.github/ @TripSit/TripBot
+/.drone.yml @TripSit/TripBot
+/CICD-POLICY.md @TripSit/TripBot
+/AGENTS.md @TripSit/TripBot
+/Dockerfile @TripSit/TripBot
+/src/docker/ @TripSit/TripBot
+/docker-compose*.yml @TripSit/TripBot
+/sonar-project.properties @TripSit/TripBot
+/.nvmrc @TripSit/TripBot
+/jest.config.* @TripSit/TripBot
+/vitest.config.* @TripSit/TripBot
+/scripts/deploy* @TripSit/TripBot
+/package.json @TripSit/TripBot
+/package-lock.json @TripSit/TripBot
+/tsconfig*.json @TripSit/TripBot
+/eslint.config.* @TripSit/TripBot
+/.eslintrc* @TripSit/TripBot

@@ -1,0 +1,47 @@
+name: OpenUatToMainPR
+
+on:
+  push:
+    branches: [uat]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: open-uat-to-main-pr
+  cancel-in-progress: true
+
+jobs:
+  open-pr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          # Privileged jobs load only the trusted workflow revision, never a PR checkout.
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            /.github/scripts/
+            /.github/cicd.json
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        with:
+          script: |
+            const sha = (await github.rest.git.getRef({...context.repo, ref: 'heads/uat'})).data.object.sha;
+            const compare = await github.rest.repos.compareCommitsWithBasehead({...context.repo, basehead: `main...${sha}`});
+            if (compare.data.ahead_by === 0) return;
+            const commits = await github.paginate(github.rest.repos.compareCommitsWithBasehead,
+              {...context.repo, basehead: `main...${sha}`, per_page: 100}, r => r.data.commits);
+            const body = [
+              'Approve this PR after testing the successfully deployed UAT commit shown below. Do not click Merge.',
+              '', `Candidate: ${sha}`, '',
+              'Promotion verifies current-commit approval, CI, UAT deployment evidence, resolved conversations, and fast-forward ancestry.',
+              'New UAT commits invalidate the release sign-off. Approval before deployment is recorded will be retried when evidence arrives.',
+              '', 'Included changes:',
+              ...commits.map(c => `- ${c.commit.message.split("\n")[0]} (${c.sha.slice(0, 7)})`),
+            ].join('\n').slice(0, 60000);
+            const prs = await github.paginate(github.rest.pulls.list,
+              {...context.repo, state: 'open', base: 'main', head: `${context.repo.owner}:uat`, per_page: 100});
+            if (prs.length) await github.rest.pulls.update({...context.repo, pull_number: prs[0].number, body});
+            else await github.rest.pulls.create({...context.repo, base: 'main', head: 'uat', title: 'Promote uat to main', body});

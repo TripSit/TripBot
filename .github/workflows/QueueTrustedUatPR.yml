@@ -1,0 +1,35 @@
+name: Queue trusted UAT PR
+
+on:
+  pull_request_target:
+    branches: [uat]
+    types: [opened, reopened, synchronize, ready_for_review, edited]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: queue-uat-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  queue:
+    if: vars.CICD_QUEUE_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          # Privileged jobs load only the trusted workflow revision, never a PR checkout.
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            /.github/scripts/
+            /.github/cicd.json
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        with:
+          script: |
+            await require('./.github/scripts/release-policy.cjs').queueTrustedPR({github, context, core});
