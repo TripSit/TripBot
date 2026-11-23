@@ -48,12 +48,6 @@ const opioidNames = opioids.map(opioid => ({
   aliases: opioid.aliases,
 }));
 
-// Get a list of drug names and aliases from drugDataAll
-const drugNames = drugDataAll.map(drug => ({
-  name: drug.name.slice(0, 1).toUpperCase() + drug.name.slice(1),
-  aliases: drug.aliases?.map(alias => alias.slice(0, 1).toUpperCase() + alias.slice(1)),
-}));
-
 async function autocompletePills(interaction: AutocompleteInteraction) {
   const focusedOption = interaction.options.getFocused(true).name;
   const options = {
@@ -216,6 +210,11 @@ async function autocompleteDrugNames(interaction: AutocompleteInteraction) {
       'aliases',
     ],
   };
+  // The updater replaces the shared data in place, so derive names and aliases from the current cache.
+  const drugNames = drugDataAll.map(drug => ({
+    name: drug.name.slice(0, 1).toUpperCase() + drug.name.slice(1),
+    aliases: drug.aliases?.map(alias => alias.slice(0, 1).toUpperCase() + alias.slice(1)),
+  }));
   const fuse = new Fuse(drugNames, options);
   const focusedValue = interaction.options.getFocused();
   const results = fuse.search(focusedValue);
