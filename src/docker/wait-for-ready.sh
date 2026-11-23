@@ -3,7 +3,7 @@ set -eu
 
 attempt=0
 while [ "$attempt" -lt 30 ]; do
-  if docker compose -f docker-compose.host.yml --project-name tripbot exec -T tripbot node -e "
+  if docker exec tripbot node -e "
     if (!process.env.DISCORD_CLIENT_TOKEN) process.exit(1);
     fetch('http://127.0.0.1:' + (process.env.API_PORT || '1337') + '/api/health', { signal: AbortSignal.timeout(4000) })
       .then(response => process.exit(response.ok ? 0 : 1))

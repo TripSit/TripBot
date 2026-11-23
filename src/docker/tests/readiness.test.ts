@@ -47,7 +47,8 @@ it('accepts a ready container without waiting or changing the service', () => {
   expect(result.error).toBeUndefined();
   expect(result.status).toBe(0);
   expect(count).toBe(1);
-  expect(commands).toContain('compose -f docker-compose.host.yml --project-name tripbot exec -T tripbot node -e');
+  expect(commands).toContain('exec tripbot node -e');
+  expect(commands).not.toContain('compose');
   expect(commands).toContain("(process.env.API_PORT || '1337') + '/api/health'");
   expect(commands).toContain('AbortSignal.timeout(4000)');
   expect(commands).toContain('process.exit(response.ok ? 0 : 1)');
