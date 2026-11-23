@@ -144,3 +144,77 @@ describe('idose ordering with already-sorted and mixed input', () => {
     expect(dbMock.user_drug_doses.delete).toHaveBeenLastCalledWith({ where: { id: oldest.id } });
   });
 });
+
+describe('private dose logging', () => {
+  const privateUser = 'private-user-canary';
+  const privateDiscord = 'private-discord-canary';
+  const privateDrug = 'private-drug-canary';
+  const privateRecord = 'private-record-canary';
+  const privateSubstance = 'private-substance-canary';
+  const input = {
+    substance: privateSubstance,
+    volume: 187.654321,
+    units: 'MG' as const,
+    roa: 'SUBLINGUAL' as const,
+    date: new Date('2042-06-07T08:09:10Z'),
+  };
+  const captureLogs = () => (['debug', 'info', 'warn', 'error', 'http'] as const)
+    .map(level => vi.spyOn(log, level));
+  let logs: ReturnType<typeof captureLogs>;
+
+  beforeEach(() => {
+    logs = captureLogs();
+    dbMock.users.upsert.mockResolvedValue({ id: privateUser } as Upsert);
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  const expectPrivateLogs = () => {
+    const output = logs.flatMap(spy => spy.mock.calls).flat().join('\n');
+    [
+      privateUser, privateDiscord, privateDrug, privateRecord, privateSubstance,
+      String(input.volume), input.units, input.roa, 'Sublingual', input.date.toISOString(),
+    ].forEach(value => expect(output).not.toContain(value));
+    expect(log.debug).toHaveBeenCalled();
+  };
+
+  it('keeps saved dose details out of every logger while persisting the entry', async () => {
+    dbMock.$queryRaw.mockResolvedValueOnce([{ drug_id: privateDrug }]);
+    const result = await idose('set', null, privateDiscord, input);
+    expect(result[0].name).toBe('Success');
+    expect(dbMock.user_drug_doses.create).toHaveBeenCalledWith({
+      data: {
+        user_id: privateUser,
+        drug_id: privateDrug,
+        route: input.roa,
+        dose: input.volume,
+        units: input.units,
+        created_at: input.date,
+      },
+    });
+    expectPrivateLogs();
+  });
+
+  it('does not log the submitted substance when lookup fails', async () => {
+    dbMock.$queryRaw.mockResolvedValueOnce([]);
+    const result = await idose('set', null, privateDiscord, input);
+    expect(result[0].value).toBe('That drug does not exist!');
+    expect(dbMock.user_drug_doses.create).not.toHaveBeenCalled();
+    expectPrivateLogs();
+  });
+
+  it('keeps deleted dose details private while confirming the deletion to the user', async () => {
+    dbMock.user_drug_doses.findMany.mockResolvedValueOnce([
+      dose(privateRecord, input.date.toISOString(), {
+        drug_id: privateDrug, dose: input.volume, units: input.units, route: input.roa,
+      }),
+    ] as unknown as Doses);
+    dbMock.drug_names.findMany.mockResolvedValueOnce([{ name: privateSubstance }] as Names);
+    const result = await idose('delete', 0, privateDiscord, input);
+    expect(dbMock.user_drug_doses.delete).toHaveBeenCalledWith({ where: { id: privateRecord } });
+    expect(result[0].value).toContain(privateSubstance);
+    expect(result[0].value).toContain(String(input.volume));
+    expect(result[0].value).toContain('Sublingual');
+    expectPrivateLogs();
+  });
+});
