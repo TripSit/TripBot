@@ -1,12 +1,18 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import axios from 'axios';
 
-const mocks = vi.hoisted(() => ({ writeFile: vi.fn(), readFile: vi.fn(), request: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  writeFile: vi.fn(), readFile: vi.fn(), request: vi.fn(), graphqlSignal: undefined as AbortSignal | undefined,
+}));
 
 vi.mock('fs/promises', () => ({ default: { writeFile: mocks.writeFile, readFile: mocks.readFile } }));
 vi.mock('axios');
 vi.mock('graphql-request', () => ({
   GraphQLClient: class {
+    constructor(_url: string, options: { signal: AbortSignal }) {
+      mocks.graphqlSignal = options.signal;
+    }
+
     request = mocks.request;
   },
 }));
@@ -242,7 +248,7 @@ describe('updateDrugDb', () => {
 
   it('records psychonaut interactions with their severity', async () => {
     mocks.request.mockResolvedValueOnce({ substances: [pwSubstances[0]] });
-    vi.mocked(axios.get).mockResolvedValue({ data: {} });
+    vi.mocked(axios.get).mockImplementation(async () => ({ data: { baz: tsDrugs.baz } }));
     await run();
     const [foo] = written('combinedDB');
     expect(foo.interactions).toEqual([
@@ -321,16 +327,134 @@ describe('updateDrugDb', () => {
     }
   });
 
-  it('survives upstream failures with an empty database', async () => {
-    vi.mocked(axios.get).mockImplementation(async (url: string) => {
-      if (url.endsWith('combos.json')) return { data: {} };
-      throw new Error('github down');
+  it('starts with its bundled cache when upstream services are unavailable', async () => {
+    vi.resetModules();
+    const updateDb = (await import('../../utils/updateDb')).default;
+    const combined = (await import('../../../../assets/data/combinedDB.json')).default;
+    const tripsit = (await import('../../../../assets/data/tripsitDB.json')).default;
+    const before = JSON.stringify([combined, tripsit]);
+    expect(combined.length).toBeGreaterThan(0);
+    vi.mocked(axios.get).mockRejectedValue(new Error('upstream unavailable'));
+    mocks.request.mockRejectedValue(new Error('upstream unavailable'));
+    await expect(updateDb()).resolves.toBeUndefined();
+    expect(JSON.stringify([combined, tripsit])).toBe(before);
+    expect(mocks.writeFile).not.toHaveBeenCalled();
+  });
+});
+
+describe('updateDrugDb keeps the last usable snapshot', () => {
+  beforeEach(() => {
+    e.NODE_ENV = 'test';
+    mocks.writeFile.mockResolvedValue(undefined);
+    mockNetwork();
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it.each(['TripSit', 'Psychonaut', 'combinations'] as const)('keeps all caches intact after a failed %s download, then recovers', async source => {
+    vi.resetModules();
+    const updateDb = (await import('../../utils/updateDb')).default;
+    const combined = (await import('../../../../assets/data/combinedDB.json')).default;
+    const tripsit = (await import('../../../../assets/data/tripsitDB.json')).default;
+    const combos = (await import('../../../../assets/data/tripsitCombos.json')).default;
+    const snapshot = () => JSON.stringify([combined, tripsit, combos]);
+    await updateDb();
+    const before = snapshot();
+    mocks.writeFile.mockClear();
+    const warning = vi.spyOn(log, 'warn');
+    if (source === 'Psychonaut') {
+      mocks.request.mockRejectedValue(new Error('upstream unavailable'));
+    } else {
+      vi.mocked(axios.get).mockImplementation(async (url: string) => {
+        if (url.endsWith(source === 'TripSit' ? 'drugs.json' : 'combos.json')) {
+          throw new Error('upstream unavailable');
+        }
+        return { data: { foo: { bar: { status: 'Low Risk & Synergy' } } } };
+      });
+    }
+
+    await expect(updateDb()).resolves.toBeUndefined();
+    expect(snapshot()).toBe(before);
+    expect(mocks.writeFile).not.toHaveBeenCalled();
+    expect(warning).toHaveBeenCalled();
+
+    mockNetwork();
+    mocks.request.mockResolvedValue({
+      substances: pwSubstances.map(entry => ({ ...entry, summary: 'recovered-source-text' })),
     });
-    mocks.request.mockRejectedValue(new Error('pw down'));
-    await run();
-    expect(written('combinedDB')).toEqual([]);
-    expect(written('tripsitDB')).toBeUndefined();
-    expect(written('psychonautDB')).toBeUndefined();
+    await updateDb();
+    expect(written('combinedDB')).toBeDefined();
+    expect(snapshot()).not.toBe(before);
+  });
+
+  it.each(['TripSit', 'both'] as const)('rejects empty %s primary data without overwriting caches', async source => {
+    vi.resetModules();
+    const updateDb = (await import('../../utils/updateDb')).default;
+    await updateDb();
+    mocks.writeFile.mockClear();
+    vi.mocked(axios.get).mockResolvedValue({ data: {} });
+    if (source === 'both') mocks.request.mockResolvedValue({ substances: [] });
+    await expect(updateDb()).resolves.toBeUndefined();
+    expect(mocks.writeFile).not.toHaveBeenCalled();
+  });
+
+  it.each(['TripSit', 'Psychonaut', 'combinations'] as const)('aborts a stalled %s download and preserves the cache', async source => {
+    vi.resetModules();
+    const updateDb = (await import('../../utils/updateDb')).default;
+    await updateDb();
+    mocks.writeFile.mockClear();
+    vi.useFakeTimers();
+    const timeout = vi.spyOn(AbortSignal, 'timeout').mockImplementation(delay => {
+      const controller = new AbortController();
+      setTimeout(() => controller.abort(new Error('download timed out')), delay);
+      return controller.signal;
+    });
+    let stalledSignal: AbortSignal | undefined;
+    const stall = (signal: AbortSignal) => new Promise<never>((_resolve, reject) => {
+      stalledSignal = signal;
+      signal.addEventListener('abort', () => reject(signal.reason), { once: true });
+    });
+    try {
+      if (source === 'Psychonaut') {
+        mocks.request.mockImplementation(() => stall(mocks.graphqlSignal as AbortSignal));
+      } else {
+        vi.mocked(axios.get).mockImplementation(async (url, options) => {
+          if (url.endsWith(source === 'TripSit' ? 'drugs.json' : 'combos.json')) {
+            expect(options?.timeout).toBe(15_000);
+            return stall(options?.signal as AbortSignal);
+          }
+          return { data: { foo: {} } };
+        });
+      }
+      const refresh = updateDb();
+      await vi.advanceTimersByTimeAsync(15_000);
+      await expect(refresh).resolves.toBeUndefined();
+      expect(timeout).toHaveBeenCalledWith(15_000);
+      expect(stalledSignal?.aborted).toBe(true);
+      expect(mocks.writeFile).not.toHaveBeenCalled();
+    } finally {
+      vi.clearAllTimers();
+      vi.useRealTimers();
+    }
+  });
+
+  it.each(['combined', 'TripSit'] as const)('does not mask a failure when the %s cache is empty', async missing => {
+    vi.resetModules();
+    const updateDb = (await import('../../utils/updateDb')).default;
+    const combined = (await import('../../../../assets/data/combinedDB.json')).default;
+    const tripsit = (await import('../../../../assets/data/tripsitDB.json')).default;
+    const originalCombined = combined.slice();
+    const originalTripsit = { ...tripsit };
+    try {
+      if (missing === 'combined') combined.splice(0, combined.length);
+      else Object.keys(tripsit).forEach(key => { Reflect.deleteProperty(tripsit, key); });
+      vi.mocked(axios.get).mockRejectedValue(new Error('upstream unavailable'));
+      await expect(updateDb()).rejects.toThrow('upstream unavailable');
+      expect(mocks.writeFile).not.toHaveBeenCalled();
+    } finally {
+      combined.splice(0, combined.length, ...originalCombined);
+      Object.assign(tripsit, originalTripsit);
+    }
   });
 });
 
@@ -351,6 +475,18 @@ describe('updateDrugDb in development (cache)', () => {
     expect(axios.get).not.toHaveBeenCalled();
     expect(mocks.request).not.toHaveBeenCalled();
     expect(written('combinedDB')).toHaveLength(3);
+  });
+
+  it('repairs only the unreadable raw cache after a complete refresh', async () => {
+    mocks.readFile.mockImplementation(async (file: string) => {
+      if (file.endsWith('tripsitDB.json')) throw new Error('ENOENT');
+      return Buffer.from(JSON.stringify(file.endsWith('psychonautDB.json') ? pwSubstances : {}));
+    });
+    await run();
+    expect(written('tripsitDB')).toBeDefined();
+    expect(written('combinedDB')).toHaveLength(3);
+    expect(written('tripsitCombos')).toBeUndefined();
+    expect(written('psychonautDB')).toBeUndefined();
   });
 
   it('falls back to the network when a cache file is unreadable', async () => {
