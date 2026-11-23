@@ -1,0 +1,15 @@
+{
+  "name": "TripSit Release Promotion",
+  "url": "https://github.com/TripSit",
+  "public": false,
+  "hook_attributes": {
+    "url": "https://github.com/TripSit",
+    "active": false
+  },
+  "default_permissions": {
+    "contents": "write",
+    "workflows": "write",
+    "metadata": "read"
+  },
+  "default_events": []
+}

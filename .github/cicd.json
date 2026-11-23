@@ -1,0 +1,13 @@
+{
+  "drone_actor_id": 1836049,
+  "uat_checks": [
+    "Lint",
+    "Build",
+    "Test",
+    "Docker Build",
+    "CodeQL (javascript)",
+    "SonarScan",
+    "Release policy tests",
+    "CI Passed"
+  ]
+}

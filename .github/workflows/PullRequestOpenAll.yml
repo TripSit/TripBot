@@ -9,45 +9,33 @@ on:
       - opened
       - synchronize
       - reopened
+      - ready_for_review
+      - edited
 
-# A PR just opened against uat may be behind uat; sync-with-uat pushes a merge
-# commit to bring it current, which fires a fresh `synchronize` run with the
-# updated code. This cancels the now-stale run from `opened` instead of
-# letting both finish (checks can't be re-run mid-workflow against a branch
-# update - the checkout ref is fixed at trigger time - so superseding the
-# whole run is the only way to actually check the synced code).
+  merge_group:
+    types: [checks_requested]
+    branches: [uat]
+
 permissions:
   contents: read
 
 concurrency:
-  group: pr-open-${{ github.event.pull_request.number }}
+  group: pr-open-${{ github.event.pull_request.number || github.event.merge_group.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  sync-with-uat:
-    name: Sync PR with uat
-    runs-on: ubuntu-latest
-    if: github.event.action == 'opened' && github.event.pull_request.base.ref == 'uat'
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - name: Update this PR's branch with the latest uat
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-        run: |
-          gh api -X PUT "repos/${GH_REPO}/pulls/${{ github.event.pull_request.number }}/update-branch" \
-            || echo "::warning::Could not auto-sync this PR with uat (likely a real conflict or a fork branch) - it may need a manual update."
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
       NODE_OPTIONS: --max-old-space-size=7168
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version-file: ".nvmrc"
           cache: "npm"
@@ -55,15 +43,22 @@ jobs:
         run: npm ci --legacy-peer-deps
       - name: Linting
         run: npx eslint --ext .ts,.js .
+      - name: Lint delivery controls
+        env:
+          ESLINT_USE_FLAT_CONFIG: "true"
+        run: npx eslint --no-ignore --config .github/scripts/eslint.config.mjs .github/scripts/*.cjs .github/scripts/*.mjs
   build:
     name: Build
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
       NODE_OPTIONS: --max-old-space-size=7168
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version-file: ".nvmrc"
           cache: "npm"
@@ -78,12 +73,15 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
       NODE_OPTIONS: --max-old-space-size=7168
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version-file: ".nvmrc"
           cache: "npm"
@@ -97,20 +95,61 @@ jobs:
         run: npx vitest run --silent --coverage --reporter=json --outputFile=jest-results.json
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: jest-results
           path: jest-results.json
           retention-days: 1
+      - name: Upload coverage report
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: coverage
+          path: coverage/lcov.info
+          if-no-files-found: error
+          retention-days: 1
+  sonar:
+    needs: test
+    name: SonarScan
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+      # The scanner needs the dependency and generated Prisma types to resolve types in the analysis
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+      - name: Generate Prisma clients
+        run: npm run db:generate
+      - name: Download coverage report
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: coverage
+          path: coverage
+      - name: Verify coverage report
+        run: test -s coverage/lcov.info
+      - uses: SonarSource/sonarqube-scan-action@59202af334b4ba7b5db01b701b8e79f8b3bef0f4 # v8.5.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
   docker-build:
     name: Docker Build
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
       - name: Build tripbot image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
         with:
           context: .
           file: ./src/docker/Dockerfile.tripbot
@@ -132,6 +171,7 @@ jobs:
   codeql:
     name: CodeQL
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       actions: read
       contents: read
@@ -142,14 +182,41 @@ jobs:
         language: ["javascript"]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066
         with:
           languages: javascript
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
+        uses: github/codeql-action/autobuild@33d7b85da1a04171e211befe2c739303b9a4c066
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066
         with:
           category: "/language:javascript"
+
+  release-policy-tests:
+    name: Release policy tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .nvmrc
+      - run: node --test .github/scripts/release-policy.test.mjs
+      - run: python3 .github/scripts/configure-cicd.test.py
+
+  ci-passed:
+    name: CI Passed
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [lint, build, test, sonar, docker-build, codeql, release-policy-tests]
+    steps:
+      - name: Require every validation job to succeed
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          node -e 'const r=JSON.parse(process.env.RESULTS); if(!Object.keys(r).length || Object.values(r).some(j=>j.result!=="success")) process.exit(1)'

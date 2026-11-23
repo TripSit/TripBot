@@ -1,0 +1,37 @@
+name: Record UAT deployment
+
+on:
+  status:
+  workflow_run:
+    workflows: [PushToUat]
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
+  deployments: write
+
+concurrency:
+  group: uat-deployment-evidence
+  cancel-in-progress: false
+
+jobs:
+  record:
+    if: github.event_name == 'workflow_run' || (startsWith(github.event.context, 'continuous-integration/drone/') && startsWith(github.event.target_url, 'https://drone.tripsit.io/'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          # Privileged jobs load only the trusted workflow revision, never a PR checkout.
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            /.github/scripts/
+            /.github/cicd.json
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        env:
+          UAT_URL: ${{ vars.UAT_URL }}
+        with:
+          script: |
+            await require('./.github/scripts/release-policy.cjs').recordDeployment({github, context, core});

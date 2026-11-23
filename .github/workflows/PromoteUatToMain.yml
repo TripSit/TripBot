@@ -1,118 +1,66 @@
 name: PromoteUatToMain
 
-# main must never gain a commit that doesn't already exist, byte-for-byte, on uat. Promotion is
-# a fast-forward of main's ref to a commit uat already reached - never a squash/rebase/merge
-# commit - so the two branches can never diverge and there is nothing to sync back afterward.
-# GuardMainSource.yml guarantees every PR into main has head uat, so once a promotion PR is
-# approved and its required checks are green, the "fast-forward" job below moves main's ref
-# forward to that exact commit via the Git Data API with force=false (fails closed if it isn't
-# a true fast-forward). GitHub then detects the head commit landed on main and marks the PR
-# merged automatically - no one needs to click main's Merge button, and doing so manually would
-# defeat this (it would create a new squash/rebase commit uat doesn't have). Reviewers should
-# just Approve.
-
 on:
-  push:
-    branches:
-      - uat
-  pull_request_review:
-    types:
-      - submitted
+  workflow_dispatch:
+  workflow_run:
+    workflows: [Record UAT deployment]
+    types: [completed]
 
 permissions:
   contents: read
-  pull-requests: write
+  pull-requests: read
+  actions: read
+  deployments: read
+  security-events: read
+
+concurrency:
+  group: promote-main
+  cancel-in-progress: false
 
 jobs:
-  open-pr:
-    name: Open uat -> main PR if needed
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    # Each run lists what uat holds when it runs, so the newest push should be the one that writes.
-    concurrency:
-      group: promote-open-pr
-      cancel-in-progress: true
-    steps:
-      - name: Open or refresh the promotion PR when uat is ahead of main
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-        run: |
-          ahead=$(gh api "repos/${GH_REPO}/compare/main...uat" --jq '.ahead_by')
-          existing=$(gh pr list --base main --head uat --state open --json number --jq '.[0].number')
-
-          if [ "$ahead" -le 0 ]; then
-            echo "uat is not ahead of main - nothing to promote."
-            exit 0
-          fi
-
-          # Summarize what will land on main: every commit on uat not yet on main. uat takes squash
-          # merges, so each subject already ends in "(#123)", which GitHub links to the merged PR.
-          # Plain author names (no @) so the PR body never pings anyone. The compare API already
-          # lists commits oldest first.
-          gh api --paginate "repos/${GH_REPO}/compare/main...uat" \
-            --jq '.commits[] | "- " + (.commit.message | split("\n")[0]) + " - " + .commit.author.name' \
-            > commits.txt
-
-          {
-            echo "Automated promotion PR: uat is ${ahead} commit(s) ahead of main. Approving this PR fast-forwards main to uat's current commit automatically - no need to click Merge."
-            echo
-            echo "## Included changes (oldest first)"
-            echo
-            head -c 60000 commits.txt
-            if [ "$(wc -c < commits.txt)" -gt 60000 ]; then
-              echo
-              echo "_List truncated - see the Commits tab for the full set._"
-            fi
-          } > body.md
-
-          if [ -n "$existing" ]; then
-            gh pr edit "$existing" --body-file body.md
-            echo "Refreshed the body of PR #${existing} (${ahead} commit(s))."
-          else
-            gh pr create --base main --head uat --title "Promote uat to main" --body-file body.md
-          fi
-
   fast-forward:
-    name: Fast-forward main to the approved uat commit
+    name: Promote verified UAT commit
+    if: vars.CICD_PROMOTION_ENABLED == 'true' && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+    environment: production-promotion
     runs-on: ubuntu-latest
-    if: >
-      github.event_name == 'pull_request_review' &&
-      github.event.review.state == 'approved' &&
-      github.event.pull_request.base.ref == 'main' &&
-      github.event.pull_request.head.ref == 'uat'
-    permissions:
-      contents: read
-      pull-requests: read
+    timeout-minutes: 10
     steps:
-      - name: Wait for the PR to be mergeable (reviews + required checks satisfied)
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          # Privileged jobs load only the trusted workflow revision, never a PR checkout.
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            /.github/scripts/
+            /.github/cicd.json
+      - name: Create scoped promotion installation token
+        id: promotion-token
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349
+        with:
+          app-id: ${{ vars.PROMOTION_APP_ID }}
+          private-key: ${{ secrets.PROMOTION_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-workflows: write
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
         env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          status="UNKNOWN"
-          for i in $(seq 1 20); do
-            status=$(gh pr view "$PR_NUMBER" --json mergeStateStatus --jq '.mergeStateStatus')
-            echo "mergeStateStatus=$status (attempt $i/20)"
-            if [ "$status" = "CLEAN" ] || [ "$status" = "UNSTABLE" ]; then
-              exit 0
-            fi
-            sleep 30
-          done
-          echo "::error::PR #$PR_NUMBER never reached a mergeable state (last status: $status) - required checks may still be running or failed. Not promoting; re-approve once checks are green, or re-run this job."
-          exit 1
-
-      - name: Fast-forward main to uat's approved commit
-        env:
-          GH_TOKEN: ${{ secrets.PROMOTION_BOT_TOKEN }}
-          GH_REPO: ${{ github.repository }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          if [ -z "$GH_TOKEN" ]; then
-            echo "::error::PROMOTION_BOT_TOKEN secret is not set. It must be a fine-grained PAT (Contents: read/write on this repo) from an account allowed to bypass main's 'require a pull request before merging' rule, so this job can push the fast-forward directly. See CONTRIBUTING.md."
-            exit 1
-          fi
-          # force=false makes this fail closed if main isn't a strict ancestor of HEAD_SHA -
-          # i.e. it can only ever fast-forward, never overwrite or rewrite history.
-          gh api -X PATCH "repos/${GH_REPO}/git/refs/heads/main" -f sha="$HEAD_SHA" -F force=false
+          PROMOTION_TOKEN: ${{ steps.promotion-token.outputs.token }}
+        with:
+          script: |
+            const policy = require('./.github/scripts/release-policy.cjs');
+            {
+              const prs = await github.paginate(github.rest.pulls.list, {...context.repo,
+                state: 'open', base: 'main', head: `${context.repo.owner}:uat`, per_page: 100});
+              if (prs.length !== 1 || prs[0].head.repo?.full_name !== context.payload.repository.full_name) {
+                core.info('No canonical promotion PR is ready.'); return;
+              }
+              const reviews = await github.paginate(github.rest.pulls.listReviews,
+                {...context.repo, pull_number: prs[0].number, per_page: 100});
+              const review = policy.latestReviews(reviews).find(r =>
+                r.state === 'APPROVED' && r.commit_id === prs[0].head.sha);
+              if (!review) { core.info('Waiting for UAT testing and approval of the current commit.'); return; }
+              context.payload.pull_request = prs[0];
+              context.payload.review = review;
+            }
+            await policy.promote({github, context, core});
