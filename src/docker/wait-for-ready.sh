@@ -1,14 +1,13 @@
 #!/bin/sh
 set -eu
 
+# The deployment proxy permits container inspection but disables remote exec.
+format='{{if and .State.Running (not .State.Restarting)}}{{if .State.Health}}{{.State.Health.Status}}{{else}}missing{{end}}{{else}}stopped{{end}}'
+
 attempt=0
 while [ "$attempt" -lt 30 ]; do
-  if docker exec tripbot node -e "
-    if (!process.env.DISCORD_CLIENT_TOKEN) process.exit(1);
-    fetch('http://127.0.0.1:' + (process.env.API_PORT || '1337') + '/api/health', { signal: AbortSignal.timeout(4000) })
-      .then(response => process.exit(response.ok ? 0 : 1))
-      .catch(() => process.exit(1));
-  " >/dev/null 2>&1; then
+  health=$(docker inspect --format "$format" tripbot 2>/dev/null) || health=unavailable
+  if [ "$health" = healthy ]; then
     echo "TripBot database and configured bot connections are ready."
     exit 0
   fi
