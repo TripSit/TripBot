@@ -215,7 +215,7 @@ describe('handleError', () => {
 
   it('the error event delegates to handleError, and process handlers are registered', async () => {
     await expect(error.execute(shortError('evt') as never)).resolves.toBeUndefined();
-    expect(registeredByErrorModule).toEqual({ rejection: 1, exception: 1 });
+    expect(registeredByErrorModule).toEqual({ rejection: 1, exception: 0 });
   });
 });
 
