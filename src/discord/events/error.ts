@@ -148,7 +148,7 @@ async function handleErrorUnsafe(
 
 /**
  * Logs an error, reports it to Discord and answers the user. It never throws: it also runs from the
- * unhandledRejection/uncaughtException handlers, and when Discord is unreachable the report itself fails.
+ * unhandledRejection handler, and when Discord is unreachable the report itself fails.
  */
 export default async function handleError(
   errorData: unknown,
@@ -173,6 +173,5 @@ process.on('unhandledRejection', async (errorData: Error) => {
   await handleError(errorData);
 });
 
-process.on('uncaughtException', async (errorData: Error) => {
-  await handleError(errorData);
-});
+// Leave uncaughtException unhandled: Node prints the fatal stack and exits nonzero so PM2 can restart the bot.
+// Awaiting an asynchronous report here would suppress that exit and keep an unsafe process running.

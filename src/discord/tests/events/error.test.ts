@@ -81,7 +81,7 @@ describe('handleError details and process listeners', () => {
     await expect(handleError(api, 'ping', interaction as never)).resolves.toBeUndefined();
   });
 
-  it('routes unhandled rejections and uncaught exceptions through handleError', async () => {
+  it('reports unhandled rejections without overriding Node’s fatal-exception handling', async () => {
     env.NODE_ENV = 'development';
     const before = {
       rejection: process.listeners('unhandledRejection'),
@@ -95,9 +95,8 @@ describe('handleError details and process listeners', () => {
     };
     try {
       expect(added.rejection).toHaveLength(1);
-      expect(added.exception).toHaveLength(1);
+      expect(added.exception).toHaveLength(0);
       await (added.rejection[0] as (e: Error) => Promise<void>)(new Error('async failure'));
-      await (added.exception[0] as (e: Error) => Promise<void>)(new Error('sync failure'));
       await error.execute(new Error('client error') as never);
     } finally {
       added.rejection.forEach(l => process.removeListener('unhandledRejection', l as never));
