@@ -1,7 +1,9 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import { autocomplete } from '../../events/autocomplete';
 import units from '../../../../assets/data/units_of_measurement.json';
+import combinedDb from '../../../../assets/data/combinedDB.json';
 import { dbMock } from '../../../vitest/utils/mockDb';
+import { CbSubstance } from '../../../global/@types/combined';
 
 type Choice = { name: string; value: string };
 
@@ -189,5 +191,36 @@ describe('autocomplete: drug names (default)', () => {
     const i = interaction({ commandName: 'calc', subcommand: 'dxm', focused: 'dxm' });
     await autocomplete(i.raw);
     expect(i.respond).toHaveBeenCalled();
+  });
+});
+
+describe('autocomplete: refreshed drug cache', () => {
+  it('uses additions, changed names and aliases, and removals without reloading the handler', async () => {
+    const cache = combinedDb as CbSubstance[];
+    const original = cache.slice();
+    const added = {
+      url: 'https://example.invalid/refresh-canary', name: 'Refreshcanaryalpha', aliases: ['Freshaliascanary'],
+    } satisfies CbSubstance;
+    const updated = { ...added, name: 'Refreshcanarybravo', aliases: ['Updatedaliascanary'] };
+    const choices = async (focused: string) => {
+      const i = interaction({ commandName: 'drug', focused });
+      await autocomplete(i.raw);
+      return lastChoices(i.respond).map(choice => choice.value);
+    };
+    try {
+      expect(await choices(added.name)).not.toContain(added.name);
+      cache.splice(0, cache.length, added);
+      expect(await choices(added.name)).toEqual([added.name]);
+      expect(await choices(added.aliases[0])).toEqual([added.name]);
+
+      cache.splice(0, cache.length, updated);
+      expect(await choices(updated.aliases[0])).toEqual([updated.name]);
+      expect(await choices(added.name)).not.toContain(added.name);
+
+      cache.splice(0, cache.length);
+      expect(await choices(updated.name)).not.toContain(updated.name);
+    } finally {
+      cache.splice(0, cache.length, ...original);
+    }
   });
 });
