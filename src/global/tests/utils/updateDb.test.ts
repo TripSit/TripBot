@@ -137,6 +137,44 @@ describe('updateDrugDb refreshes the data the bot serves', () => {
   });
 });
 
+describe('updateDrugDb refreshes fallback combination data', () => {
+  beforeEach(() => {
+    e.NODE_ENV = 'test';
+    mocks.writeFile.mockResolvedValue(undefined);
+    mockNetwork();
+  });
+
+  it('publishes changed and removed combinations to the already-loaded command', async () => {
+    vi.resetModules();
+    const updateDb = (await import('../../utils/updateDb')).default;
+    const { combo } = await import('../../commands/g.combo');
+    const first = 'refreshcanaryalpha';
+    const second = 'refreshcanarybravo';
+    let snapshot: Record<string, unknown> = {
+      [first]: { [second]: { status: 'Low Risk & Synergy', note: 'first-source-note' } },
+      [second]: {},
+    };
+    vi.mocked(axios.get).mockImplementation(async (url: string) => ({
+      data: url.endsWith('combos.json') ? snapshot : tsDrugs,
+    }));
+    expect(await combo(first, second)).toMatchObject({ err: true });
+
+    await updateDb();
+    expect(await combo(first, second)).toMatchObject({ result: 'Low Risk & Synergy', note: 'first-source-note' });
+
+    snapshot = {
+      [first]: { [second]: { status: 'Dangerous', note: 'updated-source-note' } },
+      [second]: {},
+    };
+    await updateDb();
+    expect(await combo(first, second)).toMatchObject({ result: 'Dangerous', note: 'updated-source-note' });
+
+    snapshot = {};
+    await updateDb();
+    expect(await combo(first, second)).toMatchObject({ err: true });
+  });
+});
+
 describe('updateDrugDb', () => {
   beforeEach(() => {
     e.NODE_ENV = 'test';

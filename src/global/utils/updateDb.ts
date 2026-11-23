@@ -18,6 +18,7 @@ import {
 import path from 'path';
 import loadedCombinedDb from '../../../assets/data/combinedDB.json';
 import loadedTripsitDb from '../../../assets/data/tripsitDB.json';
+import loadedCombos from '../../../assets/data/tripsitCombos.json';
 import { getOrCreateUser } from './dbRecords';
 import {
   CbSubstance,
@@ -753,12 +754,14 @@ export async function syncDrugNames(combinedDb: CbSubstance[]): Promise<void> {
  * disk would never be seen until a restart. Every importer holds the same module object, so replacing its
  * contents in place makes /drug, /combo and the API serve the new data immediately.
  */
-function refreshLoadedData(combinedDb: CbSubstance[], tsData: { [key: string]: Drug }): void {
+function refreshLoadedData(combinedDb: CbSubstance[], tsData: { [key: string]: Drug }, tsCombos: Combos): void {
   const combined = loadedCombinedDb as unknown as CbSubstance[];
   combined.splice(0, combined.length, ...combinedDb);
   const tripsit = loadedTripsitDb as unknown as Record<string, Drug>;
   Object.keys(tripsit).forEach(key => { delete tripsit[key]; });
   Object.assign(tripsit, tsData);
+  Object.keys(loadedCombos).forEach(key => { Reflect.deleteProperty(loadedCombos, key); });
+  Object.assign(loadedCombos, tsCombos);
 }
 
 export default async function updateDrugDb():Promise<void> {
@@ -768,14 +771,14 @@ export default async function updateDrugDb():Promise<void> {
   //   fs.mkdirSync(assetFolder);
   // }
 
-  await getTSCombos();
+  const tsCombos = await getTSCombos();
   const pwData = await getPWData();
   await combinePw(pwData, combinedDb);
   const tsData = await getTSData();
   await combineTs(tsData, combinedDb);
   const filePath = await saveData(combinedDb, 'combinedDB');
   log.info(F, `Updated combinedDB of ${combinedDb.length} drugs to ${filePath}`);
-  refreshLoadedData(combinedDb, tsData);
+  refreshLoadedData(combinedDb, tsData, tsCombos);
 
   try {
     await syncDrugNames(combinedDb);
