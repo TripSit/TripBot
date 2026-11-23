@@ -53,8 +53,11 @@ COPY tsconfig.json ./tsconfig.json
 # Runtime data refreshes write to build/assets/data.
 COPY --chown=node:node assets ./build/assets
 COPY src/docker/entrypoint.sh ./entrypoint.sh
+COPY src/docker/readiness.js ./readiness.js
 RUN chmod 755 ./entrypoint.sh \
     && mkdir -p /home/node/.pm2 \
     && chown node:node /home/node/.pm2
 USER node
+HEALTHCHECK --interval=5s --timeout=5s --start-period=15s --retries=3 \
+    CMD ["node", "/workspaces/tripbot/readiness.js"]
 ENTRYPOINT ["/workspaces/tripbot/entrypoint.sh"]
