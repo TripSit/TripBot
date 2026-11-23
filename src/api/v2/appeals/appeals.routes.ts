@@ -68,10 +68,33 @@ function createFailureBody(error: string | undefined) {
   };
 }
 
+type AppealAnswers = Pick<AppealData, 'reason' | 'solution' | 'future' | 'extra'>;
+
+function parseAppealAnswers(body: unknown): AppealAnswers | undefined {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return undefined;
+  const {
+    reason, solution, future, extra = '',
+  } = body as Record<string, unknown>;
+  if (typeof reason !== 'string' || !reason.trim()
+      || typeof solution !== 'string' || !solution.trim()
+      || typeof future !== 'string' || !future.trim()
+      || typeof extra !== 'string') return undefined;
+  return {
+    reason, solution, future, extra,
+  };
+}
+
 router.post('/create', async (req: AuthenticatedRequest, res) => {
   try {
     if (!req.user?.discord_id) {
       return res.status(400).json({ error: 'Discord ID not found in token' });
+    }
+
+    const answers = parseAppealAnswers(req.body);
+    if (!answers) {
+      return res.status(400).json({
+        error: 'Reason, solution and future must be nonempty text; extra must be text',
+      });
     }
 
     const banStatus = await users.checkBanStatus(req.user.discord_id);
@@ -85,15 +108,12 @@ router.post('/create', async (req: AuthenticatedRequest, res) => {
     }
 
     const appealData = {
-      ...req.body,
+      ...answers,
       guildId: process.env.DISCORD_GUILD_ID,
       discordId: req.user.discord_id,
-    } as AppealData;
+    };
 
-    const totalLength = (appealData.reason?.length || 0)
-                      + (appealData.solution?.length || 0)
-                      + (appealData.future?.length || 0)
-                      + (appealData.extra?.length || 0);
+    const totalLength = Object.values(answers).reduce((length, answer) => length + answer.length, 0);
 
     // Account for the question text overhead (roughly 400 chars)
     if (totalLength > 3600) {
