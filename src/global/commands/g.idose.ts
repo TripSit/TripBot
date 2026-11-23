@@ -107,7 +107,7 @@ async function iDoseSet(
     LIMIT 1`;
 
   if (drugData.length === 0) {
-    log.debug(F, `iDoseSet: substance '${substance}' not found in drug_names`);
+    log.debug(F, 'iDoseSet: requested substance not found');
     return [{
       name: 'Error',
       value: 'That drug does not exist!',
@@ -129,7 +129,7 @@ async function iDoseSet(
     },
   });
 
-  log.debug(F, `iDoseSet: added a ${volume}${units} ${roa} dose of drug ${drugId} for user ${userData.id}`);
+  log.debug(F, 'iDoseSet: saved a dose record');
 
   return [{
     name: 'Success',
@@ -207,7 +207,7 @@ async function iDoseDel(
     },
   });
 
-  log.debug(F, `iDoseDel: deleted record ${recordId} (${drugName} ${route}) for user ${userData.id}`);
+  log.debug(F, 'iDoseDel: deleted a dose record');
 
   return [{
     name: 'Success',
