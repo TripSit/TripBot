@@ -18,7 +18,7 @@ const drone = () => ({ id: 2, context: 'continuous-integration/drone/push', stat
 const deployment = () => ({ id: 3, sha, environment: 'uat', creator: { login: 'github-actions[bot]' },
   payload: { schema: 'tripsit-uat-v1', validation_run: 1, validation_attempt: 1, drone_status: 2 } });
 const status = () => ({ id: 4, state: 'success', creator: { login: 'github-actions[bot]' } });
-const approval = () => ({ id: 5, state: 'APPROVED', commit_id: sha, user: { login: 'tester' } });
+const approval = () => ({ id: 5, state: 'APPROVED', commit_id: sha, user: { login: 'tester', type: 'User' } });
 
 test('only an open canonical current-commit promotion is accepted', () => {
   assert.equal(policy.candidate(pr(), repository, sha, sha), sha);
@@ -240,5 +240,15 @@ test('CodeQL upload success is insufficient when the analysis or its security fi
     const blocked = mockAPI(options);
     await assert.rejects(policy.client(blocked.github, blocked.context).security(sha));
     assert.equal(blocked.writes.length, 0);
+  }
+});
+
+test('bot and unidentified reviews cannot authorize production, even with write permission', async () => {
+  for (const type of ['Bot', undefined]) {
+    const bot = { ...approval(), user: { login: 'automation', type } };
+    await assert.rejects(policy.trustedApprovals([bot], sha, 'author', async () => 'write'));
+    const valid = await policy.trustedApprovals([bot, approval()], sha, 'author', async () => 'write');
+    assert.equal(valid.length, 1);
+    assert.equal(valid[0].user.login, 'tester');
   }
 });

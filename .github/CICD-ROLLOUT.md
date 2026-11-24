@@ -131,7 +131,7 @@ python3 .github/scripts/configure-cicd.py --repository TripSit/TripBot --phase q
 The script refuses this phase unless verified promotion is enabled. It installs the native UAT
 merge queue, required checks and CodeQL thresholds, sensitive-path code-owner review, and no
 UAT bypass. It removes only superseded classic UAT status-check requirements, enables repository
-auto-merge, changes default workflow permissions to read, disables bot approvals, and finally
+auto-merge, changes default workflow permissions to read, retains GitHub Actions PR creation, and finally
 leaves `CICD_QUEUE_ENABLED=false` for the manual trial. Build concurrency and merge group size start at one.
 
 Trial a trusted ordinary PR and a sensitive-file PR. Verify that draft/fork/bot PRs are not
@@ -157,3 +157,7 @@ settings, production health evidence, and a rehearsed database-aware rollback re
 delivery improvements. TripBot startup can apply database migrations, so an image rollback alone
 does not undo a migration. Continuous UAT advances can still race human testing; exact-SHA
 approval and final ref checks reject observed movement, but do not atomically lock UAT and main.
+
+GitHub couples Actions PR creation and approval in one repository setting. It remains enabled
+for the promotion-PR updater; production verification rejects bot and unidentified reviews
+even if an automation identity has write permission. Default workflow access is still read-only.
