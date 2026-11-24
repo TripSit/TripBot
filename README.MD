@@ -9,6 +9,9 @@
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for branch/PR conventions and how to run checks before opening a pull request.
 
+Follow the [PR to production walkthrough](docs/pr-to-production.md) for automatic UAT queueing,
+deployment verification, UAT testing, and production sign-off.
+
 ## About
 TripBot is multi-platform open-source bot that is a major part of the **[TripSit](https://tripsit.me)** project.
 It is primarily a discord bot, but has been built modularly to allow for easy expansion to other platforms such as IRC, Matrix, and Telegram.
