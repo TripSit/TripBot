@@ -287,3 +287,16 @@ test('queue handoff ignores a moved PR head and cannot mutate with the default w
   assert.equal(mutations, 1);
   assert.equal(app.writes.length, 0);
 });
+
+test('validated queue handoff preserves the GitHub Context prototype getters', async () => {
+  const api = mockAPI();
+  const inherited = { get repo() { return { owner: 'TripSit', repo: 'website' }; } };
+  api.context = Object.assign(Object.create(inherited), {
+    payload: { workflow_run: { id: 1, run_attempt: 1 } }
+  });
+  assert.equal(Object.hasOwn(api.context, 'repo'), false);
+  await policy.queueValidatedPRs(api);
+  assert.equal(api.writes.length, 1);
+  assert.equal(api.writes[0][1].id, 'PR_1');
+  assert.equal(api.writes[0][1].sha, sha);
+});
