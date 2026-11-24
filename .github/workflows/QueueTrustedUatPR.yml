@@ -1,36 +1,57 @@
 name: Queue trusted UAT PR
 
 on:
-  pull_request_target:
-    branches: [uat]
-    types: [opened, reopened, synchronize, ready_for_review, edited]
+  workflow_run:
+    workflows: [PullRequestOpen]
+    types: [completed]
 
 permissions:
   contents: read
+  pull-requests: read
+  actions: read
 
 concurrency:
-  group: queue-uat-${{ github.event.pull_request.number }}
+  group: queue-uat-${{ github.event.workflow_run.head_sha }}
   cancel-in-progress: false
 
 jobs:
   queue:
-    if: vars.CICD_QUEUE_ENABLED == 'true'
+    if: >-
+      vars.CICD_QUEUE_ENABLED == 'true' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    environment: production-promotion
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    permissions:
-      contents: write
-      pull-requests: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          # Privileged jobs load only the trusted workflow revision, never a PR checkout.
+          # Only trusted UAT control files are loaded; never check out PR code.
           ref: ${{ github.workflow_sha }}
           persist-credentials: false
           sparse-checkout-cone-mode: false
           sparse-checkout: |
             /.github/scripts/
             /.github/cicd.json
+      - name: Create scoped queue installation token
+        id: queue-token
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349
+        with:
+          app-id: ${{ vars.PROMOTION_APP_ID }}
+          private-key: ${{ secrets.PROMOTION_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-workflows: write
       - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        env:
+          QUEUE_TOKEN: ${{ steps.queue-token.outputs.token }}
         with:
           script: |
-            await require('./.github/scripts/release-policy.cjs').queueTrustedPR({github, context, core});
+            const queueGraphql = github.graphql.defaults({
+              headers: { authorization: `token ${process.env.QUEUE_TOKEN}` }
+            });
+            await require('./.github/scripts/release-policy.cjs').queueValidatedPRs({
+              github, context, core, queueGraphql
+            });

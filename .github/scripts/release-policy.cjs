@@ -193,10 +193,11 @@ async function recordDeployment({ github, context, core }) {
   core.info(`Recorded ${state} UAT evidence for ${sha}.`);
 }
 
-async function queueTrustedPR({ github, context, core }) {
+async function queueTrustedPR({ github, context, core, queueGraphql, expectedHead }) {
   const c = client(github, context);
   const pr = (await github.rest.pulls.get({ ...c.repo, pull_number: context.payload.pull_request.number })).data;
   if (pr.state !== 'open' || pr.draft || pr.base.ref !== 'uat' || pr.head.repo?.full_name !== c.repository) return;
+  if (expectedHead && pr.head.sha !== expectedHead) return;
   if (pr.user.type !== 'User' || !WRITE.has(await c.permission(pr.user.login))) {
     core.notice('Automatic queue entry is limited to human authors with repository write access.'); return;
   }
@@ -210,17 +211,41 @@ async function queueTrustedPR({ github, context, core }) {
   const current = await github.graphql(`query($id:ID!) { node(id:$id) { ... on PullRequest {
     mergeStateStatus mergeQueueEntry { id } } } }`, { id: pr.node_id });
   if (current.node?.mergeQueueEntry) return;
+  requireThat(typeof queueGraphql === 'function', 'Queue enrollment requires a scoped App token.');
   if (current.node?.mergeStateStatus === 'CLEAN') {
-    await github.graphql(`mutation($id:ID!,$sha:GitObjectID!) {
+    await queueGraphql(`mutation($id:ID!,$sha:GitObjectID!) {
       enqueuePullRequest(input:{pullRequestId:$id,expectedHeadOid:$sha}) { mergeQueueEntry { id } }
     }`, { id: pr.node_id, sha: pr.head.sha });
   } else {
-    await github.graphql(`mutation($id:ID!,$sha:GitObjectID!) {
+    await queueGraphql(`mutation($id:ID!,$sha:GitObjectID!) {
       enablePullRequestAutoMerge(input:{pullRequestId:$id,expectedHeadOid:$sha,mergeMethod:SQUASH}) {
         pullRequest { number } } }`, { id: pr.node_id, sha: pr.head.sha });
   }
   core.info(`Enabled merge-when-ready for trusted UAT PR #${pr.number}; GitHub enforces reviews and queue checks.`);
 }
 
+async function queueValidatedPRs({ github, context, core, queueGraphql }) {
+  const c = client(github, context);
+  const event = context.payload.workflow_run;
+  requireThat(event?.id, 'A validation workflow run is required.');
+  const run = (await github.rest.actions.getWorkflowRun({ ...c.repo, run_id: event.id })).data;
+  requireThat(run.path === '.github/workflows/PullRequestOpenAll.yml' &&
+    run.event === 'pull_request' && run.status === 'completed' && run.conclusion === 'success' &&
+    run.head_repository?.full_name === c.repository && run.run_attempt === event.run_attempt &&
+    SHA.test(run.head_sha), 'Only a completed canonical PR validation can enroll a queue entry.');
+  const jobs = await c.pages(github.rest.actions.listJobsForWorkflowRun,
+    { run_id: run.id, filter: 'latest' });
+  requireThat(c.config.uat_checks.every(name => {
+    const found = jobs.filter(job => job.name === name);
+    return found.length === 1 && found[0].conclusion === 'success';
+  }), 'All required PR validation jobs must succeed before queue enrollment.');
+  const prs = await c.pages(github.rest.repos.listPullRequestsAssociatedWithCommit,
+    { commit_sha: run.head_sha });
+  for (const pr of prs) {
+    await queueTrustedPR({ github, core, queueGraphql, expectedHead: run.head_sha,
+      context: { ...context, payload: { ...context.payload, pull_request: { number: pr.number } } } });
+  }
+}
+
 module.exports = { candidate, successfulRun, droneStatus, evidence, latestReviews, trustedApprovals,
-  client, verify, promote, recordDeployment, queueTrustedPR };
+  client, verify, promote, recordDeployment, queueTrustedPR, queueValidatedPRs };
