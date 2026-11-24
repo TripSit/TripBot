@@ -143,7 +143,9 @@ def apply(repository, phase, app_id, rulesets, snapshot_dir, activate_queue=Fals
         gh('PATCH', f'repos/{repository}', {'allow_auto_merge': True})
         variables = {'CICD_QUEUE_ENABLED': 'true' if activate_queue else 'false'}
     gh('PUT', f'repos/{repository}/actions/permissions/workflow',
-       {'default_workflow_permissions': 'read', 'can_approve_pull_request_reviews': False})
+       # GitHub couples PR creation and approval in this switch. The controller
+       # independently requires a human sign-off; promotion PR creation must remain allowed.
+       {'default_workflow_permissions': 'read', 'can_approve_pull_request_reviews': True})
     current = {v['name'] for v in gh('GET', f'repos/{repository}/actions/variables')['variables']}
     for name, value in variables.items():
         gh('PATCH' if name in current else 'POST', f'repos/{repository}/actions/variables' +

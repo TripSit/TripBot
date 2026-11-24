@@ -53,6 +53,7 @@ function latestReviews(reviews) {
 async function trustedApprovals(reviews, sha, author, permission) {
   const trusted = [];
   for (const review of latestReviews(reviews)) {
+    if (review.user?.type !== 'User') continue;
     if (!WRITE.has(await permission(review.user.login))) continue;
     requireThat(review.state !== 'CHANGES_REQUESTED', 'An authorized reviewer has requested changes.');
     if (review.state === 'APPROVED' && review.commit_id === sha && review.user.login !== author) trusted.push(review);
@@ -137,7 +138,8 @@ async function verify(c, prNumber, reviewed) {
 async function promote({ github, context, core }) {
   const c = client(github, context);
   const review = context.payload.review;
-  requireThat(review?.state?.toLowerCase() === 'approved', 'Promotion requires an approval event.');
+  requireThat(review?.state?.toLowerCase() === 'approved' && review.user?.type === 'User',
+    'Promotion requires a human approval event.');
   requireThat(WRITE.has(await c.permission(review.user.login)), 'Review author must have repository write access.');
   const number = context.payload.pull_request.number;
   const before = await verify(c, number, review.commit_id);
