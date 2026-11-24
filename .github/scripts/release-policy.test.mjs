@@ -135,11 +135,14 @@ function mockAPI(options = {}) {
     rest: {
       git: { getRef: method({ object: { sha: options.uat || sha } }) },
       actions: {
+        getWorkflowRun: method(options.validationRun || { ...run(), event: 'pull_request',
+          path: '.github/workflows/PullRequestOpenAll.yml', head_repository: { full_name: repository } }),
         listWorkflowRuns: method({ workflow_runs: options.runs || [run()] }),
         listJobsForWorkflowRun: method({ jobs: config.uat_checks.map(name =>
           ({ name, conclusion: name === options.failedJob ? 'failure' : 'success' })) }),
       },
       repos: {
+        listPullRequestsAssociatedWithCommit: method([{ number: 1 }]),
         getCollaboratorPermissionLevel: method({ permission: options.permission || 'write' }),
         getBranchRules: method(options.rules || [{ type: 'merge_queue' }, { type: 'required_status_checks',
           parameters: { required_status_checks: config.uat_checks.map(context => ({ context })) } }]),
@@ -164,8 +167,8 @@ function mockAPI(options = {}) {
       writes.push(args); return {};
     },
   };
-  return { github, context: { repo: { owner: 'TripSit', repo: 'website' }, payload: {
-    sha, pull_request: { number: 1 } } }, core: { notice: s => notice.push(s), info: () => {} }, writes, notice };
+  return { github, queueGraphql: github.graphql, context: { repo: { owner: 'TripSit', repo: 'website' }, payload: {
+    sha, workflow_run: { id: 1, run_attempt: 1 }, pull_request: { number: 1 } } }, core: { notice: s => notice.push(s), info: () => {} }, writes, notice };
 }
 
 test('only trusted non-draft canonical human PRs can be automatically queued', async () => {
@@ -251,4 +254,36 @@ test('bot and unidentified reviews cannot authorize production, even with write 
     assert.equal(valid.length, 1);
     assert.equal(valid[0].user.login, 'tester');
   }
+});
+
+test('validated queue handoff requires the exact successful canonical workflow and every job', async () => {
+  const good = mockAPI();
+  await policy.queueValidatedPRs(good);
+  assert.equal(good.writes.length, 1);
+  const valid = { ...run(), event: 'pull_request', path: '.github/workflows/PullRequestOpenAll.yml',
+    head_repository: { full_name: repository } };
+  for (const change of [{ event: 'merge_group' }, { path: '.github/workflows/Other.yml' },
+    { conclusion: 'failure' }, { run_attempt: 2 }, { head_sha: 'invalid' },
+    { head_repository: { full_name: 'outsider/website' } }]) {
+    const api = mockAPI({ validationRun: { ...valid, ...change } });
+    await assert.rejects(policy.queueValidatedPRs(api));
+    assert.equal(api.writes.length, 0);
+  }
+  const failed = mockAPI({ failedJob: 'SonarScan' });
+  await assert.rejects(policy.queueValidatedPRs(failed));
+  assert.equal(failed.writes.length, 0);
+});
+
+test('queue handoff ignores a moved PR head and cannot mutate with the default workflow token', async () => {
+  const moved = mockAPI();
+  await policy.queueTrustedPR({ ...moved, expectedHead: old });
+  assert.equal(moved.writes.length, 0);
+  const noApp = mockAPI();
+  await assert.rejects(policy.queueTrustedPR({ ...noApp, queueGraphql: undefined }), /scoped App/);
+  assert.equal(noApp.writes.length, 0);
+  const app = mockAPI();
+  let mutations = 0;
+  await policy.queueTrustedPR({ ...app, queueGraphql: async () => { mutations += 1; } });
+  assert.equal(mutations, 1);
+  assert.equal(app.writes.length, 0);
 });

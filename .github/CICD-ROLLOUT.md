@@ -161,3 +161,15 @@ approval and final ref checks reject observed movement, but do not atomically lo
 GitHub couples Actions PR creation and approval in one repository setting. It remains enabled
 for the promotion-PR updater; production verification rejects bot and unidentified reviews
 even if an automation identity has write permission. Default workflow access is still read-only.
+
+Automatic queue enrollment runs on successful `PullRequestOpen` completion using only trusted
+UAT control files. It re-fetches the run, all required jobs, current PR head and human-author
+permission. Reads use the read-only workflow token; only the expected-head enrollment mutation
+uses a repository-scoped App token from the protected `production-promotion` environment.
+The existing release App is reused, so its private key stays within the same trusted UAT
+execution boundary; this queue controller is security-sensitive release infrastructure too.
+It never checks out or executes PR code. UAT rules grant no App bypass.
+Using `GITHUB_TOKEN` for enrollment suppresses downstream workflow events: a queued PR can
+otherwise wait forever without merge-group checks. The App preserves both merge-group and
+post-merge deployment events. Verify automatic enrollment through deployment, not just a
+successful enrollment job.
