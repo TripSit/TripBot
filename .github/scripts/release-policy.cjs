@@ -193,9 +193,10 @@ async function recordDeployment({ github, context, core }) {
   core.info(`Recorded ${state} UAT evidence for ${sha}.`);
 }
 
-async function queueTrustedPR({ github, context, core, queueGraphql, expectedHead }) {
+async function queueTrustedPR({ github, context, core, queueGraphql, expectedHead,
+  pullNumber = context.payload.pull_request?.number }) {
   const c = client(github, context);
-  const pr = (await github.rest.pulls.get({ ...c.repo, pull_number: context.payload.pull_request.number })).data;
+  const pr = (await github.rest.pulls.get({ ...c.repo, pull_number: pullNumber })).data;
   if (pr.state !== 'open' || pr.draft || pr.base.ref !== 'uat' || pr.head.repo?.full_name !== c.repository) return;
   if (expectedHead && pr.head.sha !== expectedHead) return;
   if (pr.user.type !== 'User' || !WRITE.has(await c.permission(pr.user.login))) {
@@ -242,8 +243,8 @@ async function queueValidatedPRs({ github, context, core, queueGraphql }) {
   const prs = await c.pages(github.rest.repos.listPullRequestsAssociatedWithCommit,
     { commit_sha: run.head_sha });
   for (const pr of prs) {
-    await queueTrustedPR({ github, core, queueGraphql, expectedHead: run.head_sha,
-      context: { ...context, payload: { ...context.payload, pull_request: { number: pr.number } } } });
+    await queueTrustedPR({ github, context, core, queueGraphql,
+      expectedHead: run.head_sha, pullNumber: pr.number });
   }
 }
 
