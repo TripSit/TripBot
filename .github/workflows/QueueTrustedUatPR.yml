@@ -49,9 +49,8 @@ jobs:
           QUEUE_TOKEN: ${{ steps.queue-token.outputs.token }}
         with:
           script: |
-            const queueGraphql = github.graphql.defaults({
-              headers: { authorization: `token ${process.env.QUEUE_TOKEN}` }
-            });
+            // A separate client prevents the workflow token auth hook from replacing the App token.
+            const queueGraphql = new github.constructor({ auth: process.env.QUEUE_TOKEN }).graphql;
             await require('./.github/scripts/release-policy.cjs').queueValidatedPRs({
               github, context, core, queueGraphql
             });
