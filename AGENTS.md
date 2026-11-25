@@ -23,6 +23,9 @@ external service, stop and ask before taking the risky action.
 - Do not edit `archive`, `legacy`, placeholder, Matrix, or Telegram code (including the archived IRC bot under
   `src/irc/archive/`) unless the task specifically targets it.
 - Never commit `.env`, tokens, passwords, private URLs, production identifiers, database dumps, or user data.
+- Follow the Discord Developer Policy. Before changing anything that handles Discord data, DMs, roles, user scoring, or
+  third-party services, read `docs/discord-developer-policy.md` and run its pre-change checklist. Never send Discord
+  message content to an undisclosed third party, never use it to train models, and never profile users across servers.
 - Never run a production migration, push a branch, or mutate an external service unless the user explicitly
   requested that operation. Discord command registration on bot startup is authorized as described below.
 - Preserve unrelated user changes. Never discard, reset, overwrite, or reformat files outside the requested scope.
@@ -393,6 +396,9 @@ files and do not introduce a second alias scheme.
 - Treat moderation actions, bans, appeals, reports, AI moderation, and role checks as security-sensitive.
 - Treat Discord IDs and public configuration differently from secrets, but do not expose identifiers unnecessarily.
 - Preserve user privacy in logs, API responses, errors, tests, fixtures, and screenshots.
+- Discord Developer Policy compliance is a safety constraint: see `docs/discord-developer-policy.md`. Update that file,
+  `/privacy` text in `src/global/commands/g.about.ts`, and the README when a change alters what data is collected, stored,
+  sent to a third party, or sent to users in DMs.
 
 ## Verification matrix
 
@@ -403,6 +409,7 @@ Choose checks proportional to the change; do not claim checks you did not run.
 | Documentation only | Review rendered/plain Markdown, `git diff --check` |
 | TypeScript logic | Targeted ESLint, `npx tsc --noEmit --pretty false`, new or updated tests for the change |
 | Discord command | Type-check, targeted ESLint, relevant existing test if configured, inspect interaction lifecycle |
+| Discord data, DMs, roles, scoring, or third-party calls | Discord command checks plus the `docs/discord-developer-policy.md` checklist, and the `/privacy` text updated if data handling changed |
 | Command definition/options | Discord-command checks plus note that registration updates on the next bot startup |
 | API route/query | Type-check, targeted ESLint, targeted API Vitest file |
 | Prisma schema | `prisma format`, `prisma validate`, generate both affected clients, type-check, inspect migration SQL |
@@ -468,6 +475,8 @@ A task is complete only when:
 - no secrets, generated output, local state, or unrelated lockfile changes were introduced;
 - externally visible follow-up work is called out; command registration on startup is authorized, while production
   migrations and standalone manual command deployments require an explicit request;
+- changes that touch Discord data, DMs, roles, scoring, or third-party services have been checked against
+  `docs/discord-developer-policy.md`, and the handoff names any Developer Portal item that needs a human to update;
 - the final handoff states the changed files, verification performed, and any remaining risk or blocker.
 
 ## Keep website and TripBot CI/CD aligned
