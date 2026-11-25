@@ -15,13 +15,15 @@ export async function fetchGuildBanIds(guildId: string): Promise<Set<string> | n
     const guild = await discordClient.guilds.fetch(guildId);
     const bannedIds = new Set<string>();
     let after: string | undefined;
-    while (true) {
+    let fullPage = true;
+    while (fullPage) {
       const page = await guild.bans.fetch({ limit: BAN_PAGE_SIZE, cache: false, ...(after ? { after } : {}) });
       page.forEach((_ban, userId) => bannedIds.add(userId));
-      if (page.size < BAN_PAGE_SIZE) return bannedIds;
+      fullPage = page.size >= BAN_PAGE_SIZE;
       // Snowflakes compare numerically; take the largest instead of relying on the page order
-      after = [...page.keys()].reduce((largest, id) => (BigInt(id) > BigInt(largest) ? id : largest));
+      if (fullPage) after = [...page.keys()].reduce((largest, id) => (BigInt(id) > BigInt(largest) ? id : largest));
     }
+    return bannedIds;
   } catch (error) {
     log.error(F, `Could not read the ban list for guild ${guildId}: ${error}`);
     return null;
