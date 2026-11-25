@@ -50,15 +50,21 @@ async function fetchLogChannel(channelId: string): Promise<TextChannel | null> {
   return channel as TextChannel;
 }
 
-async function deleteLogMessages(channelId: string, discordId: string): Promise<void> {
+/** Deletes every message in a log channel that `matches`. A channel that no longer exists is skipped. */
+export async function deleteChannelMessages(channelId: string, matches: (message: Message) => boolean): Promise<void> {
   const channel = await fetchLogChannel(channelId);
   if (!channel) return;
   await forEachMessagePage(channel, async message => {
-    if (messageMentionsUser(message, discordId)) await message.delete();
+    if (matches(message)) await message.delete();
   });
 }
 
-async function deleteBestOfMessages(bestOfMessageIds: string[]): Promise<void> {
+async function deleteLogMessages(channelId: string, discordId: string): Promise<void> {
+  await deleteChannelMessages(channelId, message => messageMentionsUser(message, discordId));
+}
+
+/** Deletes the Best Of channel copies of the given source messages. */
+export async function deleteBestOfMessages(bestOfMessageIds: string[]): Promise<void> {
   const remainingBestOfIds = new Set(bestOfMessageIds);
   if (remainingBestOfIds.size === 0) return;
 
@@ -114,7 +120,7 @@ export async function deleteDiscordPrivacyData(
   moderationLogChannelIds: string[] = [],
 ): Promise<void> {
   const logChannelIds = new Set([
-    env.CHANNEL_BOTERRORS, env.CHANNEL_BOTLOG, env.CHANNEL_MODLOG, ...moderationLogChannelIds,
+    env.CHANNEL_BOTERRORS, env.CHANNEL_BOTLOG, env.CHANNEL_MODLOG, env.CHANNEL_QUOTE_LOG, ...moderationLogChannelIds,
   ]);
   for (const channelId of logChannelIds) { // eslint-disable-line no-restricted-syntax
     await deleteLogMessages(channelId, discordId); // eslint-disable-line no-await-in-loop

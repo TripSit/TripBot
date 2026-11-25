@@ -98,9 +98,11 @@ const transportOptions = [
   }),
 ];
 
-// Discord error-channel logging is production only
+// Discord error-channel logging is production only, and only for warnings and errors: info and debug lines carry
+// user IDs and records that do not belong in a Discord channel. They stay in the service logs.
 if (env.NODE_ENV === 'production') {
   transportOptions.push(new DiscordTransport({
+    level: 'warn',
     format: combine(
       // Only reached in production; the level names are uncoloured and always shorter than 15 characters
       printf(info => `(Prd) ${info.level}  ${info.message} `),
