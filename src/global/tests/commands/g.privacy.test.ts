@@ -8,12 +8,11 @@ import { dbMock } from '../../../vitest/utils/mockDb';
 type Upsert = Awaited<ReturnType<typeof dbMock.users.upsert>>;
 const rows = (n: number) => Array.from({ length: n }, () => ({})) as never[];
 
-function seed(user: object, doses = 0, exp = 0, reminders = 0, activeBans: object[] = []) {
+function seed(user: object, doses = 0, exp = 0, reminders = 0) {
   dbMock.users.upsert.mockResolvedValueOnce(user as unknown as Upsert);
   dbMock.user_drug_doses.findMany.mockResolvedValueOnce(rows(doses));
   dbMock.user_experience.findMany.mockResolvedValueOnce(rows(exp));
   dbMock.user_reminders.findMany.mockResolvedValueOnce(rows(reminders));
-  dbMock.user_actions.findMany.mockResolvedValueOnce(activeBans as never);
 }
 
 beforeEach(() => {
@@ -102,7 +101,7 @@ describe('privacy delete', () => {
   it('deletes quotes, scores, RPG data, linked accounts and moderation data', async () => {
     seed({
       id: 'u', discord_id: '1', lastfm_username: 'fm', irc_id: 'i', matrix_id: 'm', moodle_id: '7', password_hash: 'h',
-    }, 0, 0, 0, [{ id: 'active-ban' }]);
+    });
     const out = await privacy('delete', '1');
     expect(dbMock.users.delete).toHaveBeenCalledWith({ where: { id: 'u' } });
     [dbMock.wordle_scores, dbMock.connections_scores, dbMock.mini_scores, dbMock.personas, dbMock.ai_info]
@@ -122,35 +121,21 @@ describe('privacy delete', () => {
       where: { OR: [{ repealed_by: 'u' }, { ban_evasion_related_user: 'u' }] },
       data: { repealed_by: null, ban_evasion_related_user: null },
     });
-    expect(dbMock.user_actions.findMany).toHaveBeenCalledWith({
-      where: {
-        OR: [{ user_id: 'u' }, { target_discord_id: '1' }],
-        type: 'FULL_BAN',
-        expires_at: { not: null },
-        repealed_at: null,
-      },
-      select: { id: true },
-    });
-    expect(dbMock.user_actions.updateMany).toHaveBeenCalledWith({
-      where: { id: { in: ['active-ban'] } },
-      data: expect.objectContaining({
-        user_id: null, created_by: null, internal_note: '', description: null,
-      }),
-    });
     expect(dbMock.drug_articles.updateMany).toHaveBeenCalledWith({
       where: { OR: [{ posted_by: 'u' }, { last_modified_by: 'u' }] },
       data: { posted_by: null, last_modified_by: null },
     });
     expect(dbMock.drug_variants.updateMany).toHaveBeenCalledWith({ where: { last_updated_by: 'u' }, data: { last_updated_by: null } });
     expect(dbMock.drugs.updateMany).toHaveBeenCalledWith({ where: { last_updated_by: 'u' }, data: { last_updated_by: null } });
+    // Every action about the user goes, including a temporary ban that has not ended: no ban record is kept
     expect(dbMock.user_actions.deleteMany).toHaveBeenCalledWith({
-      where: {
-        OR: [{ user_id: 'u' }, { target_discord_id: '1' }],
-        NOT: { id: { in: ['active-ban'] } },
-      },
+      where: { OR: [{ user_id: 'u' }, { target_discord_id: '1' }] },
     });
+    expect(dbMock.user_actions.findMany).not.toHaveBeenCalled();
+    expect(dbMock.user_actions.updateMany).toHaveBeenCalledTimes(2);
     expect(dbMock.appeals.deleteMany).toHaveBeenCalledWith({ where: { user_id: 'u' } });
     expect(out).toContain('quotes, game scores');
+    expect(out).toContain('stays in place until a moderator lifts it');
     expect(out).not.toContain('AI consent');
   });
 

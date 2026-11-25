@@ -105,38 +105,14 @@ async function deleteUserRecords(tx: TransactionClient, userData: UserRecord, di
     where: { OR: [{ repealed_by: userData.id }, { ban_evasion_related_user: userData.id }] },
     data: { repealed_by: null, ban_evasion_related_user: null },
   });
-  const activeTemporaryBanWhere = {
-    OR: [
-      { user_id: userData.id },
-      ...(discordId ? [{ target_discord_id: discordId }] : []),
-    ],
-    type: 'FULL_BAN' as const,
-    expires_at: { not: null },
-    repealed_at: null,
-  };
-  const activeTemporaryBans = await tx.user_actions.findMany({
-    where: activeTemporaryBanWhere,
-    select: { id: true },
-  });
-  const activeTemporaryBanIds = activeTemporaryBans.map(action => action.id);
-  await tx.user_actions.updateMany({
-    where: { id: { in: activeTemporaryBanIds } },
-    data: {
-      user_id: null,
-      created_by: null,
-      internal_note: '',
-      description: null,
-      ban_evasion_related_user: null,
-      repealed_by: null,
-    },
-  });
+  // No ban record about this person may remain, so this includes a temporary ban that has not ended. Without its
+  // timer TripBot cannot lift that ban automatically; it stays until a moderator lifts it, as the user is warned.
   await tx.user_actions.deleteMany({
     where: {
       OR: [
         { user_id: userData.id },
         ...(discordId ? [{ target_discord_id: discordId }] : []),
       ],
-      NOT: { id: { in: activeTemporaryBanIds } },
     },
   });
 
@@ -195,7 +171,7 @@ function describeDeletedData(counts: RecordCounts): string {
   if (counts.tickets > 0) response += `\n\nI deleted ${counts.tickets} support ticket records and Discord threads.`;
   if (counts.appeals > 0) response += `\n\nI deleted ${counts.appeals} moderation appeal records.`;
   if (counts.bestOf > 0) response += `\n\nI removed ${counts.bestOf} saved messages from the Best Of archive.`;
-  response += '\n\nI also deleted your quotes, game scores, RPG character, linked accounts, tickets, appeals, moderation history, and their Discord threads. Your moderator identity and notes on other moderation records were anonymized. If you have a temporary Discord ban awaiting its automatic lift, TripBot keeps only the minimum account, guild, and expiry data needed to lift it; that record is deleted once Discord confirms the unban. Command usage is retained only as aggregate totals and the most recent use time per command, without user, guild, channel, or option data. Discord-managed bans are not changed by this command. Copies already relayed to IRC and data in service logs or backups may remain as described in our privacy policy.';
+  response += '\n\nI also deleted your quotes, game scores, RPG character, linked accounts, tickets, appeals, moderation history, and their Discord threads. Your moderator identity and notes on other moderation records were anonymized. TripBot kept no ban records about you: if you had a temporary Discord ban, its timer was deleted too, so that ban stays in place until a moderator lifts it. Command usage is retained only as aggregate totals and the most recent use time per command, without user, guild, channel, or option data. Discord-managed bans are not changed by this command. Copies already relayed to IRC and data in service logs or backups may remain as described in our privacy policy.';
   return response;
 }
 
