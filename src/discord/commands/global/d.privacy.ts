@@ -71,7 +71,7 @@ export const dPrivacy: SlashCommand = {
         embed.setTitle('Are you sure?') /* eslint-disable max-len */
           .setDescription(stripIndents`This will delete all data we have on you, except:
           Your TripBot moderation history will be deleted. Your moderator identity and notes on other users’ moderation records will be anonymized.
-          If you have a temporary Discord ban awaiting its automatic lift, TripBot keeps only the account, guild, and expiry data needed to lift it; that timer record is deleted after Discord confirms the unban.
+          If you have a temporary Discord ban, this also deletes the timer that would lift it automatically, so the ban will stay in place until a moderator lifts it.
 
           Command usage is counted by command with a most recent use time. These aggregate stats have no user, guild, channel, or option data.
           
