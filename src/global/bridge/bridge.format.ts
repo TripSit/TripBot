@@ -1,6 +1,6 @@
 const DISCORD_FORBIDDEN_USERNAME = /discord|clyde/gi;
-// Characters Ergo rejects in nicks, plus the RELAYMSG separator
-const IRC_NICK_INVALID = /[\s,*?!@:#&/.]+/g;
+// Conservative ASCII IRC nick characters; the RELAYMSG separator is added only in the suffix.
+const IRC_NICK_INVALID = /[^A-Za-z0-9[\]\\`_^{|}-]+/g;
 
 const byteLength = (text: string) => Buffer.byteLength(text, 'utf8');
 
@@ -86,11 +86,13 @@ export function stripIrcFormatting(text: string): string {
 /** Builds a RELAYMSG-safe nick like `name/d`, truncated to the server's nick length. */
 export function toIrcNick(nick: string, label: string, maxBytes: number): string {
   const suffix = `/${label}`;
-  let base = nick.replace(IRC_NICK_INVALID, '_').replace(/^[-\d]/, '_$&') || 'unknown';
-  while (base.length > 1 && byteLength(base + suffix) > maxBytes) {
-    base = Array.from(base).slice(0, -1).join('');
+  const baseBytes = maxBytes - byteLength(suffix);
+  if (baseBytes < 1) {
+    throw new RangeError('IRC nick length must fit a base character and the relay suffix');
   }
-  return base + suffix;
+  const base = nick.replace(IRC_NICK_INVALID, '_').replace(/^[-\d]/, '_$&') || 'unknown';
+  // The allowlist makes the base ASCII, so slicing characters also limits UTF-8 bytes.
+  return base.slice(0, baseBytes) + suffix;
 }
 
 /** Makes a nick acceptable as a Discord webhook username (1-80 characters, no "discord"/"clyde"). */
