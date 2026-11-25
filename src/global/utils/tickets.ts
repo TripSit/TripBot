@@ -22,7 +22,7 @@ export function ticketExpiryDates(): { archivedAt: Date; deletedAt: Date } {
     : DateTime.local().plus({ minutes: 15 }).toJSDate();
 
   const deletedAt = env.NODE_ENV === 'production'
-    ? DateTime.local().plus({ days: 5 }).toJSDate()
+    ? DateTime.local().plus({ days: 6 }).toJSDate()
     : DateTime.local().plus({ minutes: 30 }).toJSDate();
 
   return { archivedAt, deletedAt };

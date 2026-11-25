@@ -86,6 +86,7 @@ export async function relayMessage(message: BridgeMessage): Promise<void> {
           action: message.action ?? false,
           avatarUrl: message.avatarUrl,
           sourceId: message.id,
+          ...(message.canSend ? { canSend: message.canSend } : {}),
         });
       } catch (err) {
         log.error(F, `Failed to relay ${message.platform} message to ${target.platform} ${channel}: ${err}`);

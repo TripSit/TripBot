@@ -27,7 +27,6 @@ vi.mock('../../../global/utils/thoughtPolice', () => ({ bigBrother: mocks.bigBro
 vi.mock('../../../global/commands/g.ai', () => ({ aiFlairMod: mocks.aiFlair }));
 vi.mock('../../utils/getAsset', () => ({ default: mocks.asset }));
 vi.mock('../../commands/guild/d.profile', () => ({ getProfilePreview: mocks.preview }));
-vi.mock('openai', () => ({ default: class { chat = { completions: { create: vi.fn() } }; } }));
 
 const e = env as unknown as Record<string, string>;
 
@@ -148,6 +147,22 @@ describe('rpg helpers', () => {
       expect(result).toBe(true);
       expect(stub.editReply).toHaveBeenCalledTimes(1);
       expect(stub.deferReply).toHaveBeenCalledWith({ flags: undefined });
+    });
+
+    it('honors explicit private and public response options', async () => {
+      const privateReply = await run('town', { ephemeral: true });
+      expect(privateReply.stub.deferReply).toHaveBeenCalledWith({ flags: expect.anything() });
+      const publicReply = await run('town', { ephemeral: false }, 'other');
+      expect(publicReply.stub.deferReply).toHaveBeenCalledWith({ flags: undefined });
+    });
+
+    it('registers a visibility option on every subcommand', () => {
+      const command = dRpg.data.toJSON();
+      command.options?.forEach(subcommand => {
+        expect('options' in subcommand && subcommand.options).toEqual(expect.arrayContaining([
+          expect.objectContaining({ name: 'ephemeral', type: 5 }),
+        ]));
+      });
     });
 
     it('replies ephemerally outside the TripTown channel', async () => {
@@ -473,7 +488,16 @@ describe('rpg home and flair', () => {
       expect(text(out)).toContain('New flair:** cool');
     });
 
-    it('falls back to the word filter when the AI is unavailable', async () => {
+    it.each(['offensive', 'harm', 'horny', 'pg13'])('rejects %s flair without saving it', async category => {
+      aiSays(null);
+      mocks.bigBrother.mockResolvedValueOnce(category);
+      const out = await rpgFlair(flairStub('UNSAFE') as never);
+      expect(text(out)).toContain("isn't allowed");
+      expect(mocks.bigBrother).toHaveBeenCalledWith('unsafe');
+      expect(db.rpg_inventory.upsert).not.toHaveBeenCalled();
+    });
+
+    it('falls back to the word filter when AI is unavailable', async () => {
       aiSays(null);
       mocks.bigBrother.mockResolvedValueOnce('offensive');
       expect(text(await rpgFlair(flairStub('bad') as never))).toContain("isn't allowed");
@@ -711,7 +735,7 @@ describe('rpg command routing and edge cases', () => {
     db.rpg_inventory.findMany = vi.fn().mockResolvedValue([{
       id: 'f', value: 'userflair', effect: 'userflair', effect_value: 'old',
     }]) as never;
-    mocks.aiFlair.mockResolvedValue({ response: 'Status: Rejected\nReason: no', promptTokens: 1, completionTokens: 1 });
+    mocks.aiFlair.mockResolvedValue({ response: 'Status: Rejected\nReason: no' });
     const { stub } = await run('flair', { flair: 'hello' });
     expect(stub.editReply).toHaveBeenCalledTimes(1);
   });
@@ -792,7 +816,7 @@ describe('rpg command routing and edge cases', () => {
     db.rpg_inventory.findMany = vi.fn().mockResolvedValue([{
       id: 'f', value: 'userflair', effect: 'userflair', effect_value: 'old',
     }]) as never;
-    mocks.aiFlair.mockResolvedValue({ response: 'Status: Approved\nAdjusted: ', promptTokens: 1, completionTokens: 1 });
+    mocks.aiFlair.mockResolvedValue({ response: 'Status: Approved\nAdjusted: ' });
     const stub = slashStub({ options: { flair: '' }, guild: { members: { fetch: vi.fn(async () => member()) } } });
     const out = await rpgFlair(stub as never);
     expect(embedOf(out).description).toContain('has been updated');

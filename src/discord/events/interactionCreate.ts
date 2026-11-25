@@ -11,10 +11,9 @@ import { autocomplete } from './autocomplete';
 import { buttonClick } from './buttonClick';
 import { selectMenu } from './selectMenu';
 import { botBannedUsers } from '../utils/populateBotBans';
-import modalSubmit from './modalSubmit';
 import { getOrCreateUser } from '../../global/utils/dbRecords';
 import { touchLastSeen } from '../../global/utils/lastSeen';
-import { dataSensitiveCommands, statParameters } from '../utils/commandStats';
+import { dataSensitiveCommands } from '../utils/commandStats';
 
 const F = f(__filename);  // eslint-disable-line
 
@@ -23,7 +22,9 @@ async function recordCommandUsage(interaction: ChatInputCommandInteraction): Pro
   const commandName = subcommand ? `${interaction.commandName} ${subcommand}` : interaction.commandName;
 
   // Only TripSit guild members get a user record just for using the bot; other guilds' users aren't tracked
-  if (interaction.guildId === env.DISCORD_GUILD_ID) {
+  // Privacy deletion runs concurrently with accounting; never recreate the account it is removing.
+  const deletingProfile = interaction.commandName === 'privacy' && subcommand === 'delete';
+  if (interaction.guildId === env.DISCORD_GUILD_ID && !deletingProfile) {
     touchLastSeen(await getOrCreateUser(interaction.user.id));
   }
 
@@ -32,21 +33,11 @@ async function recordCommandUsage(interaction: ChatInputCommandInteraction): Pro
 
   // Usage stats must never break the command that already ran.
   try {
-    const commandUsage = await db.command_usage.create({
-      data: {
-        command: commandName,
-        created_at: new Date(),
-        channel_id: interaction.channel?.id ?? '0',
-        guild_id: interaction.guild?.id ?? null,
-      },
-    });
-
-    // Now create the parameters linked to the command_usage entry. Values are stripped to what stats need.
-    const parameterEntries = statParameters(interaction.options.data)
-      .map(param => ({ ...param, usage_id: commandUsage.id }));
-
-    await db.command_usage_parameter.createMany({
-      data: parameterEntries,
+    const usedAt = new Date();
+    await db.command_usage.upsert({
+      where: { command: commandName },
+      create: { command: commandName, usage_count: 1, last_used_at: usedAt },
+      update: { usage_count: { increment: 1 }, last_used_at: usedAt },
     });
   } catch (error) {
     log.error(F, `Failed to record command usage: ${error}`);
@@ -102,10 +93,6 @@ export const interactionCreate: InteractionCreateEvent = {
 
     if (interaction.type === InteractionType.MessageComponent) {
       routeComponent(interaction);
-    }
-
-    if (interaction.type === InteractionType.ModalSubmit) {
-      modalSubmit(interaction);
     }
   },
 };

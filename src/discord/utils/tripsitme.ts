@@ -55,6 +55,7 @@ import { awaitModal } from './awaitModal';
 import { tripSitReminderState } from './tripsitResponseReminder';
 
 const F = f(__filename);
+const REMOVED_THREAD_ERROR = 'Ticket thread was already removed';
 
 const teamRoles = TEAM_ROLES;
 const colorRoles = TRIPSITME_COLOR_ROLES;
@@ -125,14 +126,8 @@ function ticketChannelName(
 * As the system, update the meta thread name when the user ends the session
   Click the "im good now"
   Bot updates the name of the meta channel with a green heart
-* As the system, archive the ticket after a period of time
-  After 7 days since the user last talked, the channel is archived
-* As the system, delete the ticket after a period of time
-  After 14 days since the user last talked, the channel is deleted
-* As the system, archive the meta thread after a period of time
-  After 7 days since the user last talked, the meta channel is archived
-* As the system, delete the meta thread after a period of time
-  After 14 days since the user last talked, the meta channel is deleted
+* As the system, archive the ticket 3 days after its lifecycle timer is set
+* As the system, delete the ticket and metadata threads after 6 days
 */
 
 /**
@@ -342,6 +337,7 @@ export async function tripsitmeOwned(
 
   // Update the ticket's name
   try {
+    if (!ticketData.thread_id) throw new Error(REMOVED_THREAD_ERROR);
     const channel = await interaction.guild.channels.fetch(ticketData.thread_id) as TextChannel;
     setTicketChannelName(channel, ticketChannelName('inProgress', target.displayName, 'channel'));
   } catch {
@@ -608,6 +604,7 @@ export async function tripsitmeTeamClose(
   // Get the channel objects for the help thread
   let threadHelpUser = {} as ThreadChannel;
   try {
+    if (!ticketData.thread_id) throw new Error(REMOVED_THREAD_ERROR);
     threadHelpUser = await interaction.guild.channels.fetch(ticketData.thread_id) as ThreadChannel;
 
     // The target may have left the guild, so keep the rest of the existing name
@@ -907,6 +904,7 @@ export async function tripsitmeUserClose(
   // Change the channel icon
   let threadHelpUser = {} as ThreadChannel;
   try {
+    if (!ticketData.thread_id) throw new Error(REMOVED_THREAD_ERROR);
     threadHelpUser = await interaction.guild.channels.fetch(ticketData.thread_id) as ThreadChannel;
   } catch (err) {
     log.error(F, `There was an error updating the help thread, it was likely deleted:\n ${err}`);
@@ -1433,6 +1431,7 @@ export async function tripsitmeButton(
     log.debug(F, `Target has tickets: ${JSON.stringify(ticketData, null, 2)}`);
     let threadHelpUser = {} as ThreadChannel;
     try {
+      if (!ticketData.thread_id) throw new Error(REMOVED_THREAD_ERROR);
       threadHelpUser = await interaction.guild?.channels.fetch(ticketData.thread_id) as ThreadChannel;
     } catch {
       log.debug(F, 'There was an error updating the help thread, it was likely deleted');

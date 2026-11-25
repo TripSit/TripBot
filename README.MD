@@ -162,21 +162,7 @@ To use moderation commands in your TripBot instance, you must have the Moderator
 
 If you need this role, please ask Moonbear.
 
-**AI Features**:
-
-To use AI features in your TripBot instance, you need to do a few things.
-
-First, you will need the Developer role on the development server.
-
-Once again, if you need this role, please ask Moonbear.
-
-Second, you must set the OpenAI key/org and the Gemini key in the .env file. If you're using ChatGPT, you will still need the Gemini key set, but it can be a placeholder, e.g "abc". Since the ChatGPT API isn't free, you will need either a ChatGPT Pro subscription or ChatGPT credits to use their API.
-
-Lastly, you'll need to go into a channel and use /ai setup. This is what the Developer role is needed for.
-
-Go into a channel, preferably #bot-spam, and after using /ai setup, accept the ToS in the help tab. Then, add a persona in the persona tab and proceed to the setup tab to finish your setup and select a channel.
-
-That's it. You're done! Your TripBot instance should be able to be pinged for an AI response now.
+AI chat has been removed. Translation (the Translate message command) and RPG flair AI review still use OPENAI_API_ORG and OPENAI_API_KEY. Translation requires the message author to accept both /ai tos agree:True and /ai privacy agree:True; agree:False revokes consent. The chat-history migration removes chat and image history while preserving consent and moderation settings. Historical Discord chat audit posts and bot replies require separate cleanup.
 
 ### Database Development ###
 

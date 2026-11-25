@@ -56,11 +56,15 @@ describe('idose set', () => {
   });
 
   it('rejects unknown drugs', async () => {
+    const debugLog = vi.spyOn(log, 'debug');
     (dbMock.$queryRaw as unknown as { mockResolvedValueOnce: (v: unknown) => void }).mockResolvedValueOnce([]);
     expect((await call('set'))[0].value).toBe('That drug does not exist!');
+    expect(debugLog).toHaveBeenLastCalledWith(expect.any(String), 'iDoseSet: requested substance not found');
+    debugLog.mockRestore();
   });
 
   it('stores the dose, mapping µG to MICRO_G', async () => {
+    const debugLog = vi.spyOn(log, 'debug');
     (dbMock.$queryRaw as unknown as { mockResolvedValueOnce: (v: unknown) => void }).mockResolvedValueOnce([{ drug_id: 'drug1' }]);
     user();
     const result = await call('set', { units: 'µG' });
@@ -70,6 +74,8 @@ describe('idose set', () => {
         user_id: 'u', drug_id: 'drug1', dose: 100, units: 'MICRO_G',
       }),
     });
+    expect(debugLog).toHaveBeenLastCalledWith(expect.any(String), 'iDoseSet: saved a dose record');
+    debugLog.mockRestore();
   });
 
   it('passes other units through', async () => {
@@ -102,6 +108,7 @@ describe('idose delete', () => {
   });
 
   it('deletes the chosen record in chronological order', async () => {
+    const debugLog = vi.spyOn(log, 'debug');
     user();
     dbMock.user_drug_doses.findMany.mockResolvedValueOnce([
       dose('late', '2024-02-01'), dose('early', '2024-01-01'),
@@ -110,6 +117,8 @@ describe('idose delete', () => {
     const result = await call('delete', { record: 0 });
     expect(dbMock.user_drug_doses.delete).toHaveBeenCalledWith({ where: { id: 'early' } });
     expect(result[0].value).toContain('LSD Oral');
+    expect(debugLog).toHaveBeenLastCalledWith(expect.any(String), 'iDoseDel: deleted a dose record');
+    debugLog.mockRestore();
   });
 });
 

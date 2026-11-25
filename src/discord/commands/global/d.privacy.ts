@@ -1,27 +1,27 @@
 import {
-  ChatInputCommandInteraction,
-  EmbedBuilder,
   MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
+import type { TextChannel } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
-import { privacy, setIrcBridgeOptOut } from '../../../global/commands/g.privacy';
+import { privacy } from '../../../global/commands/g.privacy';
 import { embedTemplate } from '../../utils/embedTemplate';
-import commandContext from '../../utils/context';
+import { deleteDiscordPrivacyData } from '../../utils/privacyDeletion';
 
 const F = f(__filename);
 
-async function handleBridgeOptOut(interaction: ChatInputCommandInteraction, embed: EmbedBuilder): Promise<boolean> {
-  const relay = interaction.options.getBoolean('relay', true);
-  const optedOut = await setIrcBridgeOptOut(interaction.user.id, !relay);
-  embed.setTitle('IRC Bridge')
-    .setDescription(optedOut
-      ? stripIndents`Your messages will no longer be relayed to IRC.
-      Messages already relayed stay on IRC. Run this again with relay set to True to turn relaying back on.`
-      : 'Your messages in bridged channels will be relayed to IRC.');
-  await interaction.editReply({ embeds: [embed] });
-  return true;
+async function alertPrivacyDeletionFailure(interaction: Parameters<SlashCommand['execute']>[0]): Promise<void> {
+  try {
+    const channel = await interaction.client.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel | null;
+    if (!channel?.isTextBased() || !('send' in channel)) throw new Error('Bot log channel is unavailable');
+    await channel.send({
+      content: `A privacy deletion failed. The user was asked to retry. <@${env.DISCORD_OWNER_ID}>`,
+      allowedMentions: { users: [env.DISCORD_OWNER_ID] },
+    });
+  } catch {
+    log.error(F, 'Could not send the privacy deletion failure alert to the bot log channel.');
+  }
 }
 
 export const dPrivacy: SlashCommand = {
@@ -31,47 +31,51 @@ export const dPrivacy: SlashCommand = {
     .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('get')
-      .setDescription('Get what data is stored on your user!'))
+      .setDescription('Get what data is stored on your user!')
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription('Set to False to show the response to everyone')))
     .addSubcommand(subcommand => subcommand
       .setName('delete')
       .setDescription('Instructions on deleting your data!')
       .addStringOption(option => option.setName('confirmation')
-        .setDescription('Enter your confirmation code to delete your data!')))
-    .addSubcommand(subcommand => subcommand
-      .setName('bridge')
-      .setDescription('Choose whether your messages are relayed to IRC by the chat bridge')
-      .addBooleanOption(option => option.setName('relay')
-        .setDescription('True to relay your messages to IRC, False to stop relaying them')
-        .setRequired(true))),
+        .setDescription('Enter your confirmation code to delete your data!'))
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription('Set to False to show the response to everyone'))),
   async execute(interaction) {
-    log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-    const command = interaction.options.getSubcommand() as 'get' | 'delete' | 'bridge';
+    log.info(F, 'privacy command used');
+    const ephemeral = interaction.options.getBoolean('ephemeral') ?? true;
+    await interaction.deferReply({ flags: ephemeral ? MessageFlags.Ephemeral : undefined });
+    const command = interaction.options.getSubcommand() as 'get' | 'delete';
     const embed = embedTemplate();
 
-    if (command === 'bridge') {
-      return handleBridgeOptOut(interaction, embed);
-    }
-
-    const userData = await privacy('get', interaction.user.id);
-
     if (command === 'get') {
+      const userData = await privacy('get', interaction.user.id);
       embed.setTitle('Your Data')
         .setDescription(`Here is what data we store on you: ${userData}`);
     } else if (command === 'delete') {
       const confirmation = interaction.options.getString('confirmation');
       if (confirmation === 'YesPlease!') {
-        const userDeleteData = await privacy('delete', interaction.user.id);
-        embed.setTitle('Deleting Your Data')
-          .setDescription(`Your data was deleted:
-          ${userDeleteData}`);
+        try {
+          const userDeleteData = await privacy('delete', interaction.user.id, deleteDiscordPrivacyData);
+          embed.setTitle('Deletion Complete')
+            .setDescription(`Your data was deleted:
+            ${userDeleteData}`);
+        } catch {
+          log.error(F, 'Privacy deletion failed');
+          await alertPrivacyDeletionFailure(interaction);
+          embed.setTitle('Deletion Could Not Be Completed')
+            .setDescription('I could not confirm that your data was deleted. Some Discord cleanup may have completed, but your database deletion did not finish. Please run `/privacy delete` again to retry.');
+        }
       } else {
+        const userData = await privacy('get', interaction.user.id);
         embed.setTitle('Are you sure?') /* eslint-disable max-len */
           .setDescription(stripIndents`This will delete all data we have on you, except:
-          1) Moderation actions taken against your Discord ID (warnings, timeouts, kicks, notes) will remain on file for 2 years from the date of the action, so we can keep the community safe if you return.
-          2) If your user has been banned, your Discord ID and the record of your ban will remain on file indefinitely.
+          Your TripBot moderation history will be deleted. Your moderator identity and notes on other users’ moderation records will be anonymized.
+          If you have a temporary Discord ban awaiting its automatic lift, TripBot keeps only the account, guild, and expiry data needed to lift it; that timer record is deleted after Discord confirms the unban.
+
+          Command usage is counted by command with a most recent use time. These aggregate stats have no user, guild, channel, or option data.
           
-          In other words: If you're not banned and you don't interact with the bot for 6 months, your personal data will be deleted. Moderation actions are removed 2 years after they were taken.
+          This removes your TripBot profile and feature data, support ticket lifecycle records and their threads, moderator discussion thread, appeals, moderation history, saved Best Of copies, messages in TripBot’s bot and moderation log channels that contain your Discord ID, and the IRC Bridge role. Discord-managed bans are controlled by Discord and are not changed. Copies already relayed to IRC may remain as described in our privacy policy.
           
           This will delete everything else. Be sure you want to do this! 
           

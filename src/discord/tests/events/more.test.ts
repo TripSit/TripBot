@@ -1,10 +1,8 @@
-import { ChannelType } from 'discord.js';
 import { buttonClick } from '../../events/buttonClick';
 import { messageDelete } from '../../events/messageDelete';
 import { guildMemberRemove } from '../../events/guildMemberRemove';
 import { guildBanAdd } from '../../events/guildBanAdd';
 import { dbMock } from '../../../vitest/utils/mockDb';
-import { collectionOf } from '../../../vitest/utils/discordStubs';
 
 const e = env as unknown as Record<string, string>;
 
@@ -31,7 +29,6 @@ const h = vi.hoisted(() => {
     refusalButton: vi.fn(),
     modHistoryButton: vi.fn(),
     feedbackReportModal: vi.fn(),
-    aiButton: vi.fn(),
     purgeButton: vi.fn(),
     mushroomPageEmbed: vi.fn(),
     rpg: Object.fromEntries([
@@ -63,7 +60,6 @@ vi.mock('../../commands/global/d.setup', () => ({ helperButton: h.helperButton }
 vi.mock('../../utils/modUtils', () => ({ acknowledgeButton: h.acknowledgeButton, modModal: h.modModal, refusalButton: h.refusalButton }));
 vi.mock('../../utils/modHistory', () => ({ modHistoryButton: h.modHistoryButton }));
 vi.mock('../../commands/global/d.feedback', () => ({ feedbackReportModal: h.feedbackReportModal }));
-vi.mock('../../commands/global/d.ai', () => ({ aiButton: h.aiButton }));
 vi.mock('../../commands/guild/d.purge', () => ({ purgeButton: h.purgeButton }));
 vi.mock('../../utils/hrUtils', () => ({ mushroomPageEmbed: h.mushroomPageEmbed }));
 vi.mock('../../utils/checkPermissions', () => ({ ensurePermissions: h.ensure }));
@@ -81,7 +77,7 @@ describe('buttonClick routing', () => {
   const client = (command?: { execute: () => unknown }) => ({ commands: { get: vi.fn(() => command) } }) as never;
 
   it.each([
-    ['feedbackReportX', () => h.feedbackReportModal], ['AIsettings', () => h.aiButton], ['purgeAll', () => h.purgeButton],
+    ['feedbackReportX', () => h.feedbackReportModal], ['purgeAll', () => h.purgeButton],
     ['modHistoryNext', () => h.modHistoryButton], ['moderateUser', () => h.modModal], ['acknowledgeButton', () => h.acknowledgeButton],
     ['refusalButton', () => h.refusalButton], ['helperButton', () => h.helperButton], ['"ID":"RR"x', () => h.buttonReactionRole],
     ['"ID":"PR"x', () => h.prReviewButton], ['tripsitmeClick', () => h.tripsitmeButton], ['tripsitmeOwned', () => h.tripsitmeOwned],
@@ -166,99 +162,12 @@ describe('buttonClick rpg routing', () => {
 });
 
 describe('messageDelete', () => {
-  const author = { id: 'author', username: 'alice' };
-  const entry = (over: Record<string, unknown> = {}) => ({
-    target: { id: 'author' }, createdTimestamp: Date.now() + 10_000, executor: { id: 'mod' }, ...over,
-  });
-
-  function setup(over: { log?: unknown; attachments?: Array<{ proxyURL: string }>; memberFails?: boolean; content?: string | null; author?: unknown; cached?: unknown } = {}) {
+  it('relays deletions without copying message content to a log channel', async () => {
     const send = vi.fn();
-    const fetchMember = over.memberFails ? vi.fn().mockRejectedValue(new Error('Unknown Member')) : vi.fn(async (id: string) => `<@${id}>`);
-    const deleted = {
-      id: 'm1',
-      author: 'author' in over ? over.author : author,
-      content: over.content === undefined ? 'secret' : over.content,
-      attachments: collectionOf((over.attachments ?? []).map((a, i) => [`a${i}`, a] as [string, { proxyURL: string }])),
-    };
-    const message = {
-      ...deleted,
-      guild: {
-        id: e.DISCORD_GUILD_ID,
-        fetchAuditLogs: vi.fn(async () => ({ entries: { last: () => over.log } })),
-        members: { fetch: fetchMember },
-      },
-      channel: { type: ChannelType.GuildText, name: 'lounge', messages: { cache: { get: vi.fn(() => over.cached) } } },
-      client: { channels: { fetch: vi.fn(async () => ({ send })) } },
-    };
-    return { message, send, fetchMember };
-  }
-
-  beforeEach(() => { h.ensure.mockResolvedValue(true); });
-
-  it('credits the author when no audit entry matches', async () => {
-    const { message, send, fetchMember } = setup();
+    const message = { client: { channels: { fetch: vi.fn(async () => ({ send })) } } };
     await messageDelete.execute(message as never);
-    expect(h.relayDelete).toHaveBeenCalled();
-    expect(fetchMember).toHaveBeenCalledWith('author');
-    const [{ embeds }] = send.mock.calls[0];
-    expect(embeds[0].data.description).toContain('deleted message in lounge');
-    expect(embeds[0].data.fields[0]).toMatchObject({ name: 'alice', value: 'secret' });
-  });
-
-  it('credits the moderator when a fresh audit entry matches', async () => {
-    const { message, fetchMember } = setup({ log: entry() });
-    await messageDelete.execute(message as never);
-    expect(fetchMember).toHaveBeenCalledWith('mod');
-  });
-
-  it.each([
-    ['another target', { target: { id: 'someone-else' } }], ['a stale entry', { createdTimestamp: 1 }],
-    ['no executor', { executor: null }], ['no target', { target: null }],
-  ])('ignores audit entries with %s', async (_label, over) => {
-    const { message, fetchMember } = setup({ log: entry(over) });
-    await messageDelete.execute(message as never);
-    expect(fetchMember).toHaveBeenCalledWith('author');
-  });
-
-  it('omits the field for empty messages and posts once per attachment', async () => {
-    const empty = setup({ content: '' });
-    await messageDelete.execute(empty.message as never);
-    expect(empty.send.mock.calls[0][0].embeds[0].data.fields).toBeUndefined();
-    const withFiles = setup({ attachments: [{ proxyURL: 'https://a' }, { proxyURL: 'https://b' }] });
-    await messageDelete.execute(withFiles.message as never);
-    await new Promise(resolve => { setImmediate(resolve); });
-    expect(withFiles.send).toHaveBeenCalledTimes(2);
-  });
-
-  it('recovers partial messages from the cache and gives up when they are gone', async () => {
-    const cached = { author, content: 'cached text', attachments: collectionOf<{ proxyURL: string }>({}) };
-    const recovered = setup({ author: null, cached });
-    await messageDelete.execute(recovered.message as never);
-    expect(recovered.send).toHaveBeenCalled();
-    const gone = setup({ author: null, cached: undefined });
-    await messageDelete.execute(gone.message as never);
-    expect(gone.send).not.toHaveBeenCalled();
-  });
-
-  it('stops when permissions are missing or the executor left', async () => {
-    h.ensure.mockResolvedValueOnce(false);
-    const noChannel = setup();
-    await messageDelete.execute(noChannel.message as never);
-    h.ensure.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
-    const noAudit = setup();
-    await messageDelete.execute(noAudit.message as never);
-    const left = setup({ memberFails: true });
-    await messageDelete.execute(left.message as never);
-    [noChannel, noAudit, left].forEach(s => expect(s.send).not.toHaveBeenCalled());
-  });
-
-  it('ignores DMs, other guilds and non-text channels', async () => {
-    const base = setup().message;
-    await messageDelete.execute({ ...base, guild: null } as never);
-    await messageDelete.execute({ ...base, guild: { ...base.guild, id: 'other' } } as never);
-    await messageDelete.execute({ ...base, channel: { ...base.channel, type: ChannelType.GuildVoice } } as never);
-    expect(h.ensure).not.toHaveBeenCalled();
-    expect(h.relayDelete).toHaveBeenCalledTimes(3);
+    expect(h.relayDelete).toHaveBeenCalledWith(message);
+    expect(send).not.toHaveBeenCalled();
   });
 });
 

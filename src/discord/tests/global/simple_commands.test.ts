@@ -12,9 +12,10 @@ import { emsCommand } from '../../commands/global/d.ems';
 import { lastReply, slashStub } from '../../../vitest/utils/commandStubs';
 import { dbMock } from '../../../vitest/utils/mockDb';
 
-const mocks = vi.hoisted(() => ({ fact: vi.fn(), ems: vi.fn() }));
+const mocks = vi.hoisted(() => ({ fact: vi.fn(), ems: vi.fn(), deleteDiscordPrivacyData: vi.fn() }));
 
 vi.mock('../../utils/context', () => ({ default: vi.fn(async () => 'ctx') }));
+vi.mock('../../utils/privacyDeletion', () => ({ deleteDiscordPrivacyData: mocks.deleteDiscordPrivacyData }));
 vi.mock('../../../global/commands/g.fact', () => ({ fact: mocks.fact }));
 vi.mock('../../../global/commands/g.ems', () => ({ ems: mocks.ems }));
 
@@ -107,7 +108,9 @@ describe('convert', () => {
 });
 
 describe('privacy', () => {
+  const CONFIRMATION = 'YesPlease!';
   beforeEach(() => {
+    mocks.deleteDiscordPrivacyData.mockReset().mockResolvedValue(undefined);
     dbMock.$transaction.mockImplementation(async callback => {
       if (typeof callback !== 'function') throw new Error('Expected an interactive transaction');
       return callback(dbMock);
@@ -116,6 +119,11 @@ describe('privacy', () => {
     dbMock.user_drug_doses.findMany.mockResolvedValue([]);
     dbMock.user_experience.findMany.mockResolvedValue([]);
     dbMock.user_reminders.findMany.mockResolvedValue([]);
+    dbMock.user_tickets.findMany.mockResolvedValue([]);
+    dbMock.appeals.findMany.mockResolvedValue([]);
+    dbMock.best_of.findMany.mockResolvedValue([]);
+    dbMock.discord_guilds.findMany.mockResolvedValue([]);
+    dbMock.user_actions.findMany.mockResolvedValue([]);
   });
   const embedOf = (stub: ReturnType<typeof slashStub>) => (lastReply(stub).embeds as Array<{ data: { title: string; description: string } }>)[0].data;
 
@@ -128,31 +136,61 @@ describe('privacy', () => {
   it('asks for confirmation before deleting', async () => {
     const { stub } = await run(dPrivacy, { subcommand: 'delete' });
     expect(embedOf(stub).title).toBe('Are you sure?');
-    expect(dbMock.users.update).not.toHaveBeenCalled();
+    expect(dbMock.users.delete).not.toHaveBeenCalled();
     expect(dbMock.$transaction).not.toHaveBeenCalled();
   });
 
   it('deletes data with the confirmation code', async () => {
-    const { stub } = await run(dPrivacy, { subcommand: 'delete', options: { confirmation: 'YesPlease!' } });
-    expect(embedOf(stub).title).toBe('Deleting Your Data');
+    const { stub } = await run(dPrivacy, { subcommand: 'delete', options: { confirmation: CONFIRMATION } });
+    expect(embedOf(stub).title).toBe('Deletion Complete');
     expect(dbMock.$transaction).toHaveBeenCalledOnce();
-    expect(dbMock.users.update).toHaveBeenCalled();
+    expect(dbMock.users.delete).toHaveBeenCalled();
     expect(dbMock.user_drug_doses.deleteMany).toHaveBeenCalledWith({ where: { user_id: 'uid' } });
   });
 
-  it('opts out of the IRC bridge', async () => {
-    dbMock.users.update.mockResolvedValue({ irc_bridge_opt_out: true } as never);
-    const { stub } = await run(dPrivacy, { subcommand: 'bridge', options: { relay: false } });
-    expect(dbMock.users.update).toHaveBeenCalledWith({ where: { id: 'uid' }, data: { irc_bridge_opt_out: true } });
-    expect(embedOf(stub).title).toBe('IRC Bridge');
-    expect(embedOf(stub).description).toContain('no longer be relayed');
+  it('reports a retry on failure and alerts the configured owner in the bot log channel', async () => {
+    mocks.deleteDiscordPrivacyData.mockRejectedValueOnce(new Error('Discord cleanup failed'));
+    const sendAlert = vi.fn();
+    const fetchChannel = vi.fn().mockResolvedValue({ isTextBased: () => true, send: sendAlert });
+    const { stub } = await run(dPrivacy, {
+      subcommand: 'delete',
+      options: { confirmation: CONFIRMATION },
+      client: { channels: { fetch: fetchChannel } },
+    });
+    expect(embedOf(stub).title).toBe('Deletion Could Not Be Completed');
+    expect(embedOf(stub).description).toContain('run `/privacy delete` again to retry');
+    expect(fetchChannel).toHaveBeenCalledWith(env.CHANNEL_BOTLOG);
+    expect(sendAlert).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.stringContaining(`<@${env.DISCORD_OWNER_ID}>`),
+      allowedMentions: { users: [env.DISCORD_OWNER_ID] },
+    }));
+    expect(dbMock.$transaction).not.toHaveBeenCalled();
   });
 
-  it('opts back in to the IRC bridge', async () => {
-    dbMock.users.update.mockResolvedValue({ irc_bridge_opt_out: false } as never);
-    const { stub } = await run(dPrivacy, { subcommand: 'bridge', options: { relay: true } });
-    expect(dbMock.users.update).toHaveBeenCalledWith({ where: { id: 'uid' }, data: { irc_bridge_opt_out: false } });
-    expect(embedOf(stub).description).toContain('will be relayed to IRC');
+  it('still reports deletion failure when the owner alert cannot be sent', async () => {
+    mocks.deleteDiscordPrivacyData.mockRejectedValueOnce(new Error('cleanup failed'));
+    const { stub } = await run(dPrivacy, {
+      subcommand: 'delete',
+      options: { confirmation: CONFIRMATION },
+      client: { channels: { fetch: vi.fn().mockResolvedValue(null) } },
+    });
+    expect(embedOf(stub).title).toBe('Deletion Could Not Be Completed');
+    expect(dbMock.users.delete).not.toHaveBeenCalled();
+  });
+
+  it('registers only get and delete, each with an ephemeral option', () => {
+    const definition = dPrivacy.data.toJSON();
+    expect(definition.options?.map(option => option.name)).toEqual(['get', 'delete']);
+    definition.options?.forEach(option => {
+      expect('options' in option && option.options?.some(child => child.name === 'ephemeral')).toBe(true);
+    });
+  });
+
+  it.each(['get', 'delete'])('makes %s private by default and public only on explicit request', async subcommand => {
+    const privateReply = await run(dPrivacy, { subcommand });
+    expect(privateReply.stub.deferReply).toHaveBeenCalledWith({ flags: 64 });
+    const publicReply = await run(dPrivacy, { subcommand, options: { ephemeral: false } });
+    expect(publicReply.stub.deferReply).toHaveBeenCalledWith({ flags: undefined });
   });
 });
 

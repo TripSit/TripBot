@@ -20,6 +20,8 @@ let fetchWebhooks: Mock;
 let createWebhook: Mock;
 let channelFetch: Mock;
 let memberSearch: Mock;
+let memberFetch: Mock;
+let relayMembers: Collection<string, { roles: { cache: Collection<string, object> } }>;
 const originalDiscordClient = global.discordClient;
 
 function webhook(overrides: Record<string, unknown> = {}) {
@@ -47,7 +49,9 @@ function message(overrides: Record<string, unknown> = {}): Message {
     attachments: new Collection(),
     embeds: [],
     member: { displayName: 'Moony' },
+    guild: { members: { cache: relayMembers, fetch: memberFetch } },
     author: {
+      id: 'author-1',
       bot: false,
       username: 'moonbear',
       displayName: 'Moonbear',
@@ -79,6 +83,8 @@ beforeEach(async () => {
   createWebhook = vi.fn().mockResolvedValue(webhook());
   channelFetch = vi.fn().mockResolvedValue({ type: ChannelType.GuildText, fetchWebhooks, createWebhook });
   memberSearch = vi.fn().mockResolvedValue(new Collection());
+  relayMembers = new Collection([['author-1', { roles: { cache: new Collection([[env.ROLE_IRC_BRIDGE, {}]]) } }]]);
+  memberFetch = vi.fn().mockImplementation(async (id: string) => relayMembers.get(id));
   const members = new Collection([
     ['1', { displayName: 'IrcUser', user: { username: 'ircuser' }, displayAvatarURL: () => 'https://cdn/ircuser.png' }],
   ]);
@@ -280,13 +286,13 @@ describe('relayDiscordMessage', () => {
     },
   );
 
-  it('checks visibility after the asynchronous privacy lookup', async () => {
+  it('checks visibility after the asynchronous member lookup', async () => {
     mappings.setMappings(bridgeRows().map(row => ({ ...row, source: 'auto' })));
     const permissions = new PermissionsBitField(PermissionFlagsBits.ViewChannel);
-    dbMock.users.findUnique.mockImplementationOnce((async () => {
+    memberFetch.mockImplementationOnce(async () => {
       permissions.remove(PermissionFlagsBits.ViewChannel);
-      return null;
-    }) as never);
+      return relayMembers.get('author-1');
+    });
     await chatBridge.relayDiscordMessage(message({
       channel: {
         type: ChannelType.GuildText,
@@ -330,39 +336,64 @@ describe('relayDiscordMessage', () => {
     expect(ircSend).not.toHaveBeenCalled();
   });
 
-  it('does not relay users who opted out with /privacy bridge', async () => {
-    dbMock.users.findUnique.mockResolvedValueOnce({ irc_bridge_opt_out: true } as never);
-    await chatBridge.relayDiscordMessage(message({ author: { ...message().author, id: 'opted-out' } }));
-    expect(dbMock.users.findUnique).toHaveBeenCalledWith({
-      where: { discord_id: 'opted-out' }, select: { irc_bridge_opt_out: true },
-    });
+  it('does not relay users without the IRC Bridge role', async () => {
+    relayMembers.get('author-1')?.roles.cache.clear();
+    await chatBridge.relayDiscordMessage(message());
+    expect(ircSend).not.toHaveBeenCalled();
+  });
+
+  it('uses the role alone without a database consent lookup', async () => {
+    await chatBridge.relayDiscordMessage(message());
+    expect(ircSend).toHaveBeenCalledTimes(1);
+    expect(dbMock.users.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('fails closed when the member lookup fails', async () => {
+    memberFetch.mockRejectedValueOnce(new Error('member unavailable'));
+    await chatBridge.relayDiscordMessage(message());
+    expect(ircSend).not.toHaveBeenCalled();
+    expect(global.log.error).toHaveBeenCalledWith('chatBridge', expect.stringContaining('member unavailable'));
+  });
+
+  it('fails closed when the member is missing', async () => {
+    relayMembers.clear();
+    await chatBridge.relayDiscordMessage(message());
     expect(ircSend).not.toHaveBeenCalled();
   });
 
-  it('relays users who have not opted out, or have no record yet', async () => {
-    dbMock.users.findUnique.mockResolvedValueOnce({ irc_bridge_opt_out: false } as never);
-    await chatBridge.relayDiscordMessage(message());
-    dbMock.users.findUnique.mockResolvedValueOnce(null);
-    await chatBridge.relayDiscordMessage(message());
-    expect(ircSend).toHaveBeenCalledTimes(2);
-  });
-
-  it('fails closed when the opt-out lookup fails', async () => {
-    dbMock.users.findUnique.mockRejectedValueOnce(new Error('db down'));
-    await chatBridge.relayDiscordMessage(message());
+  it('never relays webhook content even when its author has the role', async () => {
+    await chatBridge.relayDiscordMessage(message({ webhookId: 'other-webhook' }));
     expect(ircSend).not.toHaveBeenCalled();
-    expect(global.log.error).toHaveBeenCalledWith('chatBridge', expect.stringContaining('db down'));
+    expect(memberFetch).not.toHaveBeenCalled();
   });
 
-  it('relays other bots and slash command replies', async () => {
+  it('rechecks the current member role for queued delivery', async () => {
+    await chatBridge.relayDiscordMessage(message());
+    const sent = ircSend.mock.calls[0][1] as BridgeOutgoing;
+    expect(sent.canSend?.()).toBe(true);
+    relayMembers.set('author-1', { roles: { cache: new Collection() } });
+    expect(sent.canSend?.()).toBe(false);
+  });
+
+  it('blocks queued delivery while Discord cannot provide current member updates', async () => {
+    await chatBridge.relayDiscordMessage(message());
+    const sent = ircSend.mock.calls[0][1] as BridgeOutgoing;
+    global.discordClient.isReady = (() => false) as typeof global.discordClient.isReady;
+    expect(sent.canSend?.()).toBe(false);
+  });
+
+  it('relays bot replies only when the bot has the bridge role', async () => {
     await chatBridge.relayDiscordMessage(message({
       type: MessageType.ChatInputCommand,
       author: {
-        bot: true, username: 'TripBot', displayName: 'TripBot', displayAvatarURL: () => '',
+        id: 'author-1', bot: true, username: 'TripBot', displayName: 'TripBot', displayAvatarURL: () => '',
       },
       member: null,
     }));
     expect(ircSend).toHaveBeenCalledWith('#lounge', expect.objectContaining({ nick: 'TripBot' }));
+    relayMembers.get('author-1')?.roles.cache.clear();
+    await chatBridge.relayDiscordMessage(message({ author: { ...message().author, bot: true } }));
+    expect(ircSend).toHaveBeenCalledTimes(1);
   });
 
   it('logs instead of throwing when relaying fails', async () => {
@@ -381,6 +412,12 @@ describe('relayDiscordEdit', () => {
   it('relays content edits with the edit suffix', async () => {
     await chatBridge.relayDiscordEdit(message({ editedTimestamp: null }), edited());
     expect(ircSend).toHaveBeenCalledWith('#lounge', expect.objectContaining({ text: 'fixed (edited)' }));
+  });
+
+  it('does not relay edits after consent is withdrawn', async () => {
+    relayMembers.get('author-1')?.roles.cache.clear();
+    await chatBridge.relayDiscordEdit(message(), edited());
+    expect(ircSend).not.toHaveBeenCalled();
   });
 
   it('fetches partial messages before relaying', async () => {
@@ -411,6 +448,7 @@ describe('relayDiscordDelete', () => {
   });
 
   it('relays the delete by message ID', async () => {
+    relayMembers.get('author-1')?.roles.cache.clear();
     await chatBridge.relayDiscordDelete(message({ guildId: 'guild-1' }));
     expect(remove).toHaveBeenCalledWith('#lounge', 'message-1');
   });

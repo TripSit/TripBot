@@ -24,6 +24,7 @@ interface QueuedLine {
   text: string;
   action: boolean;
   sourceId?: string;
+  canSend?: () => boolean;
 }
 
 interface ChannelQueue {
@@ -99,7 +100,7 @@ function drain(client: Client, key: string): void {
     queues.delete(key);
     return;
   }
-  if (client.connected) sendLine(client, line);
+  if (client.connected && (line.canSend?.() ?? true)) sendLine(client, line);
   queue.timer = setTimeout(() => drain(client, key), IRC_MESSAGE_DELAY_MS);
 }
 
@@ -130,7 +131,12 @@ export function createIrcBridgeTarget(client: Client): BridgeTarget {
       const prefixBytes = Buffer.byteLength(`<${nick}> `, 'utf8');
       const lines = splitMessage(stripMarkdown(message.text), IRC_MESSAGE_BYTES - prefixBytes);
       enqueue(client, channel, lines.map(text => ({
-        channel, nick, text, action: message.action, sourceId: message.sourceId,
+        channel,
+        nick,
+        text,
+        action: message.action,
+        sourceId: message.sourceId,
+        canSend: message.canSend,
       })));
     },
     async remove(channel: string, sourceId: string): Promise<void> {

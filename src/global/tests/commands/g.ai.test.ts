@@ -27,8 +27,6 @@ vi.mock('openai', () => {
   return { default: MockOpenAI };
 });
 
-vi.mock('../../../discord/utils/ai', () => ({ AiText: { highEfficiencyModel: 'test-model', modPrompt: 'mod prompt' } }));
-
 const e = env as unknown as Record<string, string>;
 const original = { org: e.OPENAI_API_ORG, key: e.OPENAI_API_KEY };
 
@@ -122,7 +120,7 @@ describe.each([
       choices: [{ message: { content: 'hello' } }], usage: { prompt_tokens: 3, completion_tokens: 4 },
     });
     expect(await run([])).toEqual({ response: 'hello', promptTokens: 3, completionTokens: 4 });
-    expect(mocks.chatCreate).toHaveBeenCalledWith(expect.objectContaining({ model: 'test-model' }));
+    expect(mocks.chatCreate).toHaveBeenCalledWith(expect.objectContaining({ model: 'gpt-4o-mini', store: false }));
   });
 
   it('falls back to a polite default for empty content and missing usage', async () => {

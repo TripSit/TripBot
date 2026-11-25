@@ -20,7 +20,7 @@ export const dTripsitStats: SlashCommand = {
       .setDescription('Get stats for TripSit sessions')
       .addBooleanOption(option => option
         .setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription('Set to False to show the response to everyone')))
     .addSubcommand(subcommand => subcommand
       .setName('command')
       .setDescription('Get stats for commands')
@@ -29,14 +29,14 @@ export const dTripsitStats: SlashCommand = {
         .setDescription('The command to get stats for'))
       .addIntegerOption(option => option
         .setName('days')
-        .setDescription('Number of days to look back'))
+        .setDescription('Only include commands last used within this many days; totals are lifetime'))
       .addBooleanOption(option => option
         .setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you'))),
+        .setDescription('Set to False to show the response to everyone'))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
-    await interaction.deferReply({ flags: ephemeral });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ?? true;
+    await interaction.deferReply({ flags: ephemeral ? MessageFlags.Ephemeral : undefined });
 
     let stats = null;
     const subcommand = interaction.options.getSubcommand();

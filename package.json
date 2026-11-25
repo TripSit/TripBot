@@ -78,7 +78,6 @@
     "@keycloak/keycloak-admin-client": "^26.5.6",
     "@napi-rs/canvas": "^1.1.0",
     "@octokit/webhooks-types": "^7.6.1",
-    "@openrouter/ai-sdk-provider": "^3.1.0",
     "@prisma/adapter-mariadb": "^7.4.2",
     "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.4.2",

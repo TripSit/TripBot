@@ -22,6 +22,8 @@ export interface BridgeMessage {
   avatarUrl?: string;
   /** The message's ID on its own platform, so a later delete can be relayed. */
   id?: string;
+  /** Rechecked before delivery so queued messages respect withdrawn consent. */
+  canSend?: () => boolean;
 }
 
 /** A message that was deleted on one platform. */
@@ -42,6 +44,8 @@ export interface BridgeOutgoing {
   avatarUrl?: string;
   /** The ID of the message on its source platform. */
   sourceId?: string;
+  /** Rechecked before each queued line is delivered. */
+  canSend?: () => boolean;
 }
 
 export interface BridgeTarget {

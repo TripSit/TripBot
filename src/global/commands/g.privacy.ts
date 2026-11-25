@@ -9,13 +9,10 @@ export default privacy;
 /** Users not seen for this long, and not banned, have their data purged (see /privacy delete). */
 export const RETENTION_MONTHS = 6;
 
-/** Command parameter values are kept this many days for usage stats, then deleted. */
-export const COMMAND_PARAMETER_RETENTION_DAYS = 90;
-
-/** Moderation actions other than permanent bans are kept this long, counted from the date of the action. */
+/** Moderation actions are pruned after this period unless they concern a currently banned user. */
 export const MODERATION_ACTION_RETENTION_YEARS = 2;
 
-/** The last_seen_at that privacy('delete') writes; scrubbed users are skipped by the purge. */
+/** Legacy marker for accounts scrubbed by earlier versions; these rows are skipped by the purge. */
 export const SCRUBBED_LAST_SEEN = new Date(1970);
 
 /** Plain values keep their usual text; structured values are serialized instead of printing "[object Object]". */
@@ -24,17 +21,6 @@ function formatValue(value: unknown): string {
     return String(value);
   }
   return JSON.stringify(value);
-}
-
-/** Turns relaying of a user's Discord messages to IRC off (or back on). Returns the stored value. */
-export async function setIrcBridgeOptOut(discordId: string, optOut: boolean): Promise<boolean> {
-  const userData = await getOrCreateUser(discordId);
-  const updated = await db.users.update({
-    where: { id: userData.id },
-    data: { irc_bridge_opt_out: optOut },
-  });
-  log.info(F, `irc bridge opt-out set to ${updated.irc_bridge_opt_out} for user ${userData.id}`);
-  return updated.irc_bridge_opt_out;
 }
 
 // Fields that are never listed back to the user
@@ -50,7 +36,15 @@ const FIELD_NOTES: Record<string, string> = {
 
 type UserRecord = Awaited<ReturnType<typeof getOrCreateUser>>;
 type TransactionClient = Parameters<Parameters<typeof db.$transaction>[0]>[0];
-type RecordCounts = { doses: number; experience: number; reminders: number };
+type RecordCounts = {
+  doses: number; experience: number; reminders: number; tickets: number; appeals: number; bestOf: number;
+};
+export type DeleteDiscordData = (
+  discordId: string,
+  channelIds: string[],
+  bestOfMessageIds: string[],
+  moderationLogChannelIds: string[],
+) => Promise<void>;
 
 /** Lists the stored (non-empty, non-hidden) fields of a user, optionally with an explanatory note per field. */
 function describeUserData(userData: UserRecord, includeNotes: boolean): string {
@@ -66,43 +60,7 @@ function describeUserData(userData: UserRecord, includeNotes: boolean): string {
   return text;
 }
 
-function scrubUserData(userData: UserRecord): void {
-  Object.assign(userData, {
-    email: null,
-    username: null,
-    timezone: null,
-    birthday: null,
-    birthday_wished_at: null,
-    roles: '',
-    mindset_role: null,
-    mindset_role_expires_at: null,
-    lastfm_username: null,
-    irc_id: null,
-    matrix_id: null,
-    moodle_id: null,
-    password_hash: null,
-    level_freeze: null,
-    last_helper_activity: null,
-    last_was_helper: null,
-    karma_given: 0,
-    karma_received: 0,
-    sparkle_points: 0,
-    move_points: 0,
-    empathy_points: 0,
-    last_seen_at: SCRUBBED_LAST_SEEN,
-    last_seen_in: null,
-    joined_at: new Date(1970),
-    removed_at: null,
-  });
-}
-
-async function deleteUserRecords(tx: TransactionClient, userData: UserRecord): Promise<void> {
-  await tx.users.update({
-    where: {
-      id: userData.id,
-    },
-    data: userData,
-  });
+async function deleteUserRecords(tx: TransactionClient, userData: UserRecord, discordId: string | null): Promise<void> {
   await tx.user_drug_doses.deleteMany({
     where: {
       user_id: userData.id,
@@ -118,22 +76,90 @@ async function deleteUserRecords(tx: TransactionClient, userData: UserRecord): P
       user_id: userData.id,
     },
   });
+  await tx.watch_request.deleteMany({
+    where: discordId ? {
+      OR: [
+        { usersId: userData.id },
+        { caller_id: discordId },
+        { watched_user_id: discordId },
+      ],
+    } : { usersId: userData.id },
+  });
 
-  // Everything else tied to the user goes too. Only moderation records (actions, appeals, bans), tickets (which
-  // delete themselves shortly after archiving) and the bridge opt-out choice are kept.
-  await tx.quotes.deleteMany({ where: { user_id: userData.id } });
+  // Remove user-authored quote records too, even when they quote somebody else.
+  await tx.quotes.deleteMany({ where: { OR: [{ user_id: userData.id }, { created_by: userData.id }] } });
   await tx.wordle_scores.deleteMany({ where: { user_id: userData.id } });
   await tx.connections_scores.deleteMany({ where: { user_id: userData.id } });
   await tx.mini_scores.deleteMany({ where: { user_id: userData.id } });
   await tx.rpg_inventory.deleteMany({ where: { personas: { user_id: userData.id } } });
   await tx.personas.deleteMany({ where: { user_id: userData.id } });
-  // Deleting the AI record also removes its generated images and message usage records
   await tx.ai_info.deleteMany({ where: { user_id: userData.id } });
-  if (userData.discord_id) {
-    await tx.best_of.deleteMany({ where: { user_id: userData.discord_id } });
-    await tx.claimed_bounties.deleteMany({ where: { user_id: userData.discord_id } });
-    await tx.members.deleteMany({ where: { id: userData.discord_id } });
+  // Remove this person's moderation history and unlink their moderator identity from other people's records.
+  await tx.user_actions.updateMany({
+    where: { created_by: userData.id, NOT: { user_id: userData.id } },
+    data: { created_by: null, internal_note: '', description: null },
+  });
+  await tx.user_actions.updateMany({
+    where: { OR: [{ repealed_by: userData.id }, { ban_evasion_related_user: userData.id }] },
+    data: { repealed_by: null, ban_evasion_related_user: null },
+  });
+  const activeTemporaryBanWhere = {
+    OR: [
+      { user_id: userData.id },
+      ...(discordId ? [{ target_discord_id: discordId }] : []),
+    ],
+    type: 'FULL_BAN' as const,
+    expires_at: { not: null },
+    repealed_at: null,
+  };
+  const activeTemporaryBans = await tx.user_actions.findMany({
+    where: activeTemporaryBanWhere,
+    select: { id: true },
+  });
+  const activeTemporaryBanIds = activeTemporaryBans.map(action => action.id);
+  await tx.user_actions.updateMany({
+    where: { id: { in: activeTemporaryBanIds } },
+    data: {
+      user_id: null,
+      created_by: null,
+      internal_note: '',
+      description: null,
+      ban_evasion_related_user: null,
+      repealed_by: null,
+    },
+  });
+  await tx.user_actions.deleteMany({
+    where: {
+      OR: [
+        { user_id: userData.id },
+        ...(discordId ? [{ target_discord_id: discordId }] : []),
+      ],
+      NOT: { id: { in: activeTemporaryBanIds } },
+    },
+  });
+
+  // Ticket ownership and appeal content are user data.
+  await tx.user_tickets.updateMany({
+    where: { OR: [{ closed_by: userData.id }, { reopened_by: userData.id }] },
+    data: { closed_by: null, reopened_by: null },
+  });
+  await tx.user_tickets.deleteMany({ where: { user_id: userData.id } });
+  await tx.appeals.deleteMany({ where: { user_id: userData.id } });
+  await tx.drug_articles.updateMany({
+    where: { OR: [{ posted_by: userData.id }, { last_modified_by: userData.id }] },
+    data: {
+      posted_by: null,
+      last_modified_by: null,
+    },
+  });
+  await tx.drug_variants.updateMany({ where: { last_updated_by: userData.id }, data: { last_updated_by: null } });
+  await tx.drugs.updateMany({ where: { last_updated_by: userData.id }, data: { last_updated_by: null } });
+  if (discordId) {
+    await tx.best_of.deleteMany({ where: { user_id: discordId } });
+    await tx.claimed_bounties.deleteMany({ where: { user_id: discordId } });
+    await tx.members.deleteMany({ where: { id: discordId } });
   }
+  await tx.users.delete({ where: { id: userData.id } });
 }
 
 function describeStoredData(userData: UserRecord, counts: RecordCounts): string {
@@ -147,11 +173,14 @@ function describeStoredData(userData: UserRecord, counts: RecordCounts): string 
   if (counts.reminders > 0) {
     response += `\n\nYou have ${counts.reminders} reminders. Use /reminders get to see specifics!`;
   }
+  if (counts.tickets > 0) response += `\n\nYou have ${counts.tickets} support ticket lifecycle records and any remaining Discord threads.`;
+  if (counts.appeals > 0) response += `\n\nYou have ${counts.appeals} moderation appeal records.`;
+  if (counts.bestOf > 0) response += `\n\nYou have ${counts.bestOf} saved messages in the Best Of archive.`;
   return response;
 }
 
-function describeDeletedData(userData: UserRecord, counts: RecordCounts): string {
-  let response = `I deleted your User Data:\n${describeUserData(userData, false)}`;
+function describeDeletedData(counts: RecordCounts): string {
+  let response = 'I removed your TripBot profile data and feature data.';
   if (counts.doses > 0) {
     response += `\n\nI deleted ${counts.doses} Idose records!`;
   }
@@ -161,7 +190,10 @@ function describeDeletedData(userData: UserRecord, counts: RecordCounts): string
   if (counts.reminders > 0) {
     response += `\n\nI deleted ${counts.reminders} reminders!`;
   }
-  response += '\n\nI also deleted your quotes, game scores, RPG character, AI data and linked accounts.';
+  if (counts.tickets > 0) response += `\n\nI deleted ${counts.tickets} support ticket records and Discord threads.`;
+  if (counts.appeals > 0) response += `\n\nI deleted ${counts.appeals} moderation appeal records.`;
+  if (counts.bestOf > 0) response += `\n\nI removed ${counts.bestOf} saved messages from the Best Of archive.`;
+  response += '\n\nI also deleted your quotes, game scores, RPG character, linked accounts, tickets, appeals, moderation history, and their Discord threads. Your moderator identity and notes on other moderation records were anonymized. If you have a temporary Discord ban awaiting its automatic lift, TripBot keeps only the minimum account, guild, and expiry data needed to lift it; that record is deleted once Discord confirms the unban. Command usage is retained only as aggregate totals and the most recent use time per command, without user, guild, channel, or option data. Discord-managed bans are not changed by this command. Copies already relayed to IRC and data in service logs or backups may remain as described in our privacy policy.';
   return response;
 }
 
@@ -173,6 +205,7 @@ function describeDeletedData(userData: UserRecord, counts: RecordCounts): string
 export async function privacy(
   command: 'get' | 'delete',
   userId: string,
+  deleteDiscordData?: DeleteDiscordData,
 ):Promise<string> {
   let response = '';
   const userData = await getOrCreateUser(userId);
@@ -192,37 +225,69 @@ export async function privacy(
       user_id: userData.id,
     },
   });
+  const userTickets = await db.user_tickets.findMany({
+    where: { user_id: userData.id },
+    select: { thread_id: true, meta_thread_id: true },
+  });
+  const userAppeals = await db.appeals.findMany({ where: { user_id: userData.id }, select: { id: true } });
+  const userBestOf = userData.discord_id ? await db.best_of.findMany({
+    where: { user_id: userData.discord_id },
+    select: { message_id: true },
+  }) : [];
   const counts = {
     doses: userDrugDoses.length,
     experience: userExperience.length,
     reminders: userReminders.length,
+    tickets: userTickets.length,
+    appeals: userAppeals.length,
+    bestOf: userBestOf.length,
   };
 
   if (command === 'get') {
     response = describeStoredData(userData, counts);
   }
   if (command === 'delete') {
-    scrubUserData(userData);
-
-    // Keep the scrub marker and related deletions atomic so failed purges remain retryable.
+    const discordId = userData.discord_id;
+    const discordChannelIds = [...new Set([
+      userData.mod_thread_id,
+      ...userTickets.flatMap(ticket => [ticket.thread_id, ticket.meta_thread_id]),
+    ].filter((id): id is string => Boolean(id)))];
+    if (deleteDiscordData) {
+      const moderationLogChannels = await db.discord_guilds.findMany({
+        where: { channel_mod_log: { not: null } },
+        select: { channel_mod_log: true },
+      });
+      const moderationLogChannelIds = [...new Set(moderationLogChannels
+        .map(guild => guild.channel_mod_log)
+        .filter((id): id is string => Boolean(id)))];
+      await deleteDiscordData(
+        userId,
+        discordChannelIds,
+        userBestOf.map(entry => entry.message_id),
+        moderationLogChannelIds,
+      );
+    } else if (discordChannelIds.length > 0) throw new Error('Discord thread cleanup is required before deleting user data');
+    // Keep the data deletion and all dependent-record cleanup atomic.
     await db.$transaction(async tx => {
-      await deleteUserRecords(tx, userData);
+      await deleteUserRecords(tx, userData, discordId);
     });
 
-    response = describeDeletedData(userData, counts);
+    response = describeDeletedData(counts);
   }
 
-  log.info(F, `privacy ${command} completed for user ${userData.id}`);
+  log.info(F, `privacy ${command} completed`);
   return response;
 }
 
 /**
  * Enforces the retention promised by /privacy delete: users who haven't been seen for RETENTION_MONTHS and have
- * no unrepealed full ban are scrubbed like a manual delete. Moderation actions are not removed here; they follow
- * their own retention (see pruneModerationActions) so a returning user's history is still available.
+ * no unrepealed full ban have their data removed like a manual delete.
  * Banned users stay on file. Returns how many users were purged.
  */
-export async function purgeInactiveUsers(now: Date = new Date()): Promise<number> {
+export async function purgeInactiveUsers(
+  now: Date = new Date(),
+  deleteDiscordData?: DeleteDiscordData,
+): Promise<number> {
   const cutoff = new Date(now);
   cutoff.setUTCMonth(cutoff.getUTCMonth() - RETENTION_MONTHS);
 
@@ -239,10 +304,10 @@ export async function purgeInactiveUsers(now: Date = new Date()): Promise<number
   for (const user of inactive) { // eslint-disable-line no-restricted-syntax
     if (!user.discord_id) continue; // eslint-disable-line no-continue
     try {
-      await privacy('delete', user.discord_id); // eslint-disable-line no-await-in-loop
+      await privacy('delete', user.discord_id, deleteDiscordData); // eslint-disable-line no-await-in-loop
       purged += 1;
-    } catch (err) {
-      log.error(F, `Retention purge failed for user ${user.id}: ${err}`);
+    } catch {
+      log.error(F, 'Retention purge failed for one account');
     }
   }
 
@@ -267,15 +332,5 @@ export async function pruneModerationActions(now: Date = new Date()): Promise<nu
     },
   });
   log.info(F, `Pruned ${count} moderation actions older than ${MODERATION_ACTION_RETENTION_YEARS} years`);
-  return count;
-}
-
-/** Deletes command parameters older than COMMAND_PARAMETER_RETENTION_DAYS; the command counts themselves stay. */
-export async function pruneCommandParameters(now: Date = new Date()): Promise<number> {
-  const cutoff = new Date(now.getTime() - COMMAND_PARAMETER_RETENTION_DAYS * 24 * 60 * 60 * 1000);
-  const { count } = await db.command_usage_parameter.deleteMany({
-    where: { usage: { created_at: { lt: cutoff } } },
-  });
-  log.info(F, `Pruned ${count} command parameters older than ${COMMAND_PARAMETER_RETENTION_DAYS} days`);
   return count;
 }

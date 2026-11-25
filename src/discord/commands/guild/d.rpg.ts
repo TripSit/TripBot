@@ -3402,7 +3402,8 @@ export async function rpgHelp(
 
 /** Bot-owner only: take a retired item out of every inventory and refund what was paid for it. */
 async function rpgRefund(interaction: ChatInputCommandInteraction): Promise<boolean> {
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  const ephemeral = interaction.options.getBoolean('ephemeral') ?? true;
+  await interaction.deferReply({ flags: ephemeral ? MessageFlags.Ephemeral : undefined });
   if (interaction.user.id !== env.DISCORD_OWNER_ID) {
     await interaction.editReply({ content: 'Only the bot owner can refund items.' });
     return false;
@@ -3417,6 +3418,8 @@ async function rpgRefund(interaction: ChatInputCommandInteraction): Promise<bool
   return true;
 }
 
+const RPG_VISIBILITY_DESCRIPTION = 'Set to False to show the response to everyone';
+
 export const dRpg: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('rpg')
@@ -3424,44 +3427,92 @@ export const dRpg: SlashCommand = {
     .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('town')
-      .setDescription('Go to TripTown!'))
+      .setDescription('Go to TripTown!')
+      // RPG output is public in TripTown by default so players can share the game.
+      .addBooleanOption(option => option
+        .setName('ephemeral')
+        .setDescription(RPG_VISIBILITY_DESCRIPTION)))
     .addSubcommand(subcommand => subcommand
       .setName('market')
-      .setDescription('Go to the Market!'))
+      .setDescription('Go to the Market!')
+      // RPG output is public in TripTown by default so players can share the game.
+      .addBooleanOption(option => option
+        .setName('ephemeral')
+        .setDescription(RPG_VISIBILITY_DESCRIPTION)))
     .addSubcommand(subcommand => subcommand
       .setName('home')
-      .setDescription('Go to your Home!'))
+      .setDescription('Go to your Home!')
+      // RPG output is public in TripTown by default so players can share the game.
+      .addBooleanOption(option => option
+        .setName('ephemeral')
+        .setDescription(RPG_VISIBILITY_DESCRIPTION)))
     .addSubcommand(subcommand => subcommand
       .setName('bounties')
-      .setDescription('Go to the bounty board!'))
+      .setDescription('Go to the bounty board!')
+      // RPG output is public in TripTown by default so players can share the game.
+      .addBooleanOption(option => option
+        .setName('ephemeral')
+        .setDescription(RPG_VISIBILITY_DESCRIPTION)))
     .addSubcommand(subcommand => subcommand
       .setName('help')
-      .setDescription('Learn how to play!'))
+      .setDescription('Learn how to play!')
+      // RPG output is public in TripTown by default so players can share the game.
+      .addBooleanOption(option => option
+        .setName('ephemeral')
+        .setDescription(RPG_VISIBILITY_DESCRIPTION)))
     .addSubcommand(subcommand => subcommand
       .setName('quest')
-      .setDescription('Quest and earn 10 tokens!'))
+      .setDescription('Quest and earn 10 tokens!')
+      // RPG output is public in TripTown by default so players can share the game.
+      .addBooleanOption(option => option
+        .setName('ephemeral')
+        .setDescription(RPG_VISIBILITY_DESCRIPTION)))
     .addSubcommand(subcommand => subcommand
       .setName('dungeon')
-      .setDescription('Clear a dungeon and earn 50 tokens!'))
+      .setDescription('Clear a dungeon and earn 50 tokens!')
+      // RPG output is public in TripTown by default so players can share the game.
+      .addBooleanOption(option => option
+        .setName('ephemeral')
+        .setDescription(RPG_VISIBILITY_DESCRIPTION)))
     .addSubcommand(subcommand => subcommand
       .setName('raid')
-      .setDescription('Raid a boss and earn 100 tokens!'))
+      .setDescription('Raid a boss and earn 100 tokens!')
+      // RPG output is public in TripTown by default so players can share the game.
+      .addBooleanOption(option => option
+        .setName('ephemeral')
+        .setDescription(RPG_VISIBILITY_DESCRIPTION)))
     .addSubcommand(subcommand => subcommand
       .setName('arcade')
-      .setDescription('Go to the arcade'))
+      .setDescription('Go to the arcade')
+      // RPG output is public in TripTown by default so players can share the game.
+      .addBooleanOption(option => option
+        .setName('ephemeral')
+        .setDescription(RPG_VISIBILITY_DESCRIPTION)))
     .addSubcommand(subcommand => subcommand
       .setName('coinflip')
-      .setDescription('Go to the coinflip game'))
+      .setDescription('Go to the coinflip game')
+      // RPG output is public in TripTown by default so players can share the game.
+      .addBooleanOption(option => option
+        .setName('ephemeral')
+        .setDescription(RPG_VISIBILITY_DESCRIPTION)))
     .addSubcommand(subcommand => subcommand
       .setName('roulette')
-      .setDescription('Go to the roulette game'))
+      .setDescription('Go to the roulette game')
+      // RPG output is public in TripTown by default so players can share the game.
+      .addBooleanOption(option => option
+        .setName('ephemeral')
+        .setDescription(RPG_VISIBILITY_DESCRIPTION)))
     .addSubcommand(subcommand => subcommand
       .setName('flair')
       .setDescription('Change your flair')
       .addStringOption(option => option
         .setName('flair')
         .setDescription('Flair to change to')
-        .setRequired(true)))
+        .setRequired(true))
+      // RPG output is public in TripTown by default so players can share the game.
+      .addBooleanOption(option => option
+        .setName('ephemeral')
+        .setDescription(RPG_VISIBILITY_DESCRIPTION)))
     .addSubcommand(subcommand => subcommand
       .setName('gift')
       .setDescription('Gift tokens to another user')
@@ -3472,21 +3523,29 @@ export const dRpg: SlashCommand = {
       .addIntegerOption(option => option
         .setName('amount')
         .setDescription('Amount of tokens to gift')
-        .setRequired(true)))
+        .setRequired(true))
+      // RPG output is public in TripTown by default so players can share the game.
+      .addBooleanOption(option => option
+        .setName('ephemeral')
+        .setDescription(RPG_VISIBILITY_DESCRIPTION)))
     .addSubcommand(subcommand => subcommand
       .setName('refund')
       .setDescription('Bot owner only: remove a retired item from every inventory and refund it')
       .addStringOption(option => option
         .setName('item')
         .setDescription('The item value to retire (for example AbrilFatFace)')
-        .setRequired(true))),
+        .setRequired(true))
+      // Owner-only refunds default to a private response.
+      .addBooleanOption(option => option
+        .setName('ephemeral')
+        .setDescription(RPG_VISIBILITY_DESCRIPTION))),
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     if (interaction.options.getSubcommand() === 'refund') return rpgRefund(interaction);
     const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
-    const ephemeral = channelRpg.id !== interaction.channelId ? MessageFlags.Ephemeral : undefined;
-    await interaction.deferReply({ flags: ephemeral });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ?? (channelRpg.id !== interaction.channelId);
+    await interaction.deferReply({ flags: ephemeral ? MessageFlags.Ephemeral : undefined });
     const subcommand = interaction.options.getSubcommand();
 
     // Get the user's persona data

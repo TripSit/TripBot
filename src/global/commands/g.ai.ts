@@ -4,15 +4,17 @@
 import OpenAI from 'openai';
 import { ModerationCreateResponse } from 'openai/resources';
 import { isString } from 'underscore';
-import { AiText } from '../../discord/utils/ai';
+import { AiText } from '../utils/aiText';
 import { getOrCreateGuild } from '../utils/dbRecords';
 
 const F = f(__filename);
 
-const openAi = new OpenAI({
-  organization: env.OPENAI_API_ORG,
-  apiKey: env.OPENAI_API_KEY,
-});
+function getOpenAi(): OpenAI {
+  return new OpenAI({
+    organization: env.OPENAI_API_ORG,
+    apiKey: env.OPENAI_API_KEY,
+  });
+}
 
 type ModerationResult = {
   category: string,
@@ -25,13 +27,13 @@ export async function aiModerateReport(
 ):Promise<ModerationCreateResponse | null> {
   if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return null;
 
-  return openAi.moderations
+  return getOpenAi().moderations
     .create({
       input: message,
     })
     .catch(err => {
       if (err instanceof OpenAI.APIError) {
-        log.error(F, `OpenAI moderation request failed: ${err.status} ${err.name} - ${err.headers}`);
+        log.error(F, 'OpenAI moderation request failed');
       } else {
         throw err;
       }
@@ -68,6 +70,7 @@ export async function aiFlairMod(
     logit_bias: {},
     max_tokens: 500,
     model,
+    store: false,
     messages: chatCompletionMessages,
     // functions: aiFunctions,
     // function_call: 'auto',
@@ -75,12 +78,12 @@ export async function aiFlairMod(
 
   let responseMessage: OpenAI.Chat.ChatCompletionMessageParam;
 
-  const chatCompletion = await openAi.chat.completions
+  const chatCompletion = await getOpenAi().chat.completions
     .create(payload)
     .catch(err => {
       if (err instanceof OpenAI.APIError) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        log.error(F, `AI flair mod request failed: ${err.name} - ${err.status} - ${err.type} - ${err.error.message}`);
+        log.error(F, 'AI flair mod request failed');
       } else {
         throw err;
       }
@@ -178,17 +181,18 @@ export async function aiTranslate(
 
   const payload: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming = {
     model,
+    store: false,
     messages: chatCompletionMessages,
   };
 
   let responseMessage: OpenAI.Chat.ChatCompletionMessageParam;
 
-  const chatCompletion = await openAi.chat.completions
+  const chatCompletion = await getOpenAi().chat.completions
     .create(payload)
     .catch(err => {
       if (err instanceof OpenAI.APIError) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        log.error(F, `AI translate request failed: ${err.name} - ${err.status} - ${err.type} - ${err.error.message}`);
+        log.error(F, 'AI translate request failed');
       } else {
         throw err;
       }

@@ -20,28 +20,35 @@ describe('getTripSitStatistics', () => {
   });
 
   it('reports when no commands were used, with filters', async () => {
-    asMock(dbMock.command_usage.groupBy).mockResolvedValueOnce([] as never);
+    asMock(dbMock.command_usage.findMany).mockResolvedValueOnce([] as never);
     expect(await getTripSitStatistics('command')).toBe('No command usage found.');
-    asMock(dbMock.command_usage.groupBy).mockResolvedValueOnce([] as never);
+    asMock(dbMock.command_usage.findMany).mockResolvedValueOnce([] as never);
     expect(await getTripSitStatistics('command', 'ping', 7)).toBe(
-      'No command usage found for `ping` in the last 7 days.',
+      'No command usage found for `ping` among commands last used in the past 7 days.',
     );
   });
 
   it('lists the top 25 commands, or all when filtered', async () => {
-    const stats = Array.from({ length: 30 }, (_, i) => ({ command: `c${i}`, _count: { command: 30 - i } }));
-    asMock(dbMock.command_usage.groupBy).mockResolvedValueOnce(stats as never);
+    const stats = Array.from({ length: 30 }, (_, i) => ({
+      command: `c${i}`, usage_count: 30 - i, last_used_at: new Date('2026-11-24T12:00:00.000Z'),
+    }));
+    asMock(dbMock.command_usage.findMany).mockResolvedValueOnce(stats as never);
     const all = await getTripSitStatistics('command');
     expect(all.split('\n')).toHaveLength(26);
     expect(all).toContain('📊 **Command Stats**');
+    expect(all).toContain('last used 2026-11-24T12:00:00.000Z');
 
-    asMock(dbMock.command_usage.groupBy).mockResolvedValueOnce(stats as never);
+    asMock(dbMock.command_usage.findMany).mockResolvedValueOnce(stats as never);
     const filtered = await getTripSitStatistics('command', 'c', 3);
     expect(filtered.split('\n')).toHaveLength(31);
-    expect(filtered).toContain('for `c` (Last 3 Days)');
-    expect(dbMock.command_usage.groupBy).toHaveBeenLastCalledWith(expect.objectContaining({
-      where: { AND: [expect.objectContaining({ created_at: expect.anything() }), expect.objectContaining({ command: expect.anything() })] },
-    }));
+    expect(filtered).toContain('for `c` (Last used within 3 days; totals are lifetime)');
+    expect(dbMock.command_usage.findMany).toHaveBeenLastCalledWith({
+      where: {
+        command: { contains: 'c', mode: 'insensitive' },
+        last_used_at: { gte: expect.any(Date) },
+      },
+      orderBy: { usage_count: 'desc' },
+    });
   });
 
   it('has a placeholder for helper stats', async () => {

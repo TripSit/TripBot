@@ -21,10 +21,8 @@ declare global {
       YOUTUBE_TOKEN: string | undefined;
       IMDB_TOKEN: string | undefined;
       LOGTAIL_TOKEN: string | undefined;
-      OPENROUTER_KEY: string | undefined;
       OPENAI_API_ORG: string | undefined;
       OPENAI_API_KEY: string | undefined;
-      GEMINI_KEY: string | undefined;
 
       SONAR_URL: string | undefined;
       SONAR_TOKEN: string | undefined;
@@ -117,7 +115,6 @@ declare global {
       CHANNEL_DEVELOPERS: string;
       CHANNEL_MODLOG: string;
       CHANNEL_BOTLOG: string;
-      CHANNEL_MSGLOG: string;
       CHANNEL_AUDITLOG: string;
       CHANNEL_TEAMMEETING: string;
       CATEGORY_DEVELOPMENT: string;

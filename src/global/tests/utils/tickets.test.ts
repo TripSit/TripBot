@@ -21,7 +21,7 @@ describe('tickets', () => {
       const { archivedAt, deletedAt } = ticketExpiryDates();
       const day = 86400000;
       expect(Math.round((archivedAt.getTime() - Date.now()) / day)).toBe(3);
-      expect(Math.round((deletedAt.getTime() - Date.now()) / day)).toBe(5);
+      expect(Math.round((deletedAt.getTime() - Date.now()) / day)).toBe(6);
     });
 
     it('uses minutes outside production', () => {

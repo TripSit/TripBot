@@ -13,7 +13,6 @@ const modules = [
   '../../utils/bestOfTripsit',
   '../../../global/utils/experience',
   '../../utils/modUtils',
-  '../../commands/global/d.ai',
 ];
 
 describe.each(['production', 'development'])('modules loaded with NODE_ENV=%s', nodeEnv => {
@@ -30,12 +29,11 @@ describe('env.config optional secrets', () => {
     try {
       delete process.env.OPENAI_API_ORG;
       delete process.env.OPENAI_API_KEY;
-      delete process.env.GEMINI_KEY;
       vi.resetModules();
       vi.doMock('dotenv', () => ({ default: { config: vi.fn() }, config: vi.fn() }));
       const config = await import('../../../global/utils/env.config');
       expect(config.env.OPENAI_API_KEY).toBe('');
-      expect(config.env.GEMINI_KEY).toBe('');
+      expect(config.env).not.toHaveProperty('GEMINI_KEY');
     } finally {
       process.env = saved;
       vi.doUnmock('dotenv');

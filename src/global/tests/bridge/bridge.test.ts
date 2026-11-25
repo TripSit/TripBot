@@ -78,6 +78,14 @@ describe('bridgedChannels', () => {
 });
 
 describe('relayMessage', () => {
+  it('passes the live delivery consent check to the target', async () => {
+    const canSend = vi.fn(() => true);
+    await relayMessage({
+      platform: 'discord', channel: LOUNGE_ID, nick: 'Member', text: 'hello', canSend,
+    });
+    expect(ircSend).toHaveBeenCalledWith('#lounge', expect.objectContaining({ canSend }));
+  });
+
   it('skips a registered platform when the gateway has no channel for it', async () => {
     const matrixSend = target('matrix');
     await relayMessage({

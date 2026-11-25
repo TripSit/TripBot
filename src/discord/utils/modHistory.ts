@@ -138,7 +138,7 @@ async function historyPageEmbed(
 ): Promise<EmbedBuilder> {
   const reasonText = action.internal_note.slice(0, 1024);
   const [creator, repealer] = await Promise.all([
-    db.users.findUnique({ where: { id: action.created_by } }),
+    action.created_by ? db.users.findUnique({ where: { id: action.created_by } }) : Promise.resolve(null),
     action.repealed_by
       ? db.users.findUnique({ where: { id: action.repealed_by } })
       : Promise.resolve(null),

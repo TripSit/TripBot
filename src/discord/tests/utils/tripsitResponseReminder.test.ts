@@ -89,6 +89,12 @@ beforeEach(() => {
 });
 afterEach(() => vi.useRealTimers());
 
+it('does not fetch a thread after retention cleared its reference', async () => {
+  const { fetch } = setup({ thread_id: null });
+  await remindUnansweredTripSitTicket(ticket({ thread_id: null }), NOW);
+  expect(fetch).not.toHaveBeenCalled();
+});
+
 it('schedules the reminder five minutes after the request', () => {
   expect(tripSitResponseDueAt(START)).toEqual(NOW);
   expect(tripSitResponseDueAt()).toEqual(new Date(NOW.getTime() + 300000));

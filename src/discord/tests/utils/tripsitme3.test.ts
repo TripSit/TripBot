@@ -387,8 +387,9 @@ describe('tripsitmeButton', () => {
     expect(s.raw.showModal).not.toHaveBeenCalled();
   });
 
-  it('marks tickets with deleted threads deleted, then starts a fresh request', async () => {
+  it.each(['old-thread', null])('replaces tickets with deleted threads (%s)', async threadId => {
     const s = setup({ ticket: 'deleted-thread' });
+    dbMock.user_tickets.findFirst.mockResolvedValue({ id: 't1', thread_id: threadId } as never);
     await tripsitmeButton(s.interaction);
     expect(dbMock.user_tickets.update).toHaveBeenCalledWith({ where: { id: 't1' }, data: expect.objectContaining({ status: 'DELETED' }) });
     expect(s.raw.showModal).toHaveBeenCalled();

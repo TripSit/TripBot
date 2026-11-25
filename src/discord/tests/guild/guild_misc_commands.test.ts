@@ -63,6 +63,15 @@ describe('h2flow', () => {
 });
 
 describe('tripsitstats', () => {
+  it.each([undefined, true, false])('defaults to private statistics (ephemeral=%s)', async ephemeral => {
+    mocks.stats.mockResolvedValue('stats text');
+    const stub = slashStub({ subcommand: 'command', options: { ephemeral } });
+    await dTripsitStats.execute(stub as never);
+    expect(stub.deferReply).toHaveBeenCalledWith({
+      flags: ephemeral === false ? undefined : MessageFlags.Ephemeral,
+    });
+  });
+
   it('command and session subcommands', async () => {
     mocks.stats.mockResolvedValue('stats text');
     const cmd = slashStub({ subcommand: 'command', options: { target_command: 'drug', days: 7 } });

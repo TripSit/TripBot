@@ -1,647 +1,78 @@
-import { ai_moderation } from '@db/tripbot';
-import { stripIndents } from 'common-tags';
-import {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonInteraction,
-  ButtonStyle,
-  ChannelSelectMenuInteraction,
-  ChannelType,
-  ClientUser,
-  Colors,
-  EmbedBuilder,
-  GuildMember,
-  InteractionEditReplyOptions,
-  Message,
-  MessageFlags,
-  MessageReaction,
-  SlashCommandBuilder,
-  StringSelectMenuInteraction,
-  TextChannel,
-  User,
-} from 'discord.js';
-import { aiModerate } from '../../../global/commands/g.ai';
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
-import commandContext from '../../utils/context';
-import { GUILD_ONLY_TEXT } from '../../utils/guildOnly';
-import { embedTemplate } from '../../utils/embedTemplate';
-
-import {
-  AiFunction,
-  AiPage,
-  AiText,
-} from '../../utils/ai';
-import { OpenRouterClient } from '../../utils/aiClients/openrouter.client';
 import { getOrCreateUser } from '../../../global/utils/dbRecords';
-import { hasAiConsent, isAiChatAllowed } from '../../../global/utils/aiConsent';
-import { isCodeAgentRequest } from '../../utils/codeAgentRequest';
 
 const F = f(__filename);
+const VISIBILITY_DESCRIPTION = 'Set to False to show the response to everyone';
+
+const policies = {
+  tos: `AI Terms of Service
+
+AI chat has been removed. Translation and RPG flair review remain available.
+The AI is not a harm reduction tool. DO NOT rely on TripBot AI for drug safety, dosage, or medical advice.
+In an emergency, use #tripsit to speak with a human or contact local emergency services.
+AI can be wrong or generate misleading, dangerous, offensive, or disturbing text. There is no human oversight
+for individual AI responses. You must be 18+ to use AI features. These features are experimental.
+
+Use /ai tos agree:True to accept these terms, or agree:False to revoke your agreement.`,
+  privacy: `AI Privacy Policy
+
+Translation sends the selected message to OpenAI only if its author agreed to both the terms and privacy policy.
+RPG flair review sends the submitted flair text to OpenAI. Neither feature fetches conversation history.
+TripBot keeps consent timestamps linked to your account, but does not save translation or flair prompts and
+responses as AI message history or copy them to the former AI audit channel. Translation replies are private;
+flair review follows the RPG response visibility option. Discord messages remain until deleted on Discord.
+Provider handling is separate from TripBot database deletion. TripBot does not train or fine-tune models
+using these messages. Historical AI chat audit posts and replies require separate Discord cleanup.
+Use /privacy delete to remove your consent records along with the other data covered by that command.
+
+Use /ai privacy agree:True to accept this policy, or agree:False to revoke your agreement.`,
+};
 
 export const aiCommand: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('ai')
-    .setDescription("TripBot's AI")
+    .setDescription('Terms and privacy controls for AI translation and flair review')
     .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
-      .setDescription('Setup the TripBot AI in your server')
-      .setName('setup'))
+      .setName('tos')
+      .setDescription('Read and manage agreement to the AI terms of service')
+      .addBooleanOption(option => option.setName('agree').setDescription('Accept or revoke your agreement'))
+      .addBooleanOption(option => option.setName('ephemeral').setDescription(VISIBILITY_DESCRIPTION)))
     .addSubcommand(subcommand => subcommand
-      .setDescription(
-        'Get information on the various personas available for the AI module',
-      )
-      .setName('personas'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Configure your settings')
-      .setName('settings'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Get info on the AI module')
-      .setName('info'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Get the privacy policy for the AI module')
-      .setName('privacy'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Get the terms of service for the AI module')
-      .setName('tos')),
+      .setName('privacy')
+      .setDescription('Read and manage agreement to the AI privacy policy')
+      .addBooleanOption(option => option.setName('agree').setDescription('Accept or revoke your agreement'))
+      .addBooleanOption(option => option.setName('ephemeral').setDescription(VISIBILITY_DESCRIPTION))),
   async execute(interaction) {
-    log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
-    const subcommand = interaction.options.getSubcommand() as keyof typeof AiText.AiSubcommand;
-    switch (subcommand) {
-      case AiText.AiSubcommand.INFO:
-        await interaction.editReply(await AiPage.info(interaction));
-        break;
-      case AiText.AiSubcommand.PERSONAS:
-        await interaction.editReply(await AiPage.personas(interaction));
-        break;
-      case AiText.AiSubcommand.SETTINGS:
-        await interaction.editReply(
-          await AiPage.userSettings(interaction),
-        );
-        break;
-      case AiText.AiSubcommand.SETUP:
-        await interaction.editReply(
-          await AiPage.guildSettings(interaction),
-        );
-        break;
-      case AiText.AiSubcommand.PRIVACY:
-        await interaction.editReply(await AiPage.privacy(interaction));
-        break;
-      case AiText.AiSubcommand.TOS:
-        await interaction.editReply(await AiPage.tos(interaction));
-        break;
-      default:
-        await interaction.editReply(await AiPage.info(interaction));
-        break;
+    log.info(F, 'AI consent controls used');
+    const ephemeral = interaction.options.getBoolean('ephemeral') ?? true;
+    await interaction.deferReply({ flags: ephemeral ? MessageFlags.Ephemeral : undefined });
+    const subcommand = interaction.options.getSubcommand();
+    if (subcommand !== 'tos' && subcommand !== 'privacy') {
+      await interaction.editReply({ content: 'AI chat has been removed. Use /ai tos or /ai privacy for consent controls.' });
+      return false;
     }
+
+    const agree = interaction.options.getBoolean('agree');
+    if (agree !== null) {
+      const user = await getOrCreateUser(interaction.user.id);
+      const field = subcommand === 'tos' ? 'ai_tos_agree' : 'ai_privacy_agree';
+      const data = { [field]: agree ? new Date() : null };
+      if (agree) {
+        await db.ai_info.upsert({
+          where: { user_id: user.id },
+          create: { user_id: user.id, ...data },
+          update: data,
+        });
+      } else {
+        await db.ai_info.updateMany({ where: { user_id: user.id }, data });
+      }
+    }
+    const confirmation = agree === null ? '' : `\n\nYour agreement was ${agree ? 'saved' : 'revoked'}.`;
+    await interaction.editReply({ content: policies[subcommand] + confirmation });
     return true;
   },
 };
-
-export async function discordAiModerate(messageData: Message): Promise<void> {
-  if (messageData.author.bot) return;
-  if (messageData.cleanContent.length < 1) return;
-  if (messageData.channel.type === ChannelType.DM) return;
-  if (!messageData.guild) return;
-  // Message text goes to OpenAI's moderation endpoint, so only users who agreed to the AI terms are scanned.
-  if (!await hasAiConsent(messageData.author.id)) return;
-
-  const modResults = await aiModerate(
-    messageData.cleanContent
-      .replace(AiText.tripbotUAT, '')
-      .replace('tripbot', ''),
-    messageData.guild.id,
-  );
-
-  if (modResults.length === 0) return;
-
-  const activeFlags = modResults.map(modResult => modResult.category);
-
-  const targetMember = messageData.member as GuildMember;
-  const aiEmbed = new EmbedBuilder()
-    .setThumbnail(targetMember.user.displayAvatarURL())
-    .setColor(Colors.Yellow)
-    .addFields(
-      {
-        name: 'Member',
-        value: stripIndents`<@${targetMember.id}>`,
-        inline: true,
-      },
-      {
-        name: 'Flags',
-        value: stripIndents`${activeFlags.join(', ')}`,
-        inline: true,
-      },
-      {
-        name: 'Channel',
-        value: stripIndents`${messageData.url}`,
-        inline: true,
-      },
-      {
-        name: 'Message',
-        value: stripIndents`${messageData.cleanContent}`,
-        inline: false,
-      },
-    );
-
-  const modAiModifyButtons = [] as ActionRowBuilder<ButtonBuilder>[];
-  // For each of the sortedCategoryScores, add a field
-  modResults.forEach(result => {
-    const safeCategoryName = result.category
-      .replace('/', '_')
-      .replace('-', '_') as keyof ai_moderation;
-    if (result.value > 0.9) {
-      aiEmbed.setColor(Colors.Red);
-    }
-    aiEmbed.addFields(
-      {
-        name: result.category,
-        value: '\u200B',
-        inline: true,
-      },
-      {
-        name: 'AI Value',
-        value: `${result.value.toFixed(2)}`,
-        inline: true,
-      },
-      {
-        name: 'Threshold Value',
-        value: `${result.limit}`,
-        inline: true,
-      },
-    );
-    modAiModifyButtons.push(
-      new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-          .setCustomId(`aiMod~adjust~${safeCategoryName}~-0.10`)
-          .setLabel('-0.10')
-          .setEmoji('⏪')
-          .setStyle(ButtonStyle.Danger),
-        new ButtonBuilder()
-          .setCustomId(`aiMod~adjust~${safeCategoryName}~-0.01`)
-          .setLabel('-0.01')
-          .setEmoji('◀️')
-          .setStyle(ButtonStyle.Danger),
-        new ButtonBuilder()
-          .setCustomId(`aiMod~adjust~${safeCategoryName}~+0.01`)
-          .setLabel('+0.01')
-          .setEmoji('▶️')
-          .setStyle(ButtonStyle.Success),
-        new ButtonBuilder()
-          .setCustomId(`aiMod~adjust~${safeCategoryName}~+0.10`)
-          .setLabel('+0.10')
-          .setEmoji('⏩')
-          .setStyle(ButtonStyle.Success),
-        new ButtonBuilder()
-          .setCustomId(`aiMod~save~${safeCategoryName}~${result.limit}`)
-          .setLabel(`Save ${result.category} at ${result.limit.toFixed(2)}`)
-          .setEmoji('💾')
-          .setStyle(ButtonStyle.Primary),
-      ),
-    );
-  });
-
-  const userActions = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId(`aiMod~note~${messageData.author.id}`)
-      .setLabel('Note')
-      .setEmoji('🗒️')
-      .setStyle(ButtonStyle.Success),
-    new ButtonBuilder()
-      .setCustomId(`aiMod~warn~${messageData.author.id}`)
-      .setLabel('Warn')
-      .setEmoji('⚠️')
-      .setStyle(ButtonStyle.Primary),
-    new ButtonBuilder()
-      .setCustomId(`aiMod~timeout~${messageData.author.id}`)
-      .setLabel('Mute')
-      .setEmoji('⏳')
-      .setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder()
-      .setCustomId(`aiMod~ban~${messageData.author.id}`)
-      .setLabel('Ban')
-      .setEmoji('🔨')
-      .setStyle(ButtonStyle.Danger),
-  );
-
-  // Get the channel to send the message to
-  const channelAiModLog = (await discordClient.channels.fetch(
-    env.CHANNEL_AIMOD_LOG,
-  )) as TextChannel;
-  // Send the message
-  try {
-    await channelAiModLog.send({
-      content: `${targetMember.displayName} was flagged by AI for ${activeFlags.join(', ')} in ${messageData.url}`,
-      embeds: [aiEmbed],
-      components: [userActions, ...modAiModifyButtons],
-    });
-  } catch (err) {
-    log.error(F, `Error sending message: ${err}`);
-    log.error(
-      F,
-      `${JSON.stringify(
-        {
-          content: `${targetMember.displayName} was flagged by AI for ${activeFlags.join(', ')} in ${messageData.url}`,
-          embeds: [aiEmbed],
-          components: [userActions, ...modAiModifyButtons],
-        },
-        null,
-        2,
-      )}`,
-    );
-  }
-}
-/** The message may have been deleted meanwhile (Unknown message); apologising must not raise a second error. */
-async function apologise(messageData: Message<boolean>): Promise<void> {
-  try {
-    await messageData.reply("I'm having trouble thinking right now. Try again in a minute.");
-  } catch (replyError) {
-    log.debug(F, `Could not send the AI error reply: ${replyError}`);
-  }
-}
-
-export async function aiMessage(messageData: Message<boolean>): Promise<void> {
-  // Basic Filters
-  if (messageData.author.bot || messageData.cleanContent.length < 1) return;
-  if (!messageData.guild) return;
-
-  // Rollout gate first: nothing below (DB writes, nag replies, API calls) happens for anyone else.
-  if (!isAiChatAllowed(messageData.author.id)) return;
-  // Only talk when addressed (mention or a reply to the bot), never to every message in the channel.
-  if (!messageData.mentions.has(discordClient.user as ClientUser)) return;
-  // "@tripbot ... fix it" from a developer is handled by the code agent.
-  if (isCodeAgentRequest(messageData)) return;
-
-  await messageData.fetch();
-
-  log.debug(F, `Received message for AI processing in #${messageData.channelId}`);
-
-  // 1. Permission/Guild Check
-  const guildData = await db.discord_guilds.findUnique({
-    where: { id: messageData.guild.id },
-    include: { ai_channels: true },
-  });
-
-  log.debug(F, 'Fetched AI guild configuration');
-
-  const isAiEnabled = guildData?.ai_channels.some(c => c.channel_id === messageData.channelId);
-  if (!isAiEnabled) {
-    if (messageData.mentions.has(discordClient.user as ClientUser)) {
-      await messageData.reply('AI is not enabled in this channel. Ask an admin to run `/ai setup`.');
-    }
-    return;
-  }
-
-  log.debug(F, `AI is enabled for channel ${messageData.channelId}. Continuing processing.`);
-
-  // 2. User Data & Agreement Check
-  const userData = await db.users.upsert({
-    where: { discord_id: messageData.author.id },
-    create: { discord_id: messageData.author.id, ai_info: { create: {} } },
-    update: {},
-    include: { ai_info: true },
-  });
-
-  log.debug(F, 'Fetched AI user settings');
-
-  if (!userData.ai_info?.ai_tos_agree || !userData.ai_info?.ai_privacy_agree) {
-    await messageData.reply('Please review and agree to `/ai tos` and `/ai privacy` before chatting.');
-    return;
-  }
-
-  log.debug(F, `User ${messageData.author.id} has agreed to TOS and Privacy. Continuing processing.`);
-
-  // 3. Cost & Model Selection
-  const isPremium = AiFunction.checkPremiumStatus(messageData.member as GuildMember);
-
-  log.debug(F, `User ${messageData.author.id} premium status: ${isPremium}`);
-
-  // Use aggregate and alias to avoid ESLint dangling underscore errors
-  const rollingStats = await db.ai_message.aggregate({
-    _sum: { usd: true },
-    where: {
-      ai_info_id: userData.ai_info.id,
-      created_at: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
-    },
-  });
-
-  log.debug(F, `Fetched rolling stats for ${messageData.author.id}: ${JSON.stringify(rollingStats)}`);
-
-  const { _sum: rollingSum } = rollingStats; // Aliasing here
-  const currentCost = rollingSum.usd ? rollingSum.usd.toNumber() : 0;
-
-  const dailyLimit = isPremium ? 0.50 : 0.05;
-  const model = currentCost < dailyLimit ? AiText.primaryModel : AiText.backupModel;
-
-  log.debug(F, `Selected model for user ${messageData.author.id}: ${model} (Current cost: $${currentCost.toFixed(4)}, Daily limit: $${dailyLimit})`);
-
-  // 4. Typing Indicator Setup
-  if (messageData.channel.isTextBased() && !messageData.channel.isDMBased()) {
-    await messageData.channel.sendTyping();
-  }
-
-  log.debug(F, `Sent typing indicator in channel ${messageData.channelId}`);
-
-  // 5. Generate and Process Response
-  try {
-    const personaId = userData.ai_info.persona_id ?? 'tripbot';
-
-    log.debug(F, `Using persona ${personaId} for user ${messageData.author.id}`);
-
-    const prompt = await AiFunction.createPrompt(messageData, personaId);
-
-    log.debug(F, `Generated prompt with persona ${personaId}`);
-
-    const chatResponse = await OpenRouterClient.chat({
-      model,
-      max_tokens: 1000,
-      prompt,
-    });
-
-    const { content, usage } = chatResponse;
-
-    log.debug(F, `Received response from OpenRouter (Usage: ${JSON.stringify(usage)})`);
-
-    // Audit & Database Logging
-    await AiFunction.aiAudit(messageData.author, messageData, prompt, chatResponse, model);
-
-    const personaData = await db.ai_persona.upsert({
-      where: { name: personaId },
-      create: { name: personaId },
-      update: {},
-    });
-
-    log.debug(F, 'Prepared AI persona');
-
-    await db.ai_message.create({
-      data: {
-        prompt_tokens: usage?.promptTokens ?? 0,
-        completion_tokens: usage?.completionTokens ?? 0,
-        tokens: (usage?.promptTokens ?? 0) + (usage?.completionTokens ?? 0),
-        usd: usage?.cost ?? 0,
-        ai_persona_id: personaData.id,
-        ai_info_id: userData.ai_info.id,
-        message_id: messageData.id,
-      },
-    });
-
-    log.debug(F, `Created AI message in #${messageData.channelId}`);
-
-    const reply = await messageData.reply({
-      content: content.slice(0, 2000),
-      allowedMentions: { parse: [] },
-    });
-
-    log.debug(F, `Sent AI response to user ${messageData.author.id} in channel ${messageData.channelId}`);
-
-    await reply.react('👍');
-    await reply.react('👎');
-  } catch (err) {
-    log.error(F, `AI Error: ${err}`);
-    await apologise(messageData);
-  }
-}
-
-// We want to collect every message tripbot sends that gets three thumbs downs
-const THUMBS_UP_EMOJIS = ['👍', '👍🏻', '👍🏼', '👍🏽', '👍🏾', '👍🏿', 'ts_thumbup'];
-const THUMBS_DOWN_EMOJIS = ['👎', '👎🏻', '👎🏼', '👎🏽', '👎🏾', '👎🏿', 'ts_thumbdown'];
-
-/** Only thumbs reactions from real users on tripbot's replies (in a guild) are audited. */
-function isAuditReaction(messageReaction: MessageReaction, user: User): boolean {
-  const emojiName = messageReaction.emoji.name as string;
-  return Boolean(messageReaction.message.guild) // Ignore DMs
-    && messageReaction.message.reference !== null
-    && Boolean(messageReaction.message.author?.bot) // Ignore non-bot messages
-    && !user.bot // Ignore bot users
-    && (THUMBS_UP_EMOJIS.includes(emojiName) || THUMBS_DOWN_EMOJIS.includes(emojiName)); // Ignore non-audit emojis
-}
-
-export async function aiReaction(
-  messageReaction: MessageReaction,
-  user: User, // Discord user
-) {
-  if (!isAuditReaction(messageReaction, user)) return;
-
-  let originalMessage: Message;
-  try {
-    originalMessage = await messageReaction.message.fetchReference();
-  } catch (error) {
-    log.error(F, `Error fetching reference: ${error}`);
-    log.error(
-      F,
-      `Message: ${JSON.stringify(messageReaction.message, null, 2)}`,
-    );
-    return;
-  }
-
-  log.debug(
-    F,
-    `${user.displayName} reacted to tripbot's message with an audit emoji (${messageReaction.emoji.name})`,
-  );
-
-  // Get the message data from the db
-
-  const messageData = await db.ai_message.findUniqueOrThrow({
-    where: {
-      message_id: originalMessage.id,
-    },
-    include: {
-      ai_persona: true,
-    },
-  });
-
-  const isUpvote = THUMBS_UP_EMOJIS.includes(messageReaction.emoji.name as string);
-  const action = isUpvote ? 'approve' : 'reject';
-  log.debug(F, `Updating  ${messageData.ai_persona.name} with ${action} vote`);
-
-  await db.ai_persona.update({
-    where: {
-      name: messageData.ai_persona.name,
-    },
-    data: isUpvote
-      ? {
-        upvotes: {
-          increment: 1,
-        },
-      }
-      : {
-        downvotes: {
-          increment: 1,
-        },
-      },
-  });
-
-  const channelAiVoteLog = await discordClient.channels.fetch(
-    env.CHANNEL_AIVOTELOG,
-  );
-  if (!channelAiVoteLog?.isSendable()) {
-    log.error(F, 'AI Vote Log channel not found or not text-based');
-    return;
-  }
-  log.debug(F, 'Sending message to vote room');
-  await channelAiVoteLog.send({
-    embeds: [
-      embedTemplate().setTitle(`AI ${action}`).setDescription(stripIndents`
-            ${originalMessage.author.displayName} (${originalMessage.author.id}):
-            \`${originalMessage.cleanContent}\`
-
-            TripBot:
-            \`${messageReaction.message.cleanContent}\`
-          `),
-    ],
-  });
-
-  const auditLimit = env.NODE_ENV === 'production' ? 4 : 3;
-  if (messageReaction.count === auditLimit) {
-    const message = isUpvote
-      ? stripIndents`${messageReaction.message.cleanContent}
-            
-        **Thank you for your feedback, I have notified Moonbear that this response was excellent.**`
-      : stripIndents`~~${messageReaction.message.cleanContent}~~
-            
-        **Thank you for your feedback, I have notified Moonbear that this response was improper.**`;
-
-    // This happens before the message is edited, so we need to fetch the original message.
-
-    await channelAiVoteLog.send({
-      content: stripIndents`
-            The following AI response was deemed ${action === 'reject' ? 'improper' : 'excellent'} by \
-            ${messageReaction.message.guild?.name} <@${env.DISCORD_OWNER_ID}>`,
-    });
-
-    await messageReaction.message.edit(message);
-
-    // Remove the emojis so someone can't just toggle it on and off
-    await messageReaction.message.reactions.removeAll();
-  }
-}
-
-export async function aiMenu(
-  interaction: ChannelSelectMenuInteraction | StringSelectMenuInteraction,
-): Promise<InteractionEditReplyOptions> {
-  const {
-    customId, values, user,
-  } = interaction;
-
-  log.debug(F, `AI Menu interaction with customId: ${customId}`);
-
-  switch (customId) {
-    case AiText.MenuId.PERSONA_SELECT: {
-      const selectedId = values[0];
-      log.debug(F, `User selected a persona: ${selectedId}`);
-
-      const userData = await getOrCreateUser(user.id);
-
-      log.debug(F, 'Fetched user for AI persona selection');
-
-      await db.ai_info.update({
-        where: { user_id: userData.id },
-        data: { persona_id: selectedId },
-      });
-
-      log.debug(F, `Updated persona for user ${user.id} to ${selectedId} in the database`);
-
-      return AiPage.userSettings(interaction);
-    }
-    case AiText.MenuId.GUILD_CHANNELS: {
-      if (!interaction.inGuild()) {
-        return { content: GUILD_ONLY_TEXT };
-      }
-
-      const { guildId } = interaction;
-
-      // Run both operations in a transaction for safety and speed
-      await db.$transaction([
-        // 1. Remove channels that are NO LONGER selected
-        db.ai_channel.deleteMany({
-          where: {
-            guild_id: guildId,
-            channel_id: { notIn: values },
-          },
-        }),
-
-        // 2. Add new channels (ignoring ones that already exist)
-        // createMany is much more efficient than a forEach loop
-        db.ai_channel.createMany({
-          data: values.map(id => ({
-            channel_id: id,
-            guild_id: guildId,
-          })),
-          skipDuplicates: true, // This prevents errors if the channel is already there
-        }),
-      ]);
-
-      log.debug(F, `Synced AI channels for guild ${guildId}. Current count: ${values.length}`);
-
-      return AiPage.guildSettings(interaction);
-    }
-    default:
-      break;
-  }
-
-  switch (values[0]) {
-    case AiText.Page.INFO.value:
-      return AiPage.info(interaction);
-    case AiText.Page.PERSONAS.value:
-      return AiPage.personas(interaction);
-    case AiText.Page.USER_SETTINGS.value:
-      return AiPage.userSettings(interaction);
-    case AiText.Page.GUILD_SETUP.value:
-      return AiPage.guildSettings(interaction);
-    case AiText.Page.PRIVACY.value:
-      return AiPage.privacy(interaction);
-    case AiText.Page.TOS.value:
-      return AiPage.tos(interaction);
-    default:
-      return AiPage.userSettings(interaction);
-  }
-}
-
-export async function aiButton(interaction: ButtonInteraction): Promise<void> {
-  const buttonID = interaction.customId as keyof typeof AiText.ButtonId;
-
-  // eslint-disable-next-line sonarjs/no-small-switch
-  switch (buttonID) {
-    case AiText.ButtonId.AGREE_TOS:
-      await db.users.update({
-        where: {
-          discord_id: interaction.user.id,
-        },
-        data: {
-          ai_info: {
-            upsert: {
-              update: { ai_tos_agree: new Date() },
-              create: { ai_tos_agree: new Date() },
-            },
-          },
-        },
-      });
-      log.debug(F, `User ${interaction.user.id} agreed to the terms`);
-      await interaction.update(await AiPage.tos(interaction));
-      break;
-    case AiText.ButtonId.AGREE_PRIVACY: {
-      await db.users.update({
-        where: {
-          discord_id: interaction.user.id,
-        },
-        data: {
-          ai_info: {
-            upsert: {
-              update: { ai_privacy_agree: new Date() },
-              create: { ai_privacy_agree: new Date() },
-            },
-          },
-        },
-      });
-      log.debug(F, `User ${interaction.user.id} agreed to the privacy policy`);
-      await interaction.update(await AiPage.privacy(interaction));
-      break;
-    }
-    default:
-      await AiPage.userSettings(interaction);
-      break;
-  }
-}
 
 export default aiCommand;

@@ -118,8 +118,8 @@ describe('tripsitmeTeamClose', () => {
     expect(dbMock.user_tickets.update).toHaveBeenCalledWith({ where: { id: 't1' }, data: { meta_thread_id: null } });
   });
 
-  it('handles tickets whose thread was deleted', async () => {
-    mocks.getOpenTicket.mockResolvedValue(ticket());
+  it.each(['th', null])('handles tickets whose thread was deleted (%s)', async threadId => {
+    mocks.getOpenTicket.mockResolvedValue(ticket({ thread_id: threadId }));
     const s = setup({ threadFetch: 'fail' });
     await expect(tripsitmeTeamClose(s.interaction)).rejects.toThrow();
     expect(dbMock.user_tickets.update).toHaveBeenCalledWith({ where: { id: 't1' }, data: expect.objectContaining({ status: 'DELETED' }) });
@@ -306,8 +306,9 @@ describe('tripsitmeUserClose', () => {
     expect(s.target.roles.add).not.toHaveBeenCalled();
   });
 
-  it('closes out tickets whose thread was deleted', async () => {
+  it.each(['th', null])('closes out tickets whose thread was deleted (%s)', async threadId => {
     const s = setup({ threadFetch: 'fail' });
+    dbMock.user_tickets.findFirst.mockResolvedValue(ticket({ thread_id: threadId }) as never);
     await tripsitmeUserClose(s.interaction);
     expect(s.raw.editReply).toHaveBeenCalledWith({ content: expect.stringContaining('likely deleted manually') });
     expect(dbMock.user_tickets.update).toHaveBeenCalledWith({ where: { id: 't1' }, data: expect.objectContaining({ status: 'DELETED' }) });
