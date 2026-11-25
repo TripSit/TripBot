@@ -218,7 +218,17 @@ async function deleteTicket(ticket: TicketRow): Promise<void> {
   const threadIds = [ticket.thread_id, ticket.meta_thread_id].filter((id): id is string => Boolean(id));
   for (const threadId of threadIds) { // eslint-disable-line no-restricted-syntax
     try {
-      const channel = await global.discordClient.channels.fetch(threadId); // eslint-disable-line no-await-in-loop
+      let channel;
+      try {
+        channel = await global.discordClient.channels.fetch(threadId); // eslint-disable-line no-await-in-loop
+      } catch (fetchError) {
+        // The bot can no longer see the thread (removed from the guild or channel), so retrying can never succeed.
+        if (fetchError instanceof DiscordAPIError && fetchError.code === RESTJSONErrorCodes.MissingAccess) {
+          log.debug(F, `Ticket thread ${threadId} is no longer accessible; clearing its reference`);
+          continue; // eslint-disable-line no-continue
+        }
+        throw fetchError;
+      }
       if (!channel) continue; // eslint-disable-line no-continue
       if (!channel.isThread()) throw new Error(`Ticket cleanup target ${threadId} is not a thread`);
       const thread = channel as ThreadChannel;
@@ -668,6 +678,8 @@ async function checkMoodle() { // eslint-disable-line
                     Finally, if you have any feedback on the course, please let us know in the ${channelContent} channel, or on the forum in the course!
 
                     Thanks so much for taking the time to learn with us, we hope you enjoyed it!
+
+                    You're receiving this one-time message because you linked your TripSit Learn account with \`/learn\` and completed this course.
                     `),
                 ],
               });
