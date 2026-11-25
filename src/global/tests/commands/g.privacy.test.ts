@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import type { Prisma } from '@db/tripbot';
 import {
-  privacy, pruneModerationActions, purgeInactiveUsers, SCRUBBED_LAST_SEEN,
+  privacy, pruneModerationActions, purgeInactiveUsers, reconcileLiftedBans, SCRUBBED_LAST_SEEN,
 } from '../../commands/g.privacy';
 import { dbMock } from '../../../vitest/utils/mockDb';
 
@@ -271,5 +271,76 @@ describe('pruneModerationActions', () => {
         },
       },
     });
+  });
+});
+
+describe('reconcileLiftedBans', () => {
+  const now = new Date('2026-11-25T00:00:00Z');
+  const ban = (id: string, over: object = {}) => ({
+    id,
+    guild_id: 'g1',
+    user_id: `u-${id}`,
+    target_discord_id: `d-${id}`,
+    users_user_actions_user_idTousers: { discord_id: `d-${id}` },
+    ...over,
+  });
+
+  it('repeals bans Discord no longer enforces and keeps the ones still in force', async () => {
+    dbMock.user_actions.findMany.mockResolvedValueOnce([
+      ban('active'),
+      ban('lifted'),
+      // An older record without a target ID falls back to the linked profile's Discord ID
+      ban('legacy', { target_discord_id: null, users_user_actions_user_idTousers: { discord_id: 'd-legacy' } }),
+    ] as never);
+    const fetchBans = vi.fn(async () => new Set(['d-active']));
+
+    expect(await reconcileLiftedBans(fetchBans, now)).toBe(2);
+    expect(fetchBans).toHaveBeenCalledWith('g1');
+    expect(dbMock.user_actions.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { type: 'FULL_BAN', repealed_at: null },
+    }));
+    expect(dbMock.user_actions.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ['lifted', 'legacy'] }, repealed_at: null },
+      data: { repealed_at: now },
+    });
+    expect(dbMock.user_actions.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it('deletes timer-only records whose ban was already lifted', async () => {
+    dbMock.user_actions.findMany.mockResolvedValueOnce([
+      ban('timer', { user_id: null, users_user_actions_user_idTousers: null }),
+      ban('pending', { user_id: null, users_user_actions_user_idTousers: null }),
+    ] as never);
+
+    expect(await reconcileLiftedBans(async () => new Set(['d-pending']), now)).toBe(1);
+    expect(dbMock.user_actions.deleteMany).toHaveBeenCalledWith({
+      where: { id: { in: ['timer'] }, user_id: null, repealed_at: null },
+    });
+    expect(dbMock.user_actions.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('leaves a guild untouched when its ban list cannot be read', async () => {
+    dbMock.user_actions.findMany.mockResolvedValueOnce([
+      ban('unknown', { guild_id: 'g-unreadable' }),
+      ban('lifted', { guild_id: 'g2' }),
+    ] as never);
+    const fetchBans = vi.fn(async (guildId: string) => (guildId === 'g2' ? new Set<string>() : null));
+
+    expect(await reconcileLiftedBans(fetchBans)).toBe(1);
+    expect(fetchBans).toHaveBeenCalledTimes(2);
+    expect(dbMock.user_actions.updateMany).toHaveBeenCalledTimes(1);
+    expect(dbMock.user_actions.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: { in: ['lifted'] }, repealed_at: null },
+    }));
+  });
+
+  it('skips records with no Discord ID to check', async () => {
+    dbMock.user_actions.findMany.mockResolvedValueOnce([
+      ban('anonymous', { target_discord_id: null, users_user_actions_user_idTousers: null }),
+    ] as never);
+
+    expect(await reconcileLiftedBans(async () => new Set<string>(), now)).toBe(0);
+    expect(dbMock.user_actions.updateMany).not.toHaveBeenCalled();
+    expect(dbMock.user_actions.deleteMany).not.toHaveBeenCalled();
   });
 });

@@ -39,6 +39,8 @@ type TransactionClient = Parameters<Parameters<typeof db.$transaction>[0]>[0];
 type RecordCounts = {
   doses: number; experience: number; reminders: number; tickets: number; appeals: number; bestOf: number;
 };
+/** Returns the Discord IDs currently banned from a guild, or null when the complete list cannot be read. */
+export type FetchGuildBanIds = (guildId: string) => Promise<Set<string> | null>;
 export type DeleteDiscordData = (
   discordId: string,
   channelIds: string[],
@@ -333,4 +335,65 @@ export async function pruneModerationActions(now: Date = new Date()): Promise<nu
   });
   log.info(F, `Pruned ${count} moderation actions older than ${MODERATION_ACTION_RETENTION_YEARS} years`);
   return count;
+}
+
+type UnrepealedBan = {
+  id: string;
+  guild_id: string;
+  user_id: string | null;
+  target_discord_id: string | null;
+  users_user_actions_user_idTousers: { discord_id: string | null } | null;
+};
+
+/** Repeals (or, for timer-only records left by /privacy delete, deletes) bans that Discord no longer enforces. */
+async function repealLiftedBans(bans: UnrepealedBan[], bannedIds: Set<string>, now: Date): Promise<number> {
+  const lifted = bans.filter(ban => {
+    const discordId = ban.target_discord_id ?? ban.users_user_actions_user_idTousers?.discord_id;
+    return Boolean(discordId) && !bannedIds.has(discordId as string);
+  });
+  // A record without a user only exists to lift its ban, so it has nothing left to do.
+  const timerOnlyIds = lifted.filter(ban => !ban.user_id).map(ban => ban.id);
+  const repealIds = lifted.filter(ban => ban.user_id).map(ban => ban.id);
+  if (timerOnlyIds.length > 0) {
+    await db.user_actions.deleteMany({ where: { id: { in: timerOnlyIds }, user_id: null, repealed_at: null } });
+  }
+  if (repealIds.length > 0) {
+    await db.user_actions.updateMany({ where: { id: { in: repealIds }, repealed_at: null }, data: { repealed_at: now } });
+  }
+  return lifted.length;
+}
+
+/**
+ * Marks full bans that Discord no longer enforces as repealed, so only users who are still banned stay out of the
+ * inactive-account purge and moderation-history pruning. This covers temporary bans lifted by older versions (which
+ * only cleared the expiry) and bans lifted directly in Discord. A guild whose ban list cannot be read is left as is.
+ * Returns how many ban records were updated.
+ */
+export async function reconcileLiftedBans(
+  fetchGuildBanIds: FetchGuildBanIds,
+  now: Date = new Date(),
+): Promise<number> {
+  const unrepealed = await db.user_actions.findMany({
+    where: { type: 'FULL_BAN', repealed_at: null },
+    select: {
+      id: true,
+      guild_id: true,
+      user_id: true,
+      target_discord_id: true,
+      users_user_actions_user_idTousers: { select: { discord_id: true } },
+    },
+  });
+
+  const byGuild = new Map<string, UnrepealedBan[]>();
+  unrepealed.forEach(ban => byGuild.set(ban.guild_id, [...(byGuild.get(ban.guild_id) ?? []), ban]));
+
+  let reconciled = 0;
+  for (const [guildId, bans] of byGuild) { // eslint-disable-line no-restricted-syntax
+    const bannedIds = await fetchGuildBanIds(guildId); // eslint-disable-line no-await-in-loop
+    if (!bannedIds) continue; // eslint-disable-line no-continue
+    reconciled += await repealLiftedBans(bans, bannedIds, now); // eslint-disable-line no-await-in-loop
+  }
+
+  log.info(F, `Reconciled ${reconciled} of ${unrepealed.length} unrepealed full bans with Discord`);
+  return reconciled;
 }

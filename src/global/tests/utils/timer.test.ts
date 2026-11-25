@@ -116,7 +116,7 @@ describe('runTimer', () => {
     expect(client().user.setActivity).toHaveBeenCalled();
     expect(scheduled).toHaveLength(11);
     expect(scheduled.map(s => s.ms)).toEqual([
-      5000, 10000, 5000, 5000, 5000, 5000, 48 * 3600000, 10000, 3600000, 3600000, 48 * 3600000,
+      5000, 10000, 5000, 5000, 5000, 5000, 48 * 3600000, 10000, 3600000, 3600000, 3600000,
     ]);
   });
 
@@ -124,7 +124,7 @@ describe('runTimer', () => {
     e.NODE_ENV = 'production';
     await runTimer();
     expect(scheduled.map(s => s.ms)).toEqual([
-      10000, 60000, 60000, 30000, 60000, 60000, 24 * 3600000, 12 * 3600000, 3600000, 3600000, 24 * 3600000,
+      10000, 60000, 60000, 30000, 60000, 60000, 24 * 3600000, 3600000, 3600000, 3600000, 3600000,
     ]);
   });
 
@@ -148,14 +148,60 @@ describe('runTimer', () => {
   });
 
   it('runs the retention purge on its schedule', async () => {
+    dbMock.user_actions.findMany.mockResolvedValue([]);
     dbMock.users.findMany.mockResolvedValue([]);
     dbMock.user_actions.deleteMany.mockResolvedValue({ count: 0 });
     const { run } = await start();
     await run('retention');
+    // Ban records are reconciled with Discord before the purge decides who still counts as banned
+    expect(dbMock.user_actions.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { type: 'FULL_BAN', repealed_at: null },
+    }));
+    expect(dbMock.user_actions.findMany.mock.invocationCallOrder[0])
+      .toBeLessThan(dbMock.users.findMany.mock.invocationCallOrder[0]);
     expect(dbMock.users.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: expect.objectContaining({ last_seen_at: expect.objectContaining({ lt: expect.any(Date) }) }),
     }));
     expect(dbMock.user_actions.deleteMany).toHaveBeenCalled();
+  });
+
+  describe('retention schedule', () => {
+    beforeEach(() => { vi.useFakeTimers({ toFake: ['Date'] }); });
+    afterEach(() => { vi.useRealTimers(); });
+
+    it('runs at the first poll of each UTC day, whatever the hour, and only once that day', async () => {
+      dbMock.user_actions.findMany.mockResolvedValue([]);
+      dbMock.users.findMany.mockResolvedValue([]);
+      dbMock.user_actions.deleteMany.mockResolvedValue({ count: 0 });
+      vi.setSystemTime(Date.UTC(2026, 10, 25, 3, 15));
+      const { run } = await start();
+
+      await run('retention');
+      expect(dbMock.users.findMany).toHaveBeenCalledTimes(1);
+
+      vi.setSystemTime(Date.UTC(2026, 10, 25, 23, 59));
+      await run('retention');
+      expect(dbMock.users.findMany).toHaveBeenCalledTimes(1);
+
+      vi.setSystemTime(Date.UTC(2026, 10, 26, 0, 5));
+      await run('retention');
+      expect(dbMock.users.findMany).toHaveBeenCalledTimes(2);
+    });
+
+    it('still purges when the ban reconciliation fails', async () => {
+      vi.setSystemTime(Date.UTC(2026, 10, 25, 3, 15));
+      vi.spyOn(global.log, 'error').mockReturnValue(undefined as never);
+      dbMock.user_actions.findMany.mockRejectedValueOnce(new Error('database unavailable'));
+      dbMock.users.findMany.mockResolvedValue([]);
+      dbMock.user_actions.deleteMany.mockResolvedValue({ count: 0 });
+      const { run } = await start();
+
+      await run('retention');
+
+      expect(global.log.error).toHaveBeenCalledWith('timer', expect.stringContaining('Ban reconciliation failed'));
+      expect(dbMock.users.findMany).toHaveBeenCalledTimes(1);
+      expect(dbMock.user_actions.deleteMany).toHaveBeenCalled();
+    });
   });
 
   it('runs the database updater on its schedule', async () => {
@@ -876,15 +922,48 @@ describe('expired bans', () => {
     expect(dbMock.user_actions.update).not.toHaveBeenCalled();
   });
 
-  it('lifts the ban, reports it and clears the expiry', async () => {
+  it('lifts the ban, reports it and records it as repealed', async () => {
     dbMock.user_actions.findMany.mockResolvedValue([ban()] as never);
     const { guild, modThread, modLog } = setup();
     const { run } = await start();
     await run('bans');
+    // Only unrepealed bans are lifted, so a lifted ban is never processed twice
+    expect(dbMock.user_actions.findMany).toHaveBeenCalledWith({
+      where: { expires_at: { not: null, lte: expect.any(Date) }, repealed_at: null, type: 'FULL_BAN' },
+    });
     expect(guild.bans.remove).toHaveBeenCalledWith(expect.anything(), 'Temporary ban expired');
     expect(modThread.send).toHaveBeenCalled();
     expect(modLog.send.mock.calls[0][0].embeds[0].data.description).toContain('after 3 days');
-    expect(dbMock.user_actions.update).toHaveBeenCalledWith({ where: { id: 'b1' }, data: { expires_at: null } });
+    // The expiry stays for the history; the repeal stops the lifted ban counting as an active full ban
+    expect(dbMock.user_actions.update).toHaveBeenCalledWith({
+      where: { id: 'b1' }, data: { repealed_at: expect.any(Date) },
+    });
+  });
+
+  it('treats a ban someone already lifted on Discord as lifted, without announcing it', async () => {
+    dbMock.user_actions.findMany.mockResolvedValue([ban()] as never);
+    const { guild, modThread, modLog } = setup();
+    const unknownBan = new DiscordAPIError(
+      { message: 'Unknown Ban', code: RESTJSONErrorCodes.UnknownBan },
+      RESTJSONErrorCodes.UnknownBan,
+      404,
+      'DELETE',
+      '/bans',
+      {},
+    );
+    guild.bans.remove.mockRejectedValue(unknownBan);
+    const { run } = await start();
+    await run('bans');
+    expect(dbMock.user_actions.update).toHaveBeenCalledWith({
+      where: { id: 'b1' }, data: { repealed_at: expect.any(Date) },
+    });
+    expect(modThread.send).not.toHaveBeenCalled();
+    expect(modLog.send).not.toHaveBeenCalled();
+
+    // A privacy-deleted user's timer record is deleted once Discord confirms there is no ban
+    dbMock.users.findUnique.mockResolvedValue(null);
+    await run('bans');
+    expect(dbMock.user_actions.delete).toHaveBeenCalledWith({ where: { id: 'b1' } });
   });
 
   it('deletes the minimal timer record after lifting a privacy-deleted user’s ban', async () => {
@@ -913,7 +992,7 @@ describe('expired bans', () => {
     expect(dbMock.user_actions.update).toHaveBeenCalledTimes(2);
   });
 
-  it('retries a failed unban and clears the expiry only after success', async () => {
+  it('retries a failed unban and records the repeal only after success', async () => {
     dbMock.user_actions.findMany.mockResolvedValue([ban()] as never);
     const { guild } = setup({ unbanFails: true });
     const { run } = await start();
@@ -934,7 +1013,7 @@ describe('expired bans', () => {
     expect(dbMock.user_actions.update).toHaveBeenCalledTimes(2);
   });
 
-  it('clears the expiry even if the notification fails after a successful unban', async () => {
+  it('records the repeal even if the notification fails after a successful unban', async () => {
     dbMock.user_actions.findMany.mockResolvedValue([ban()] as never);
     const { guild, modThread } = setup();
     modThread.send.mockRejectedValue(new Error('Notification unavailable'));
@@ -942,7 +1021,7 @@ describe('expired bans', () => {
     await run('bans');
     expect(guild.bans.remove).toHaveBeenCalledTimes(1);
     expect(dbMock.user_actions.update).toHaveBeenCalledWith({
-      where: { id: 'b1' }, data: { expires_at: null },
+      where: { id: 'b1' }, data: { repealed_at: expect.any(Date) },
     });
   });
 

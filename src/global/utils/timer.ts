@@ -12,6 +12,7 @@ import {
   RESTJSONErrorCodes,
   TextChannel,
   ThreadChannel,
+  User,
 } from 'discord.js';
 import Parser from 'rss-parser';
 import { DateTime } from 'luxon';
@@ -26,8 +27,9 @@ import { experience } from './experience';
 import { profile } from '../commands/g.learn';
 import getTripSitStatistics from '../commands/g.tripsitstats';
 import { getOrCreateGuild } from './dbRecords';
-import { pruneModerationActions, purgeInactiveUsers } from '../commands/g.privacy';
+import { pruneModerationActions, purgeInactiveUsers, reconcileLiftedBans } from '../commands/g.privacy';
 import { deleteDiscordPrivacyData } from '../../discord/utils/privacyDeletion';
+import { fetchGuildBanIds } from '../../discord/utils/guildBans';
 import { remindUnansweredTripSitTicket } from '../../discord/utils/tripsitResponseReminder';
 
 const F = f(__filename);
@@ -690,10 +692,22 @@ async function checkMoodle() { // eslint-disable-line
   }, Promise.resolve());
 }
 
+/** Lifts a ban on Discord. Returns false when Discord has no ban left to lift because someone already lifted it. */
+async function liftDiscordBan(guild: Guild, user: User): Promise<boolean> {
+  try {
+    await guild.bans.remove(user, 'Temporary ban expired');
+    return true;
+  } catch (error) {
+    if (error instanceof DiscordAPIError && error.code === RESTJSONErrorCodes.UnknownBan) return false;
+    throw error;
+  }
+}
+
 async function undoExpiredBans() {
   const expiredBans = await db.user_actions.findMany({
     where: {
       expires_at: { not: null, lte: new Date() },
+      repealed_at: null,
       type: 'FULL_BAN',
     },
   });
@@ -718,18 +732,24 @@ async function undoExpiredBans() {
       // Ensure guild exists
       if (!targetGuild) return;
 
-      // Unban user
-      await targetGuild.bans.remove(user, 'Temporary ban expired');
+      // Unban user. Discord answering that there is no ban also confirms the ban is gone.
+      const liftedNow = await liftDiscordBan(targetGuild, user);
       // Only stop retrying once Discord confirms the unban, independently of notifications.
       if (!targetUserData?.discord_id) {
         await db.user_actions.delete({ where: { id: activeBan.id } });
         log.info(F, 'Expired temporary ban lifted; deleted its privacy-limited timer record.');
         return;
       }
+      // Record the lift as a repeal, keeping the expiry for the history. An unrepealed full ban keeps a user out of
+      // the inactive-account purge and moderation-history pruning, so a lifted ban must not stay unrepealed.
       await db.user_actions.update({
         where: { id: activeBan.id },
-        data: { expires_at: null },
+        data: { repealed_at: new Date() },
       });
+      if (!liftedNow) {
+        log.info(F, `Temporary ban for ${activeBan.target_discord_id} in ${targetGuild.name} was already lifted on Discord.`);
+        return;
+      }
       log.info(F, `Temporary ban for ${user.username} (${activeBan.target_discord_id}) in ${targetGuild.name} has expired and been lifted!`);
 
       const targetGuildData = await db.discord_guilds.findUnique({ where: { id: activeBan.guild_id } });
@@ -855,19 +875,36 @@ async function checkBirthdays() {
 }
 
 /**
- * Wraps a job that acts on a calendar day. The job is polled all day, but runs only during `hourUtc` and at most
- * once per UTC day, so a restart or a drifting timer chain can no longer skip the day or fire around midnight.
- * Nothing is persisted: a restart inside that one hour could repeat the job once.
+ * Wraps a job that acts on a calendar day. The job is polled all day and runs at most once per UTC day, so a restart
+ * or a drifting timer chain can no longer skip the day or fire around midnight. With an `hourUtc` it runs only during
+ * that hour. With `null` it runs at the first poll of each UTC day, including the first poll after a restart, so a bot
+ * that restarts more often than daily still runs it every day.
+ * Nothing is persisted: a restart can repeat the job on the same day.
  */
-function oncePerUtcDay(job: () => Promise<void>, hourUtc = 12): () => Promise<void> {
+function oncePerUtcDay(job: () => Promise<void>, hourUtc: number | null = 12): () => Promise<void> {
   let lastRunDay = '';
   return async () => {
     const now = new Date();
     const day = now.toISOString().slice(0, 10);
-    if (now.getUTCHours() !== hourUtc || lastRunDay === day) return;
+    if ((hourUtc !== null && now.getUTCHours() !== hourUtc) || lastRunDay === day) return;
     lastRunDay = day;
     await job();
   };
+}
+
+/**
+ * Daily retention. Ban records are first checked against Discord, so only users who are still banned stay out of the
+ * inactive-account purge and moderation-history pruning. If that check fails, unchecked bans keep protecting their
+ * users, so the purge can still run safely.
+ */
+async function enforceRetention(): Promise<void> {
+  try {
+    await reconcileLiftedBans(fetchGuildBanIds);
+  } catch (error) {
+    log.error(F, `Ban reconciliation failed; unchecked bans still count as active: ${error}`);
+  }
+  await purgeInactiveUsers(new Date(), deleteDiscordPrivacyData);
+  await pruneModerationActions();
 }
 
 async function checkEvery(
@@ -914,17 +951,13 @@ async function runTimer() {
     // { callback: checkLpm, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
     { callback: updateDb, interval: env.NODE_ENV === 'production' ? hours24 : hours48 },
     // { callback: pruneInactiveHelpers, interval: env.NODE_ENV === 'production' ? hours48 : seconds60 },
-    { callback: undoExpiredBans, interval: env.NODE_ENV === 'production' ? hours24 / 2 : seconds10 },
+    // Hourly, so a restart delays lifting an expired ban by an hour at most instead of half a day
+    { callback: undoExpiredBans, interval: env.NODE_ENV === 'production' ? hours1 : seconds10 },
     // Calendar jobs are polled every hour and run once, at 12:00 UTC (see oncePerUtcDay)
     { callback: oncePerUtcDay(monthlySessionStats), interval: hours1 },
     { callback: oncePerUtcDay(checkBirthdays), interval: hours1 },
-    {
-      callback: async () => {
-        await purgeInactiveUsers(new Date(), deleteDiscordPrivacyData);
-        await pruneModerationActions();
-      },
-      interval: env.NODE_ENV === 'production' ? hours24 : hours48,
-    },
+    // Polled hourly and run at the first poll of each UTC day, so restarts cannot keep postponing it
+    { callback: oncePerUtcDay(enforceRetention, null), interval: hours1 },
   ];
 
   timers.forEach(timer => {
