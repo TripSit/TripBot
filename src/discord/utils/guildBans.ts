@@ -21,7 +21,9 @@ export async function fetchGuildBanIds(guildId: string): Promise<Set<string> | n
       page.forEach((_ban, userId) => bannedIds.add(userId));
       fullPage = page.size >= BAN_PAGE_SIZE;
       // Snowflakes compare numerically; take the largest instead of relying on the page order
-      if (fullPage) after = [...page.keys()].reduce((largest, id) => (BigInt(id) > BigInt(largest) ? id : largest), '0');
+      if (fullPage) {
+        after = [...page.keys()].reduce((largest, id) => (BigInt(id) > BigInt(largest) ? id : largest), '0');
+      }
     }
     return bannedIds;
   } catch (error) {
