@@ -32,6 +32,10 @@ describe('About', () => {
     expect(About.privacy).not.toContain('/privacy bridge');
     expect(About.privacy).toContain('Nothing you write is sent to an AI provider');
     expect(About.privacy).toContain('RPG flair is reviewed locally');
+    expect(About.privacy).toContain('month and day only, never a year');
+    expect(About.privacy).toContain('purged automatically');
+    expect(About.privacy).toContain('never your Discord identity');
+    expect(About.privacy).toContain('We do not send promotional DMs');
     expect(About.privacy).toContain('or delete ordinary Discord messages');
     expect(About.privacy).toContain('TripBot has no AI features');
     expect(About.privacy).toContain('removes the IRC Bridge role');

@@ -12,7 +12,6 @@ declare global {
       DISCORD_CLIENT_REDIRECT_URI: string | undefined;
 
       GITHUB_TOKEN: string | undefined;
-      CLAUDE_CODE_OAUTH_TOKEN: string | undefined;
       CODE_AGENT_REPO: string | undefined;
       RAPID_TOKEN: string | undefined;
       WOLFRAM_TOKEN: string | undefined;
