@@ -27,6 +27,14 @@ const withGuild = (stub: SlashStub, fetch: (id: string) => unknown): SlashStub =
 };
 
 describe('tripsitmode', () => {
+  it.each([undefined, true, false])('makes close acknowledgements private by default (%s)', async ephemeral => {
+    const stub = slashStub({ subcommand: 'off', options: { user: target, ephemeral } });
+    await tripsitmode.execute(stub as never);
+    const proxy = mocks.userClose.mock.calls[0][0];
+    await proxy.deferReply({});
+    expect(stub.deferReply).toHaveBeenCalledWith({ flags: ephemeral === false ? undefined : 64 });
+  });
+
   beforeEach(() => {
     Object.values(mocks).forEach(m => m.mockReset());
     mocks.ensure.mockResolvedValue(true);
@@ -183,9 +191,9 @@ describe('tripsitmode on: edge cases', () => {
     expect(db.discord_guilds.update).toHaveBeenCalledWith(expect.objectContaining({ data: { channel_tripsitmeta: null } }));
   });
 
-  it('marks a ticket whose thread was deleted and opens a fresh modal', async () => {
+  it.each(['th', null])('marks a ticket whose thread is gone (%s) and opens a fresh modal', async threadId => {
     const text = await channelOf();
-    db.user_tickets.findFirst = vi.fn().mockResolvedValue({ id: 'tk', thread_id: 'th' }) as never;
+    db.user_tickets.findFirst = vi.fn().mockResolvedValue({ id: 'tk', thread_id: threadId }) as never;
     db.user_tickets.update = vi.fn().mockResolvedValue({ id: 'tk', status: 'DELETED' }) as never;
     const stub = withGuild(onStub(), id => {
       if (id === 'th') throw new Error('Unknown Channel');

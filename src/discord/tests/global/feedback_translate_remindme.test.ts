@@ -5,7 +5,7 @@ import { lastReply, slashStub, resolvingModal } from '../../../vitest/utils/comm
 import { flushPromises } from '../../../vitest/utils/discordStubs';
 
 const mocks = vi.hoisted(() => ({
-  aiTranslate: vi.fn(), remindMe: vi.fn(), paginate: vi.fn(), consent: vi.fn(),
+  aiTranslate: vi.fn(), consent: vi.fn(), remindMe: vi.fn(), paginate: vi.fn(),
 }));
 
 vi.mock('../../utils/context', () => ({ default: vi.fn(async () => 'ctx') }));

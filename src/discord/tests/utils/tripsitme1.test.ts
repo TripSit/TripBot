@@ -189,8 +189,8 @@ describe('ticket buttons', () => {
       expect(mocks.setName).toHaveBeenCalledTimes(1);
     });
 
-    it('survives deleted meta channels and threads, and stops without send permission', async () => {
-      mocks.getOpenTicket.mockResolvedValue(ticket());
+    it.each(['th', null])('survives deleted meta channels and threads (%s), and stops without permission', async threadId => {
+      mocks.getOpenTicket.mockResolvedValue(ticket({ thread_id: threadId }));
       const gone = setup({ metaFetch: 'fail', threadFetch: 'fail' });
       await tripsitmeOwned(gone.interaction);
       expect(dbMock.user_tickets.update).toHaveBeenCalled();

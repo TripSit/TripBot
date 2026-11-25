@@ -7,7 +7,6 @@ import { rpgHome, rpgMarketChange } from '../commands/guild/d.rpg';
 import { applicationStart, applicationReject } from '../utils/application';
 import commandContext from '../utils/context';
 import { helpMenu } from '../commands/global/d.help';
-import { aiMenu } from '../commands/global/d.ai';
 import { purgeMenu } from '../commands/guild/d.purge';
 import { modHistoryButton } from '../utils/modHistory';
 
@@ -37,8 +36,6 @@ async function handleStringSelect(interaction: StringSelectMenuInteraction): Pro
     await applicationReject(interaction);
   } else if (menuID.startsWith('applicationRoleSelectMenu')) {
     await applicationStart(interaction);
-  } else if (menuID.startsWith('AI')) {
-    await interaction.update(await aiMenu(interaction));
   }
 }
 
@@ -53,7 +50,5 @@ export async function selectMenu(
     await handleStringSelect(interaction);
   } else if (interaction.isUserSelectMenu() && menuID.startsWith('purge')) {
     await purgeMenu(interaction);
-  } else if (interaction.isChannelSelectMenu() && menuID.startsWith('AI')) {
-    await interaction.update(await aiMenu(interaction));
   }
 }

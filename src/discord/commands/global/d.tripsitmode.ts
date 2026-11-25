@@ -92,6 +92,7 @@ async function reopenExistingTicket(
 
   let threadHelpUser = {} as ThreadChannel;
   try {
+    if (!ticketData.thread_id) throw new Error('Ticket thread was already removed');
     threadHelpUser = await interaction.guild?.channels.fetch(ticketData.thread_id) as ThreadChannel;
   } catch {
     log.debug(F, 'There was an error updating the help thread, it was likely deleted');
@@ -114,7 +115,8 @@ async function reopenExistingTicket(
 
   if (!threadHelpUser.id) return false;
 
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  const ephemeral = interaction.options.getBoolean('ephemeral') ?? true;
+  await interaction.deferReply({ flags: ephemeral ? MessageFlags.Ephemeral : undefined });
   await needsHelpMode(interaction, target);
   log.debug(F, 'Added needshelp to user');
 
@@ -214,7 +216,8 @@ async function tripsitmodeOn(
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('tripsitmeSubmit') && i.customId.split('~')[1] === interaction.id;
   await awaitModal(interaction, filter)
     .then(async i => {
-      await i.deferReply({ flags: MessageFlags.Ephemeral });
+      const ephemeral = interaction.options.getBoolean('ephemeral') ?? true;
+      await i.deferReply({ flags: ephemeral ? MessageFlags.Ephemeral : undefined });
       const triage = i.fields.getTextInputValue('triageInput');
       const intro = i.fields.getTextInputValue('introInput');
 
@@ -248,14 +251,18 @@ export const tripsitmode: SlashCommand = {
       .addUserOption(option => option
         .setName('user')
         .setDescription('Member to modify')
-        .setRequired(true)))
+        .setRequired(true))
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription('Set to False to show the response to everyone')))
     .addSubcommand(subcommand => subcommand
       .setName('off')
       .setDescription('Turn off tripsit mode for a user')
       .addUserOption(option => option
         .setName('user')
         .setDescription('Member to modify')
-        .setRequired(true))),
+        .setRequired(true))
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription('Set to False to show the response to everyone'))),
   async execute(interaction:ChatInputCommandInteraction) {
     log.info(F, await commandContext(interaction));
     const enable = interaction.options.getSubcommand() as 'on' | 'off';
@@ -275,7 +282,10 @@ export const tripsitmode: SlashCommand = {
         member: interaction.member,
         user: interaction.user,
         channel: interaction.channel,
-        deferReply: (content: InteractionDeferReplyOptions & { withResponse: true; }) => interaction.deferReply(content),
+        deferReply: (content: InteractionDeferReplyOptions & { withResponse: true; }) => interaction.deferReply({
+          ...content,
+          flags: (interaction.options.getBoolean('ephemeral') ?? true) ? MessageFlags.Ephemeral : undefined,
+        }),
         reply: (content: string | MessagePayload | InteractionReplyOptions) => {
           if (interaction.deferred || interaction.replied) {
             return interaction.followUp(content);

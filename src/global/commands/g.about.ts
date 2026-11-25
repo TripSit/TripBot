@@ -145,8 +145,10 @@ export default class About {
       `;
 
   public static readonly privacy:string = stripIndents`
-      We take privacy very seriously. We only store the data we need to provide our services, and we never sell or share your data with third parties.
-      If you want to know what data we have on you, or if you want to delete your data, you can use the /privacy command.`;
+      TripBot stores Discord identifiers and feature data outside Discord, including saved quotes, preferences, usage and moderation records. We do not sell your data.
+      Messages, server display names and attachment links in designated bridged channels are shared with IRC only while the author has the IRC Bridge role. Opt in through Channels & Roles in Discord. Remove the role there to stop future relays, including queued messages. IRC participants may save copies; removing the role does not erase messages already received or saved.
+      AI chat has been removed. Translation sends the selected message to OpenAI only when its author agreed to the AI terms and privacy policy; RPG flair review sends submitted flair text to OpenAI. These features do not fetch conversation history or save prompts and replies as AI message history. Consent records remain until removed through privacy deletion or applicable account retention. Historical Discord AI audit posts and replies require separate cleanup; removing the module does not delete those messages.
+      Use /privacy get to inspect stored data and /privacy delete to remove TripBot profile and feature data, support ticket and moderator discussion threads, appeals, moderation history, saved Best Of copies, and messages containing your Discord ID in TripBot's bot and moderation log channels. It also removes the IRC Bridge role to stop future sharing. Your moderator identity and notes on other users' moderation records are anonymized. For a temporary Discord ban awaiting its automatic lift, TripBot retains only the account, guild, and expiry needed to lift it; the timer record is deleted after Discord confirms the unban. The command does not change Discord-managed bans or delete ordinary Discord messages, copies already shared with IRC, or data retained in service logs and backups. Contact ${this.botEmail} about privacy questions.`;
 
   public static readonly applicationsDesc = stripIndents`
     **What is an Application system?**

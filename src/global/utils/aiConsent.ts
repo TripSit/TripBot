@@ -1,5 +1,5 @@
 /**
- * AI consent: a user has opted in to the AI module only once they have agreed to BOTH the terms of
+ * AI consent: a user has opted in to AI translation only once they have agreed to BOTH the terms of
  * service and the privacy policy (`/ai tos`, `/ai privacy`). Nothing a user writes may be sent to an
  * AI provider or copied into an AI prompt until then. Revoking (deleting ai_info) removes consent.
  */
@@ -27,17 +27,4 @@ export async function getAiConsentedIds(discordIds: string[]): Promise<Set<strin
 
 export async function hasAiConsent(discordId: string): Promise<boolean> {
   return (await getAiConsentedIds([discordId])).has(discordId);
-}
-
-/**
- * Rollout gate for AI chat. Only the bot owner may talk to the model for now; widen this one function to open it up.
- * Consent (above) is still required on top of this.
- */
-export function isAiChatAllowed(discordId: string): boolean {
-  return discordId === env.DISCORD_OWNER_ID;
-}
-
-/** Users whose messages may be sent to the chat model: allowed by the rollout gate AND consented. */
-export async function getAiChatUserIds(discordIds: string[]): Promise<Set<string>> {
-  return getAiConsentedIds(discordIds.filter(isAiChatAllowed));
 }

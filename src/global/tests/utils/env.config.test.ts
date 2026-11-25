@@ -18,6 +18,14 @@ afterEach(() => {
 });
 
 describe('env IRC settings', () => {
+  it.each([
+    ['production', '1574860845719228486'],
+    ['development', '1574862495548706968'],
+  ])('uses the %s bridge consent role', async (nodeEnv, roleId) => {
+    const config = await loadEnv({ NODE_ENV: nodeEnv });
+    expect(config.ROLE_IRC_BRIDGE).toBe(roleId);
+  });
+
   it('uses the dev IRC server outside production', async () => {
     const env = await loadEnv({ NODE_ENV: 'development' });
     expect(env.IRC_SERVER).toBe('irc.tripsit.io');

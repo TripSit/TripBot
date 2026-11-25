@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, sonarjs/no-duplicate-string */
-import { ChannelType, Collection } from 'discord.js';
+import {
+  ChannelType, Collection, DiscordAPIError, RESTJSONErrorCodes,
+} from 'discord.js';
 import runTimer from '../../utils/timer';
 import { dbMock } from '../../../vitest/utils/mockDb';
 
@@ -148,16 +150,12 @@ describe('runTimer', () => {
   it('runs the retention purge on its schedule', async () => {
     dbMock.users.findMany.mockResolvedValue([]);
     dbMock.user_actions.deleteMany.mockResolvedValue({ count: 0 });
-    dbMock.command_usage_parameter.deleteMany.mockResolvedValue({ count: 0 });
     const { run } = await start();
     await run('retention');
     expect(dbMock.users.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: expect.objectContaining({ last_seen_at: expect.objectContaining({ lt: expect.any(Date) }) }),
     }));
     expect(dbMock.user_actions.deleteMany).toHaveBeenCalled();
-    expect(dbMock.command_usage_parameter.deleteMany).toHaveBeenCalledWith({
-      where: { usage: { created_at: { lt: expect.any(Date) } } },
-    });
   });
 
   it('runs the database updater on its schedule', async () => {
@@ -282,7 +280,7 @@ describe('tickets', () => {
     expect(dbMock.user_tickets.update).toHaveBeenCalledWith(expect.objectContaining({
       where: { id: 't1' },
       data: expect.objectContaining({
-        status: 'ARCHIVED', type: 'TRIPSIT', first_message_id: '123',
+        status: 'ARCHIVED', type: 'TRIPSIT', first_message_id: null,
       }),
     }));
     expect(thread.setArchived).toHaveBeenCalledWith(true);
@@ -339,17 +337,15 @@ describe('tickets', () => {
     await run('tickets');
   });
 
-  it('uses the production retention period and tolerates tickets without a thread', async () => {
+  it('keeps the original six-day deadline when archiving a production ticket', async () => {
     e.NODE_ENV = 'production';
-    dbMock.user_tickets.findMany.mockResolvedValue([ticket({ thread_id: null })] as never);
+    const deletionDeadline = future();
+    dbMock.user_tickets.findMany.mockResolvedValue([ticket({ archived_at: past(), deleted_at: deletionDeadline })] as never);
     discordForArchive();
-    client().channels.fetch = vi.fn(async () => { throw new Error('no thread'); });
     const { run } = await start();
     await run('tickets');
     const update = dbMock.user_tickets.update.mock.calls[0][0] as { data: { deleted_at: Date } };
-    const days = (update.data.deleted_at.getTime() - Date.now()) / 86_400_000;
-    expect(days).toBeGreaterThan(2.9);
-    expect(days).toBeLessThan(3.1);
+    expect(update.data.deleted_at).toEqual(deletionDeadline);
   });
 
   it('skips role restoration when Discord returns nothing for the user, the member or the roles', async () => {
@@ -389,34 +385,111 @@ describe('tickets', () => {
     expect(higherNeedsHelp.member.roles.remove).not.toHaveBeenCalled();
   });
 
-  it('does not touch tickets that are already archived, deleted or paused', async () => {
-    dbMock.user_tickets.findMany.mockResolvedValue(
-      ['ARCHIVED', 'DELETED', 'PAUSED'].map(status => ticket({ status, deleted_at: future() })) as never,
-    );
+  it('does not touch tickets before their archive deadline or tickets already archived/deleted', async () => {
+    dbMock.user_tickets.findMany.mockResolvedValue([
+      ticket({ status: 'ARCHIVED', archived_at: future(), deleted_at: future() }),
+      ticket({
+        status: 'DELETED', archived_at: future(), deleted_at: future(), thread_id: null, first_message_id: null,
+      }),
+      ticket({ status: 'PAUSED', archived_at: future(), deleted_at: future() }),
+    ] as never);
     const { run } = await start();
     await run('tickets');
     expect(dbMock.user_tickets.update).not.toHaveBeenCalled();
   });
 
-  it('deletes expired archived tickets and their threads', async () => {
-    dbMock.user_tickets.findMany.mockResolvedValue([ticket({ status: 'ARCHIVED', deleted_at: past() })] as never);
-    const thread = { delete: vi.fn() };
-    client().channels.fetch = vi.fn(async () => thread);
+  it('applies the retention deadline to paused tickets too', async () => {
+    dbMock.user_tickets.findMany.mockResolvedValue([ticket({ status: 'PAUSED', archived_at: past(), deleted_at: future() })] as never);
+    discordForArchive();
     const { run } = await start();
     await run('tickets');
-    expect(thread.delete).toHaveBeenCalled();
-    expect(dbMock.user_tickets.update).toHaveBeenCalledWith({ where: { id: 't1' }, data: { status: 'DELETED' } });
+    expect(dbMock.user_tickets.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ status: 'ARCHIVED' }),
+    }));
   });
 
-  it('still marks the ticket deleted when the thread is already gone', async () => {
+  it('deletes expired archived tickets and both ticket threads, then clears identifying references', async () => {
+    dbMock.user_tickets.findMany.mockResolvedValue([ticket({
+      status: 'ARCHIVED', deleted_at: past(), thread_id: 'ticket-thread', meta_thread_id: 'meta-thread',
+    })] as never);
+    const ticketThread = { isThread: () => true, delete: vi.fn() };
+    const metaThread = { isThread: () => true, delete: vi.fn() };
+    client().channels.fetch = vi.fn(async (id: string) => (id === 'ticket-thread' ? ticketThread : metaThread) as never);
+    const { run } = await start();
+    await run('tickets');
+    expect(ticketThread.delete).toHaveBeenCalled();
+    expect(metaThread.delete).toHaveBeenCalled();
+    expect(dbMock.user_tickets.update).toHaveBeenCalledWith({
+      where: { id: 't1' },
+      data: {
+        status: 'DELETED',
+        thread_id: null,
+        meta_thread_id: null,
+        first_message_id: null,
+        closed_by: null,
+        reopened_by: null,
+      },
+    });
+  });
+
+  it.each(['thread_id', 'meta_thread_id', 'first_message_id'])('retries legacy deleted ticket cleanup with a retained %s', async field => {
+    dbMock.user_tickets.findMany.mockResolvedValue([ticket({
+      status: 'DELETED', thread_id: null, meta_thread_id: null, first_message_id: null, [field]: 'legacy',
+    })] as never);
+    client().channels.fetch = vi.fn(async () => null);
+    const { run } = await start();
+    await run('tickets');
+    expect(dbMock.user_tickets.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        status: 'DELETED', thread_id: null, meta_thread_id: null, first_message_id: null,
+      }),
+    }));
+  });
+
+  it('treats Discord Unknown Channel as completed cleanup but retries invalid targets', async () => {
+    dbMock.user_tickets.findMany.mockResolvedValue([ticket({ status: 'ARCHIVED', deleted_at: past() })] as never);
+    client().channels.fetch = vi.fn(async () => {
+      throw new DiscordAPIError(
+        { message: 'Unknown Channel', code: RESTJSONErrorCodes.UnknownChannel },
+        RESTJSONErrorCodes.UnknownChannel,
+        404,
+        'GET',
+        'https://discord.invalid',
+        {},
+      );
+    });
+    const { run } = await start();
+    await run('tickets');
+    expect(dbMock.user_tickets.update).toHaveBeenCalled();
+    dbMock.user_tickets.update.mockClear();
+    client().channels.fetch = vi.fn(async () => ({ isThread: () => false }));
+    await run('tickets');
+    expect(dbMock.user_tickets.update).not.toHaveBeenCalled();
+  });
+
+  it('clears ticket references when both threads are already gone', async () => {
     dbMock.user_tickets.findMany.mockResolvedValue([ticket({ status: 'ARCHIVED', deleted_at: past(), thread_id: null })] as never);
     const { run } = await start();
     await run('tickets');
-    expect(dbMock.user_tickets.update).toHaveBeenCalledWith({ where: { id: 't1' }, data: { status: 'DELETED' } });
+    expect(dbMock.user_tickets.update).toHaveBeenCalledWith({
+      where: { id: 't1' },
+      data: {
+        status: 'DELETED',
+        thread_id: null,
+        meta_thread_id: null,
+        first_message_id: null,
+        closed_by: null,
+        reopened_by: null,
+      },
+    });
 
+    dbMock.user_tickets.update.mockClear();
     dbMock.user_tickets.findMany.mockResolvedValue([ticket({ status: 'ARCHIVED', deleted_at: past() })] as never);
     client().channels.fetch = vi.fn(async () => { throw new Error('gone'); });
+    const logError = vi.spyOn(log, 'error');
     await run('tickets');
+    expect(dbMock.user_tickets.update).not.toHaveBeenCalled();
+    expect(logError).toHaveBeenCalledWith(expect.any(String), expect.stringContaining('Timer task failed'));
   });
 
   describe('failsafe thread pruning', () => {
@@ -481,7 +554,7 @@ describe('tickets', () => {
       const { run } = await start();
       await run('tickets');
       expect(good.messages.fetch).toHaveBeenCalledWith({ limit: 10 });
-      // Regression test for TripSit/TripBot#1368: only threads idle for over 5 days are pruned, not recently active ones
+      // Regression test for TripSit/TripBot#1368: only threads idle for six days are pruned, not recently active ones
       expect(idle.delete).toHaveBeenCalled();
       expect(good.delete).not.toHaveBeenCalled();
       expect(empty.delete).not.toHaveBeenCalled();
@@ -777,7 +850,7 @@ describe('moodle', () => {
 
 describe('expired bans', () => {
   const ban = (over: object = {}) => ({
-    id: 'b1', target_discord_id: 'd1', guild_id: 'g1', created_at: new Date(Date.now() - 4 * 86400000), expires_at: past(), ...over,
+    id: 'b1', user_id: 'u1', target_discord_id: 'd1', guild_id: 'g1', created_at: new Date(Date.now() - 4 * 86400000), expires_at: past(), ...over,
   });
 
   function setup(opts: { modlog?: string | null; modThread?: string | null; unbanFails?: boolean } = {}) {
@@ -790,7 +863,9 @@ describe('expired bans', () => {
     dbMock.discord_guilds.findUnique.mockResolvedValue(
       { channel_mod_log: opts.modlog === undefined ? 'log' : opts.modlog } as never,
     );
-    dbMock.users.findUnique.mockResolvedValue({ mod_thread_id: opts.modThread === undefined ? 'thread' : opts.modThread } as never);
+    dbMock.users.findUnique.mockResolvedValue({
+      discord_id: 'd1', mod_thread_id: opts.modThread === undefined ? 'thread' : opts.modThread,
+    } as never);
     return { guild, modThread, modLog };
   }
 
@@ -810,6 +885,19 @@ describe('expired bans', () => {
     expect(modThread.send).toHaveBeenCalled();
     expect(modLog.send.mock.calls[0][0].embeds[0].data.description).toContain('after 3 days');
     expect(dbMock.user_actions.update).toHaveBeenCalledWith({ where: { id: 'b1' }, data: { expires_at: null } });
+  });
+
+  it('deletes the minimal timer record after lifting a privacy-deleted user’s ban', async () => {
+    dbMock.user_actions.findMany.mockResolvedValue([ban()] as never);
+    const { guild, modThread, modLog } = setup();
+    dbMock.users.findUnique.mockResolvedValue(null);
+    const { run } = await start();
+    await run('bans');
+    expect(guild.bans.remove).toHaveBeenCalledWith(expect.anything(), 'Temporary ban expired');
+    expect(dbMock.user_actions.delete).toHaveBeenCalledWith({ where: { id: 'b1' } });
+    expect(dbMock.user_actions.update).not.toHaveBeenCalled();
+    expect(modThread.send).not.toHaveBeenCalled();
+    expect(modLog.send).not.toHaveBeenCalled();
   });
 
   it('works without a mod thread, and stops early without a mod log', async () => {

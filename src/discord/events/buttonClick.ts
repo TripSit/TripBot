@@ -24,7 +24,6 @@ import { helperButton } from '../commands/global/d.setup';
 import { acknowledgeButton, modModal, refusalButton } from '../utils/modUtils';
 import { modHistoryButton } from '../utils/modHistory';
 import { feedbackReportModal } from '../commands/global/d.feedback';
-import { aiButton } from '../commands/global/d.ai';
 import { purgeButton } from '../commands/guild/d.purge';
 import { mushroomPageEmbed } from '../utils/hrUtils';
 
@@ -119,7 +118,6 @@ async function handleMushroomButton(interaction: ButtonInteraction): Promise<boo
 // Handlers that were never awaited are wrapped so they stay fire-and-forget.
 const buttonRoutes: [string, (interaction: ButtonInteraction) => Promise<unknown>][] = [
   ['feedbackReport', feedbackReportModal],
-  ['AI', aiButton],
   ['purge', purgeButton],
   ['modHistory', modHistoryButton],
   ['moderate', modModal],

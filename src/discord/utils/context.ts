@@ -19,7 +19,7 @@ export default async function commandContext(
   | ModalSubmitInteraction,
 ) {
   const source = interaction.guild ? `${interaction.guild.name}` : 'DM';
-  let message = `via ${interaction.user.id} in ${source}`;
+  let message = `in ${source}`;
   if (Object.hasOwn(interaction, 'options')) {
     const interactionOptions = (interaction as ChatInputCommandInteraction).options;
     if (interactionOptions.data && interactionOptions.data.length > 0) {

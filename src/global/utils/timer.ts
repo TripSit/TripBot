@@ -4,10 +4,12 @@ import {
   CategoryChannel,
   ChannelType,
   Colors,
+  DiscordAPIError,
   Guild,
   GuildBasedChannel,
   GuildMember,
   PermissionResolvable,
+  RESTJSONErrorCodes,
   TextChannel,
   ThreadChannel,
 } from 'discord.js';
@@ -24,7 +26,8 @@ import { experience } from './experience';
 import { profile } from '../commands/g.learn';
 import getTripSitStatistics from '../commands/g.tripsitstats';
 import { getOrCreateGuild } from './dbRecords';
-import { pruneCommandParameters, pruneModerationActions, purgeInactiveUsers } from '../commands/g.privacy';
+import { pruneModerationActions, purgeInactiveUsers } from '../commands/g.privacy';
+import { deleteDiscordPrivacyData } from '../../discord/utils/privacyDeletion';
 import { remindUnansweredTripSitTicket } from '../../discord/utils/tripsitResponseReminder';
 
 const F = f(__filename);
@@ -112,7 +115,7 @@ type UserRow = Awaited<ReturnType<typeof db.users.upsert>>;
 
 async function restoreTicketRoles(ticket: TicketRow, userData: UserRow): Promise<void> {
   /* v8 ignore next -- tickets belong to users that were seen on Discord */
-  if (!userData.discord_id) return;
+  if (!userData.discord_id || !ticket.thread_id) return;
   const discordUser = await discordClient.users.fetch(userData.discord_id);
   /* v8 ignore next -- users.fetch rejects instead of resolving empty */
   if (!discordUser) return;
@@ -159,14 +162,13 @@ async function restoreTicketRoles(ticket: TicketRow, userData: UserRow): Promise
 }
 
 async function archiveTicket(ticket: TicketRow): Promise<void> {
-  // Archive the ticket set the deleted time to 1 week from now
+  // Keep the original six-day deletion deadline; archiving must not extend ticket retention.
   const updatedTicket = ticket;
   updatedTicket.status = 'ARCHIVED' as ticket_status;
-  updatedTicket.deleted_at = env.NODE_ENV === 'production'
-    ? DateTime.local().plus({ days: 3 }).toJSDate()
-    : DateTime.local().plus({ minutes: 15 }).toJSDate();
   updatedTicket.type ??= 'TRIPSIT' as ticket_type;
-  updatedTicket.first_message_id ??= '123';
+  updatedTicket.deleted_at ??= DateTime.fromJSDate(ticket.archived_at).plus(
+    env.NODE_ENV === 'production' ? { days: 3 } : { minutes: 15 },
+  ).toJSDate();
 
   await db.user_tickets.update({
     where: {
@@ -210,15 +212,20 @@ async function archiveTicket(ticket: TicketRow): Promise<void> {
 async function deleteTicket(ticket: TicketRow): Promise<void> {
   log.debug(F, `Deleting ticket ${ticket.id}...`);
 
-  // Delete the thread on discord
-  if (ticket.thread_id) {
+  // Delete ticket and metadata threads before clearing their IDs from the retention row.
+  const threadIds = [ticket.thread_id, ticket.meta_thread_id].filter((id): id is string => Boolean(id));
+  for (const threadId of threadIds) { // eslint-disable-line no-restricted-syntax
     try {
-      const thread = await global.discordClient.channels.fetch(ticket.thread_id) as ThreadChannel;
-      await thread.delete();
-      log.debug(F, `Thread ${ticket.thread_id} was deleted`);
-    } catch {
-      // Thread was likely manually deleted
-      log.debug(F, `Thread ${ticket.thread_id} was likely manually deleted`);
+      const channel = await global.discordClient.channels.fetch(threadId); // eslint-disable-line no-await-in-loop
+      if (!channel) continue; // eslint-disable-line no-continue
+      if (!channel.isThread()) throw new Error(`Ticket cleanup target ${threadId} is not a thread`);
+      const thread = channel as ThreadChannel;
+      await thread.delete(); // eslint-disable-line no-await-in-loop
+      log.debug(F, `Ticket thread ${threadId} was deleted`);
+    } catch (error) {
+      if (error instanceof DiscordAPIError && error.code === RESTJSONErrorCodes.UnknownChannel) continue; // eslint-disable-line no-continue
+      log.error(F, 'Failed to delete a ticket thread; ticket cleanup will retry.');
+      throw error;
     }
   }
   await db.user_tickets.update({
@@ -227,16 +234,26 @@ async function deleteTicket(ticket: TicketRow): Promise<void> {
     },
     data: {
       status: 'DELETED' as ticket_status,
+      thread_id: null,
+      meta_thread_id: null,
+      first_message_id: null,
+      closed_by: null,
+      reopened_by: null,
     },
   });
 }
 
 async function processTicket(ticket: TicketRow): Promise<void> {
+  // Retry cleanup of legacy deleted rows that still contain Discord references.
+  if (ticket.status === 'DELETED' && (ticket.thread_id || ticket.meta_thread_id || ticket.first_message_id)) {
+    await deleteTicket(ticket);
+    return;
+  }
+
   // Check if the ticket is ready to be archived
   if (ticket.archived_at
     && ticket.status !== 'ARCHIVED'
     && ticket.status !== 'DELETED'
-    && ticket.status !== 'PAUSED'
     && DateTime.fromJSDate(ticket.archived_at) <= DateTime.local()) {
     await archiveTicket(ticket);
   }
@@ -252,7 +269,7 @@ async function processTicket(ticket: TicketRow): Promise<void> {
 }
 
 async function deleteStaleThread(thread: ThreadChannel, channel: TextChannel): Promise<void> {
-  // Check if the thread was created over a week ago
+  // Failsafe for orphaned archived TripSit threads after the six-day retention window.
   try {
     await thread.fetch();
 
@@ -261,10 +278,9 @@ async function deleteStaleThread(thread: ThreadChannel, channel: TextChannel): P
     const userMessages = messages.filter(msg => !msg.system);
     const lastUserMessage = userMessages.first();
 
-    // Determine if this message was sent longer than a week ago
-    if (lastUserMessage && DateTime.fromJSDate(lastUserMessage.createdAt) <= DateTime.local().minus({ days: 5 })) {
-      thread.delete();
-      log.debug(F, `Deleted thread ${thread.name} in ${channel.name} because the last user message was sent over 5 days ago`);
+    if (lastUserMessage && DateTime.fromJSDate(lastUserMessage.createdAt) <= DateTime.local().minus({ days: 6 })) {
+      await thread.delete();
+      log.debug(F, `Deleted thread ${thread.name} in ${channel.name} after six days of inactivity`);
     }
   } catch {
     // Thread was likely manually deleted
@@ -312,7 +328,7 @@ async function cleanTripsitThreads(guildData: GuildRow): Promise<void> {
     archived: {
       type: 'private',
       fetchAll: true,
-      before: new Date().setDate(new Date().getDate() - 5),
+      before: new Date().setDate(new Date().getDate() - 6),
     },
   });
   await waitForTimerTasks(threadList.threads.map(thread => deleteStaleThread(thread, channel)));
@@ -324,7 +340,7 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
   // Loop through each ticket
   await waitForTimerTasks(ticketData.map(ticket => processTicket(ticket)));
 
-  // As a failsafe, loop through the Tripsit room and delete any threads that are older than 7 days and are archived
+  // As a failsafe, delete orphaned archived TripSit threads after six days of inactivity.
   const guildDataList = await db.discord_guilds.findMany();
   await waitForTimerTasks(guildDataList.map(guildData => cleanTripsitThreads(guildData)));
 }
@@ -693,6 +709,10 @@ async function undoExpiredBans() {
       const user = await global.discordClient.users.fetch(activeBan.target_discord_id);
       if (!user) return;
 
+      const targetUserData = activeBan.user_id
+        ? await db.users.findUnique({ where: { id: activeBan.user_id } })
+        : null;
+
       targetGuild = await global.discordClient.guilds.fetch(activeBan.guild_id);
 
       // Ensure guild exists
@@ -701,6 +721,11 @@ async function undoExpiredBans() {
       // Unban user
       await targetGuild.bans.remove(user, 'Temporary ban expired');
       // Only stop retrying once Discord confirms the unban, independently of notifications.
+      if (!targetUserData?.discord_id) {
+        await db.user_actions.delete({ where: { id: activeBan.id } });
+        log.info(F, 'Expired temporary ban lifted; deleted its privacy-limited timer record.');
+        return;
+      }
       await db.user_actions.update({
         where: { id: activeBan.id },
         data: { expires_at: null },
@@ -714,7 +739,6 @@ async function undoExpiredBans() {
       const modlog = await targetGuild.channels.fetch(targetGuildData.channel_mod_log) as TextChannel | null;
 
       // Fetch mod thread & user data
-      const targetUserData = await db.users.findUnique({ where: { discord_id: activeBan.target_discord_id } });
       const modThread = targetUserData?.mod_thread_id
         ? await targetGuild.channels.fetch(targetUserData.mod_thread_id) as ThreadChannel | null
         : null;
@@ -733,7 +757,7 @@ async function undoExpiredBans() {
       if (modThread) await modThread.send({ embeds: [embed] });
       if (modlog) await modlog.send({ embeds: [embed] });
     } catch {
-      log.error(F, `Failed to process expired temporary ban on ${activeBan.target_discord_id} in ${targetGuild?.name}.`);
+      log.error(F, 'Failed to process an expired temporary ban.');
     }
   }));
 }
@@ -896,9 +920,8 @@ async function runTimer() {
     { callback: oncePerUtcDay(checkBirthdays), interval: hours1 },
     {
       callback: async () => {
-        await purgeInactiveUsers();
+        await purgeInactiveUsers(new Date(), deleteDiscordPrivacyData);
         await pruneModerationActions();
-        await pruneCommandParameters();
       },
       interval: env.NODE_ENV === 'production' ? hours24 : hours48,
     },

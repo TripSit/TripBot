@@ -15,7 +15,6 @@ import { helperActivityUpdate } from '../utils/helperActivityUpdate';
 import { nightsWatch } from '../../global/commands/g.watchuser';
 import { getOrCreateUser } from '../../global/utils/dbRecords';
 import { touchLastSeen } from '../../global/utils/lastSeen';
-import { aiMessage } from '../commands/global/d.ai';
 import { botBannedUsers } from '../utils/populateBotBans';
 import { recordTripSitResponse } from '../utils/tripsitResponseReminder';
 
@@ -76,7 +75,6 @@ export const messageCreate: MessageCreateEvent = {
 
     // Don't run on bots
     if (message.author.bot) return;
-    aiMessage(message).catch(err => log.error(F, `AI message handling failed: ${err}`));
     countMessage(message);
     youAre(message);
     karma(message);

@@ -119,7 +119,7 @@ async function deliverReminders(ticket: ReminderTicket, thread: ThreadChannel, u
 
 export async function remindUnansweredTripSitTicket(ticket: user_tickets, now = new Date()): Promise<void> {
   const due = ticket.response_due_at;
-  if (ticket.type !== 'TRIPSIT' || ticket.status !== 'OPEN' || !due || due.getTime() > now.getTime()
+  if (!ticket.thread_id || ticket.type !== 'TRIPSIT' || ticket.status !== 'OPEN' || !due || due.getTime() > now.getTime()
     || ticket.responded_at || (ticket.team_reminded_at && ticket.user_reminded_at) || pending.has(ticket.id)) return;
   pending.add(ticket.id);
   try {

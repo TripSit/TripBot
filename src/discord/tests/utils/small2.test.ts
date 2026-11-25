@@ -127,23 +127,23 @@ describe('commandContext', () => {
   const user = { id: '42' };
 
   it('describes DMs and guild invocations', async () => {
-    expect(await commandContext({ user, guild: null } as never)).toBe('via 42 in DM');
-    expect(await commandContext({ user, guild: { name: 'G' } } as never)).toBe('via 42 in G');
+    expect(await commandContext({ user, guild: null } as never)).toBe('in DM');
+    expect(await commandContext({ user, guild: { name: 'G' } } as never)).toBe('in G');
   });
 
   it('lists top-level options', async () => {
     const interaction = { user, guild: { name: 'G' }, options: { data: [{ name: 'a', value: 1 }, { name: 'b', value: 'x' }, { name: 'substance', value: 'lsd' }] } };
     // Typed values stay out of the logs; only allowlisted options keep theirs.
-    expect(await commandContext(interaction as never)).toBe('via 42 in G with params: a, b, substance: lsd');
+    expect(await commandContext(interaction as never)).toBe('in G with params: a, b, substance: lsd');
   });
 
   it('lists subcommands and their options', async () => {
     const withParams = { user, guild: null, options: { data: [{ type: 1, options: [{ name: 'a', value: 1 }] }], getSubcommand: () => 'sub' } };
-    expect(await commandContext(withParams as never)).toBe('via 42 in DM subCommand: sub with params: a');
+    expect(await commandContext(withParams as never)).toBe('in DM subCommand: sub with params: a');
     const noParams = { user, guild: null, options: { data: [{ type: 1, options: [] }], getSubcommand: () => 'sub' } };
-    expect(await commandContext(noParams as never)).toBe('via 42 in DM subCommand: sub');
+    expect(await commandContext(noParams as never)).toBe('in DM subCommand: sub');
     const empty = { user, guild: null, options: { data: [] } };
-    expect(await commandContext(empty as never)).toBe('via 42 in DM');
+    expect(await commandContext(empty as never)).toBe('in DM');
   });
 
   it('includes component custom ids', async () => {

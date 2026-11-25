@@ -65,47 +65,13 @@ async function getSessionStats(): Promise<string> {
 
 async function getCommandStats(command?: string | null, days?: number): Promise<string> {
   log.info(F, 'Getting command stats');
-
-  let whereClause: any = {};
-
-  const filters = [];
-
-  if (days) {
-    const since = new Date();
-    since.setDate(since.getDate() - days);
-    filters.push({
-      created_at: {
-        gte: since,
-      },
-    });
-  }
-
-  if (command) {
-    filters.push({
-      command: {
-        contains: command,
-        mode: 'insensitive',
-      },
-    });
-  }
-
-  if (filters.length > 0) {
-    whereClause = {
-      AND: filters,
-    };
-  }
-
-  const stats = await db.command_usage.groupBy({
-    by: ['command'],
-    where: whereClause,
-    _count: {
-      command: true,
+  const since = days ? new Date(Date.now() - days * 24 * 60 * 60 * 1000) : undefined;
+  const stats = await db.command_usage.findMany({
+    where: {
+      ...(command ? { command: { contains: command, mode: 'insensitive' as const } } : {}),
+      ...(since ? { last_used_at: { gte: since } } : {}),
     },
-    orderBy: {
-      _count: {
-        command: 'desc',
-      },
-    },
+    orderBy: { usage_count: 'desc' },
   });
 
   if (!stats.length) {
@@ -113,9 +79,7 @@ async function getCommandStats(command?: string | null, days?: number): Promise<
     if (command) {
       message += ` for \`${command}\``;
     }
-    if (days) {
-      message += ` in the last ${days} days`;
-    }
+    if (days) message += ` among commands last used in the past ${days} days`;
     message += '.';
     return message;
   }
@@ -124,13 +88,13 @@ async function getCommandStats(command?: string | null, days?: number): Promise<
   const topStats = command ? stats : stats.slice(0, 25);
 
   const formatted = topStats
-    .map(s => `- \`${s.command}\`: ${s._count.command} use(s)`)
+    .map(s => `- \`${s.command}\`: ${s.usage_count} use(s), last used ${s.last_used_at.toISOString()}`)
     .join('\n');
 
   const titleParts = ['📊 **Command Stats'];
 
   if (command) titleParts.push(`for \`${command}\``);
-  if (days) titleParts.push(`(Last ${days} Days)`);
+  if (days) titleParts.push(`(Last used within ${days} days; totals are lifetime)`);
 
   const title = `${titleParts.join(' ')}**`;
 

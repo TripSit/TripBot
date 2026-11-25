@@ -27,7 +27,6 @@ const mocks = vi.hoisted(() => ({
   giveMilestone: vi.fn(),
   chitragupta: vi.fn(),
   bestOf: vi.fn(),
-  aiReaction: vi.fn(),
   relayEdit: vi.fn(),
 }));
 
@@ -36,7 +35,6 @@ vi.mock('../../utils/trust', () => ({ default: mocks.trust }));
 vi.mock('../../../global/utils/experience', () => ({ giveMilestone: mocks.giveMilestone }));
 vi.mock('../../utils/chitragupta', () => ({ chitragupta: mocks.chitragupta }));
 vi.mock('../../utils/bestOfTripsit', () => ({ bestOf: mocks.bestOf }));
-vi.mock('../../commands/global/d.ai', () => ({ aiReaction: mocks.aiReaction }));
 vi.mock('../../utils/chatBridge', () => ({ relayDiscordEdit: mocks.relayEdit }));
 
 const send = vi.fn();
@@ -242,7 +240,6 @@ describe('reaction events', () => {
   it('added: scores karma and best-of for humans in tripsit', async () => {
     const r = reaction();
     await messageReactionAdd.execute(r as never, user() as never);
-    expect(mocks.aiReaction).toHaveBeenCalled();
     expect(mocks.chitragupta).toHaveBeenCalledWith(r, expect.anything(), 1);
     expect(mocks.bestOf).toHaveBeenCalledWith(r);
   });
@@ -257,7 +254,6 @@ describe('reaction events', () => {
     await messageReactionAdd.execute(reaction({ message: { fetch: vi.fn(), guild: { id: 'other' } } }) as never, user() as never);
     await messageReactionAdd.execute(reaction() as never, user(true) as never);
     expect(mocks.chitragupta).not.toHaveBeenCalled();
-    expect(mocks.aiReaction).toHaveBeenCalledTimes(3);
   });
 
   it('removed: reverses karma, fetching partial reactions', async () => {
@@ -289,28 +285,13 @@ describe('messageUpdate', () => {
     ...over,
   });
 
-  it('relays the edit and logs old and new content', async () => {
+  it('relays edits without copying message content to a log channel', async () => {
     await messageUpdate.execute(msg('before') as never, msg('after') as never);
     expect(mocks.relayEdit).toHaveBeenCalled();
-    const [{ embeds }] = send.mock.calls[0];
-    expect(embeds[0].data.fields).toEqual([
-      { name: 'Old Message', value: 'before', inline: true }, { name: 'New Message', value: 'after', inline: true },
-    ]);
+    expect(send).not.toHaveBeenCalled();
   });
 
-  it('marks missing content and truncates long content', async () => {
-    await messageUpdate.execute(msg(null) as never, msg('x'.repeat(2000)) as never);
-    const [{ embeds }] = send.mock.calls[0];
-    expect(embeds[0].data.fields[0].value).toBe('(Not found)');
-    expect(embeds[0].data.fields[1].value).toHaveLength(1024);
-  });
-
-  it('survives embeds that cannot be built', async () => {
-    await messageUpdate.execute(msg('a') as never, msg('b', { url: 123 }) as never);
-    expect(send).toHaveBeenCalled();
-  });
-
-  it('only logs human edits inside tripsit', async () => {
+  it('relays events regardless of guild or author', async () => {
     await messageUpdate.execute(msg('a') as never, msg('b', { guild: null }) as never);
     await messageUpdate.execute(msg('a') as never, msg('b', { guild: { id: 'other' } }) as never);
     await messageUpdate.execute(msg('a') as never, msg('b', { author: null }) as never);

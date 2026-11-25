@@ -141,18 +141,19 @@ async function relay(message: Message, suffix: string): Promise<void> {
   if (!RELAYED_MESSAGE_TYPES.has(message.type)) return;
   if (isBridgeWebhookMessage(message)) return;
   if (findGateways('discord', message.channelId).length === 0) return;
+  // Webhooks have no member role that can establish the author's bridge consent.
+  if (message.webhookId || !env.ROLE_IRC_BRIDGE) return;
+
+  const { guild } = message;
+  const authorId = message.author.id;
+  await guild.members.fetch(authorId);
+  // Read the current member on every check, rather than retaining a pre-update role snapshot.
+  const canSend = () => discordClient.isReady()
+    && (guild.members.cache.get(authorId)?.roles.cache.has(env.ROLE_IRC_BRIDGE) ?? false);
+  if (!canSend()) return;
 
   const text = discordMessageText(message);
   if (!text) return;
-
-  // Users can opt out with /privacy bridge. A failed lookup throws, so we fail closed and don't relay.
-  if (!message.author.bot) {
-    const author = await db.users.findUnique({
-      where: { discord_id: message.author.id },
-      select: { irc_bridge_opt_out: true },
-    });
-    if (author?.irc_bridge_opt_out) return;
-  }
 
   // Recheck live permissions after async lookups: mapping sync may still be queued.
   const automatic = getMappingRows().some(row => row.discord_channel_id === message.channelId
@@ -170,6 +171,7 @@ async function relay(message: Message, suffix: string): Promise<void> {
     text: `${text}${suffix}`,
     avatarUrl: message.author.displayAvatarURL(),
     id: message.id,
+    canSend,
   });
 }
 

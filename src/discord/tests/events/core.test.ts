@@ -8,7 +8,6 @@ import { interactionCreate } from '../../events/interactionCreate';
 import { messageCreate } from '../../events/messageCreate';
 import { voiceStateUpdate } from '../../events/voiceStateUpdate';
 import { selectMenu } from '../../events/selectMenu';
-import modalSubmit from '../../events/modalSubmit';
 import { botBannedUsers } from '../../utils/populateBotBans';
 import { sleep } from '../../utils/sleep';
 import { dbMock } from '../../../vitest/utils/mockDb';
@@ -17,7 +16,6 @@ import { flushPromises, stubInstance } from '../../../vitest/utils/discordStubs'
 const e = env as unknown as Record<string, string>;
 
 const mocks = vi.hoisted(() => ({
-  aiMessage: vi.fn(),
   commandRun: vi.fn(),
   autocomplete: vi.fn(),
   buttonClick: vi.fn(),
@@ -50,9 +48,7 @@ const mocks = vi.hoisted(() => ({
   rpgMarketChange: vi.fn(),
   applicationStart: vi.fn(),
   applicationReject: vi.fn(),
-  aiMenu: vi.fn(),
   purgeMenu: vi.fn(),
-  userSettings: vi.fn(),
   context: vi.fn(),
 }));
 
@@ -88,10 +84,7 @@ vi.mock('../../utils/modHistory', () => ({ modHistoryButton: mocks.modHistoryBut
 vi.mock('../../commands/global/d.help', () => ({ helpMenu: mocks.helpMenu }));
 vi.mock('../../commands/guild/d.rpg', () => ({ rpgHome: mocks.rpgHome, rpgMarketChange: mocks.rpgMarketChange }));
 vi.mock('../../utils/application', () => ({ applicationStart: mocks.applicationStart, applicationReject: mocks.applicationReject }));
-vi.mock('../../commands/global/d.ai', () => ({ aiMenu: mocks.aiMenu, aiReaction: vi.fn(), aiMessage: mocks.aiMessage }));
 vi.mock('../../commands/guild/d.purge', () => ({ purgeMenu: mocks.purgeMenu }));
-vi.mock('../../utils/ai', () => ({ AiPage: { userSettings: mocks.userSettings }, AiText: {} }));
-vi.mock('../../utils/ai/modals', () => ({ AiModal: { ID: {} } }));
 vi.mock('../../utils/context', () => ({ default: mocks.context }));
 vi.mock('../../utils/populateBotBans', async importOriginal => ({ ...(await importOriginal<object>()), populateBans: mocks.populate }));
 vi.mock('timers/promises', () => ({ setTimeout: vi.fn(async () => undefined) }));
@@ -259,8 +252,7 @@ describe('interactionCreate', () => {
     expect(mocks.commandRun).not.toHaveBeenCalled();
   });
 
-  it('runs slash commands and records usage with their parameters', async () => {
-    dbMock.command_usage.create.mockResolvedValue({ id: 'usage1' } as never);
+  it('runs slash commands and records aggregate usage by command only', async () => {
     const i = base({
       isChatInputCommand: () => true,
       commandName: 'drug',
@@ -282,17 +274,14 @@ describe('interactionCreate', () => {
     });
     await interactionCreate.execute(i as never);
     expect(mocks.commandRun).toHaveBeenCalled();
-    expect(dbMock.command_usage.create).toHaveBeenCalledWith({ data: expect.objectContaining({ command: 'drug info', channel_id: 'c', guild_id: 'g' }) });
+    expect(dbMock.command_usage.upsert).toHaveBeenCalledWith({
+      where: { command: 'drug info' },
+      create: { command: 'drug info', usage_count: 1, last_used_at: expect.any(Date) },
+      update: { usage_count: { increment: 1 }, last_used_at: expect.any(Date) },
+    });
     // 'g' is not the TripSit guild, so the user gets no record
     expect(dbMock.users.upsert).not.toHaveBeenCalled();
     expect(dbMock.users.update).not.toHaveBeenCalled();
-    expect(dbMock.command_usage_parameter.createMany).toHaveBeenCalledWith({
-      data: [
-        { name: 'substance', value: 'lsd', usage_id: 'usage1' },
-        { name: 'user', value: '', usage_id: 'usage1' },
-        { name: 'ephemeral', value: 'true', usage_id: 'usage1' },
-      ],
-    });
   });
 
   it.each(['idose', 'moderate', 'report'])('never records usage of the data-sensitive /%s command', async commandName => {
@@ -304,12 +293,26 @@ describe('interactionCreate', () => {
     });
     await interactionCreate.execute(i as never);
     expect(mocks.commandRun).toHaveBeenCalled();
-    expect(dbMock.command_usage.create).not.toHaveBeenCalled();
-    expect(dbMock.command_usage_parameter.createMany).not.toHaveBeenCalled();
+    expect(dbMock.command_usage.upsert).not.toHaveBeenCalled();
+  });
+
+  it('does not recreate a profile while privacy deletion runs', async () => {
+    const i = base({
+      isChatInputCommand: () => true,
+      commandName: 'privacy',
+      guildId: e.DISCORD_GUILD_ID,
+      options: { getSubcommand: () => 'delete', data: [] },
+    });
+    await interactionCreate.execute(i as never);
+    expect(mocks.commandRun).toHaveBeenCalled();
+    expect(dbMock.users.upsert).not.toHaveBeenCalled();
+    expect(dbMock.command_usage.upsert).toHaveBeenCalledWith(expect.objectContaining({
+      where: { command: 'privacy delete' },
+    }));
   });
 
   it('keeps the command running when usage cannot be recorded', async () => {
-    dbMock.command_usage.create.mockRejectedValue(new Error('db down'));
+    dbMock.command_usage.upsert.mockRejectedValue(new Error('db down'));
     const i = base({
       isChatInputCommand: () => true,
       commandName: 'ping',
@@ -317,11 +320,9 @@ describe('interactionCreate', () => {
       options: { getSubcommand: () => null, data: [] },
     });
     await expect(interactionCreate.execute(i as never)).resolves.toBeUndefined();
-    expect(dbMock.command_usage_parameter.createMany).not.toHaveBeenCalled();
   });
 
   it('records and touches the user only for slash commands in the TripSit guild', async () => {
-    dbMock.command_usage.create.mockResolvedValue({ id: 'u3' } as never);
     const i = base({
       isChatInputCommand: () => true,
       commandName: 'ping',
@@ -334,7 +335,6 @@ describe('interactionCreate', () => {
   });
 
   it('handles slash commands without subcommand, channel or guild', async () => {
-    dbMock.command_usage.create.mockResolvedValue({ id: 'u2' } as never);
     const i = base({
       isChatInputCommand: () => true,
       commandName: 'ping',
@@ -343,7 +343,11 @@ describe('interactionCreate', () => {
       options: { getSubcommand: () => null, data: [] },
     });
     await interactionCreate.execute(i as never);
-    expect(dbMock.command_usage.create).toHaveBeenCalledWith({ data: expect.objectContaining({ command: 'ping', channel_id: '0', guild_id: null }) });
+    expect(dbMock.command_usage.upsert).toHaveBeenCalledWith({
+      where: { command: 'ping' },
+      create: { command: 'ping', usage_count: 1, last_used_at: expect.any(Date) },
+      update: { usage_count: { increment: 1 }, last_used_at: expect.any(Date) },
+    });
   });
 
   it('routes context menus, autocomplete, components and modals', async () => {
@@ -373,14 +377,13 @@ describe('messageCreate', () => {
   });
 
   beforeEach(() => {
-    mocks.aiMessage.mockResolvedValue(undefined);
     dbMock.users.upsert.mockResolvedValue({ id: 'uid', discord_bot_ban: false, last_seen_at: new Date() } as never);
   });
 
   it('runs every handler for human messages in tripsit', async () => {
     const m = msg();
     await messageCreate.execute(m as never);
-    [mocks.messageCommand, mocks.relayDiscordMessage, mocks.aiMessage, mocks.countMessage, mocks.youAre, mocks.karma,
+    [mocks.messageCommand, mocks.relayDiscordMessage, mocks.countMessage, mocks.youAre, mocks.karma,
       mocks.helperActivity, mocks.trackResponse, mocks.nightsWatch, mocks.announcements].forEach(fn => expect(fn).toHaveBeenCalledWith(m));
     expect(mocks.experience).toHaveBeenCalledWith(m.member, 'GENERAL', 'TEXT', m.channel);
   });
@@ -406,13 +409,7 @@ describe('messageCreate', () => {
     mocks.trackResponse.mockRejectedValueOnce(new Error('database unavailable'));
     const m = msg();
     await expect(messageCreate.execute(m as never)).resolves.toBeUndefined();
-    expect(mocks.aiMessage).toHaveBeenCalledWith(m);
     expect(mocks.announcements).toHaveBeenCalledWith(m);
-  });
-
-  it('logs instead of crashing when AI handling rejects', async () => {
-    mocks.aiMessage.mockRejectedValue(new Error('boom'));
-    await expect(messageCreate.execute(msg() as never)).resolves.toBeUndefined();
   });
 
   it('does not run message commands for bot-banned users', async () => {
@@ -436,7 +433,6 @@ describe('messageCreate', () => {
     dbMock.users.upsert.mockResolvedValue({ discord_bot_ban: false } as never);
     await messageCreate.execute(msg({ author: { id: 'b', bot: true } }) as never);
     expect(mocks.countMessage).not.toHaveBeenCalled();
-    expect(mocks.aiMessage).not.toHaveBeenCalled();
     expect(mocks.messageCommand).toHaveBeenCalledTimes(3);
   });
 });
@@ -520,14 +516,13 @@ describe('selectMenu', () => {
     expect(handler()).toHaveBeenCalled();
   });
 
-  it('routes AI menus for string and channel selects', async () => {
-    mocks.aiMenu.mockResolvedValue({ content: 'ai' });
+  it('ignores retired AI menus for string and channel selects', async () => {
     const s = menu('AIsettings');
     await selectMenu(s as never);
-    expect(s.update).toHaveBeenCalledWith({ content: 'ai' });
+    expect(s.update).not.toHaveBeenCalled();
     const c = menu('AIchannel', 'channel');
     await selectMenu(c as never);
-    expect(c.update).toHaveBeenCalled();
+    expect(c.update).not.toHaveBeenCalled();
     await selectMenu(menu('other', 'channel') as never);
   });
 
@@ -551,18 +546,6 @@ describe('selectMenu', () => {
     expect(mocks.purgeMenu).toHaveBeenCalled();
     await selectMenu(menu('other', 'user') as never);
     expect(mocks.purgeMenu).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe('modalSubmit', () => {
-  it('refreshes AI settings for AI modals only', async () => {
-    mocks.userSettings.mockResolvedValue({ content: 'settings' });
-    const ai = { customId: 'AIname', editReply: vi.fn() };
-    await modalSubmit(ai as never);
-    expect(ai.editReply).toHaveBeenCalledWith({ content: 'settings' });
-    const other = { customId: 'reportModal', editReply: vi.fn() };
-    await modalSubmit(other as never);
-    expect(other.editReply).not.toHaveBeenCalled();
   });
 });
 

@@ -1,5 +1,5 @@
 import {
-  getAiChatUserIds, getAiConsentedIds, hasAiConsent, isAiChatAllowed,
+  getAiConsentedIds, hasAiConsent,
 } from '../../utils/aiConsent';
 import { dbMock } from '../../../vitest/utils/mockDb';
 
@@ -31,16 +31,5 @@ describe('aiConsent', () => {
     expect(await hasAiConsent('a')).toBe(true);
     dbMock.users.findMany.mockResolvedValueOnce([] as never);
     expect(await hasAiConsent('b')).toBe(false);
-  });
-
-  it('opens AI chat to the owner only, and still needs consent', async () => {
-    const e = env as unknown as Record<string, string>;
-    expect(isAiChatAllowed(e.DISCORD_OWNER_ID)).toBe(true);
-    expect(isAiChatAllowed('someone-else')).toBe(false);
-    dbMock.users.findMany.mockResolvedValueOnce([{ discord_id: e.DISCORD_OWNER_ID }] as never);
-    expect(await getAiChatUserIds([e.DISCORD_OWNER_ID, 'someone-else'])).toEqual(new Set([e.DISCORD_OWNER_ID]));
-    expect(dbMock.users.findMany).toHaveBeenLastCalledWith(expect.objectContaining({
-      where: expect.objectContaining({ discord_id: { in: [e.DISCORD_OWNER_ID] } }),
-    }));
   });
 });

@@ -79,6 +79,23 @@ afterEach(() => {
 });
 
 describe('IRC bridge target', () => {
+  it('drops queued lines after consent is withdrawn without blocking other senders', async () => {
+    let consent = true;
+    await sendToIrc(outgoing({ text: 'first\nsecond', canSend: () => consent }));
+    expect(client.raw).toHaveBeenCalledTimes(1);
+    consent = false;
+    await sendToIrc(outgoing({ text: 'other sender' }));
+    await vi.advanceTimersByTimeAsync(2 * bridge.IRC_MESSAGE_DELAY_MS);
+    expect(client.raw).toHaveBeenCalledTimes(2);
+    expect(client.raw).toHaveBeenLastCalledWith('RELAYMSG', '#lounge', RELAYED_NICK, 'other sender');
+  });
+
+  it('checks consent even for the first line', async () => {
+    await sendToIrc(outgoing({ canSend: () => false }));
+    expect(client.raw).toHaveBeenCalledTimes(0);
+    expect(client.say).not.toHaveBeenCalled();
+  });
+
   it('relays with RELAYMSG as name/label', async () => {
     await sendToIrc(outgoing());
     expect(client.raw).toHaveBeenCalledWith('RELAYMSG', '#lounge', RELAYED_NICK, 'hello');

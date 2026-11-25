@@ -24,6 +24,23 @@ describe('About', () => {
     expect(About.disclaimer).toContain('medical emergency');
   });
 
+  it('discloses external storage, sharing, privacy controls and deletion limits', () => {
+    expect(About.privacy).toContain('outside Discord');
+    expect(About.privacy).toContain('only while the author has the IRC Bridge role');
+    expect(About.privacy).toContain('Channels & Roles');
+    expect(About.privacy).toContain('including queued messages');
+    expect(About.privacy).not.toContain('/privacy bridge');
+    expect(About.privacy).toContain('Translation sends the selected message to OpenAI');
+    expect(About.privacy).toContain('RPG flair review');
+    expect(About.privacy).toContain('or delete ordinary Discord messages');
+    expect(About.privacy).toContain('AI chat has been removed');
+    expect(About.privacy).toContain('removes the IRC Bridge role');
+    expect(About.privacy).toContain('moderation history');
+    expect(About.privacy).toContain('messages containing your Discord ID in TripBot');
+    expect(About.privacy).toContain(About.botEmail);
+    expect(About.privacy).not.toContain('never sell or share');
+  });
+
   it('has setup guides for each guild system', () => {
     [About.applicationsDesc, About.techhelpDesc, About.ticketboothDesc, About.tripsitSessionsDesc].forEach(desc => {
       expect(desc).toContain('How do I set it up?');

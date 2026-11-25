@@ -3,7 +3,6 @@ import {
 } from '../@types/eventDef';
 import { chitragupta } from '../utils/chitragupta';
 import { bestOf } from '../utils/bestOfTripsit';
-import { aiReaction } from '../commands/global/d.ai';
 
 const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
 
@@ -25,8 +24,6 @@ export const messageReactionAdd: MessageReactionAddEvent = {
     if (!messageReaction.message.guild) return; // Ignore DMs
     // log.info(F, stripIndents`${user} added ${messageReaction.emoji.name} on to \
     //     ${messageReaction.message.author?.displayName}'s message`);
-    // AI audit stuff comes first cuz this can happen on other guilds
-    await aiReaction(messageReaction, user);
 
     // Only run the rest on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (messageReaction.message.guild?.id !== env.DISCORD_GUILD_ID) return;

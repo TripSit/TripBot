@@ -332,9 +332,10 @@ async function seedDiscordGuilds(): Promise<void> {
 async function seed() {
   await Promise.all([
     // These need to happen in any order before removing...
+    prisma.ai_info.deleteMany({}), // users
+    prisma.ai_moderation.deleteMany({}), // discord_guilds
     prisma.reaction_roles.deleteMany({}), // discord_guilds
     prisma.counting.deleteMany({}), // discord_guilds
-    prisma.ai_moderation.deleteMany({}), // discord_guilds
     prisma.rpg_inventory.deleteMany({}), // discord_guilds
     prisma.personas.deleteMany({}), // discord_guilds
     prisma.user_actions.deleteMany({}), // users
