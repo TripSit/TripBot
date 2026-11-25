@@ -339,7 +339,7 @@ describe('relayDiscordMessage', () => {
   it('does not relay users without the IRC Bridge role', async () => {
     relayMembers.get('author-1')?.roles.cache.clear();
     await chatBridge.relayDiscordMessage(message());
-    expect(ircSend).not.toHaveBeenCalled();
+    expect(ircSend).toHaveBeenCalledTimes(0);
   });
 
   it('uses the role alone without a database consent lookup', async () => {
@@ -358,12 +358,12 @@ describe('relayDiscordMessage', () => {
   it('fails closed when the member is missing', async () => {
     relayMembers.clear();
     await chatBridge.relayDiscordMessage(message());
-    expect(ircSend).not.toHaveBeenCalled();
+    expect(ircSend).toHaveBeenCalledTimes(0);
   });
 
   it('never relays webhook content even when its author has the role', async () => {
     await chatBridge.relayDiscordMessage(message({ webhookId: 'other-webhook' }));
-    expect(ircSend).not.toHaveBeenCalled();
+    expect(ircSend).toHaveBeenCalledTimes(0);
     expect(memberFetch).not.toHaveBeenCalled();
   });
 
@@ -417,7 +417,7 @@ describe('relayDiscordEdit', () => {
   it('does not relay edits after consent is withdrawn', async () => {
     relayMembers.get('author-1')?.roles.cache.clear();
     await chatBridge.relayDiscordEdit(message(), edited());
-    expect(ircSend).not.toHaveBeenCalled();
+    expect(ircSend).toHaveBeenCalledTimes(0);
   });
 
   it('fetches partial messages before relaying', async () => {

@@ -69,7 +69,8 @@ export const aiCommand: SlashCommand = {
         await db.ai_info.updateMany({ where: { user_id: user.id }, data });
       }
     }
-    const confirmation = agree === null ? '' : `\n\nYour agreement was ${agree ? 'saved' : 'revoked'}.`;
+    let confirmation = '';
+    if (agree !== null) confirmation = `\n\nYour agreement was ${agree ? 'saved' : 'revoked'}.`;
     await interaction.editReply({ content: policies[subcommand] + confirmation });
     return true;
   },

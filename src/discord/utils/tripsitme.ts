@@ -282,6 +282,32 @@ function tripsitterButtons(
   return row;
 }
 
+/** Posts the "is receiving help" note in the meta channel. Returns false when permissions block the post. */
+async function notifyOwnedInMeta(
+  guild: Guild,
+  metaChannelId: string,
+  defaultMetaChannelId: string | null,
+  actor: GuildMember,
+  target: GuildMember,
+): Promise<boolean> {
+  let metaChannel = {} as TextChannel;
+  try {
+    metaChannel = await guild.channels.fetch(metaChannelId) as TextChannel;
+  } catch {
+    // Meta channel deleted
+  }
+  if (!metaChannel.id) return true;
+  if (!await ensurePermissions(metaChannel, ['SendMessages' as PermissionResolvable], F)) return false;
+
+  await metaChannel.send({
+    content: stripIndents`${actor.displayName} has indicated that ${target.toString()} is receiving help!`,
+  });
+  if (metaChannelId !== defaultMetaChannelId) {
+    setTicketChannelName(metaChannel, ticketChannelName('inProgress', target.displayName, 'discussion'));
+  }
+  return true;
+}
+
 export async function tripsitmeOwned(
   interaction:ButtonInteraction,
 ) {
@@ -316,23 +342,8 @@ export async function tripsitmeOwned(
 
   const metaChannelId = ticketData.meta_thread_id ?? guildData.channel_tripsitmeta;
   if (metaChannelId) {
-    let metaChannel = {} as TextChannel;
-    try {
-      metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
-    } catch {
-      // Meta channel deleted
-    }
-
-    if (metaChannel.id) {
-      if (!await ensurePermissions(metaChannel, ['SendMessages' as PermissionResolvable], F)) return;
-
-      await metaChannel.send({
-        content: stripIndents`${actor.displayName} has indicated that ${target.toString()} is receiving help!`,
-      });
-      if (metaChannelId !== guildData.channel_tripsitmeta) {
-        setTicketChannelName(metaChannel, ticketChannelName('inProgress', target.displayName, 'discussion'));
-      }
-    }
+    const sent = await notifyOwnedInMeta(interaction.guild, metaChannelId, guildData.channel_tripsitmeta, actor, target);
+    if (!sent) return;
   }
 
   // Update the ticket's name

@@ -92,7 +92,7 @@ describe('IRC bridge target', () => {
 
   it('checks consent even for the first line', async () => {
     await sendToIrc(outgoing({ canSend: () => false }));
-    expect(client.raw).not.toHaveBeenCalled();
+    expect(client.raw).toHaveBeenCalledTimes(0);
     expect(client.say).not.toHaveBeenCalled();
   });
 
