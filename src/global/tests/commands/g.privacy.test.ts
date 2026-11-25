@@ -49,7 +49,10 @@ describe('privacy get', () => {
     expect(out).toContain('Mindset role is only stored');
     expect(out).toContain('You have 1 Idose records');
     expect(out).toContain('You have 2 experience records');
+    // Points at commands that exist: /levels and /remind_me get
+    expect(out).toContain('Use /levels to see your levels!');
     expect(out).toContain('You have 3 reminders');
+    expect(out).toContain('Use /remind_me get to see specifics!');
     expect(dbMock.users.update).not.toHaveBeenCalled();
   });
 

@@ -759,12 +759,12 @@ describe('moodle', () => {
     return { guild, member, content };
   }
 
-  it('congratulates and rewards members who completed the course', async () => {
+  it('rewards members who completed the course privately, without a channel announcement', async () => {
     mocks.profile.mockResolvedValue({ completedCourses: [COURSE] });
     const { member, content } = setup();
     const { run } = await start();
     await run('moodle');
-    expect(content.send).toHaveBeenCalled();
+    expect(content.send).not.toHaveBeenCalled();
     expect(member.roles.add).toHaveBeenCalledWith(expect.objectContaining({ id: e.ROLE_TS100 }));
     expect(member.user.send).toHaveBeenCalled();
   });
@@ -789,10 +789,10 @@ describe('moodle', () => {
 
   it('does nothing for members who already have the role', async () => {
     mocks.profile.mockResolvedValue({ completedCourses: [COURSE] });
-    const { member, content } = setup({ hasRole: true });
+    const { member } = setup({ hasRole: true });
     const { run } = await start();
     await run('moodle');
-    expect(content.send).not.toHaveBeenCalled();
+    expect(member.user.send).not.toHaveBeenCalled();
     expect(member.roles.add).not.toHaveBeenCalled();
   });
 
