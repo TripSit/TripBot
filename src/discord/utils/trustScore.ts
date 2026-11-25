@@ -1,14 +1,6 @@
 /* eslint-disable max-len */
-import { stripIndents } from 'common-tags';
-import {
-  DiscordAPIError,
-  Guild,
-  GuildBan,
-  PermissionResolvable,
-} from 'discord.js';
-import { checkGuildPermissions } from './checkPermissions';
-
 // Separate file: modHistory needs this and modUtils imports modHistory.
+// Only the account's own age and avatar are used: bans and memberships in other guilds are deliberately not checked.
 export default tripSitTrustScore;
 
 type ScoreResult = { score: number; reasoning: string };
@@ -32,84 +24,6 @@ function scoreAccountAge(accountAgeMs: number): ScoreResult {
   return { score, reasoning: `+${score} | Account was created ${description}\n` };
 }
 
-async function scoreMutualGuilds(targetId: string, guildsPromise: Promise<unknown>): Promise<ScoreResult> {
-  const [, targetInGuilds] = await Promise.all([
-    guildsPromise, // Await the fetched guilds
-    Promise.all(discordClient.guilds.cache.map(async guild => {
-      if (guild.members.cache.get(targetId)) {
-        return guild;
-      }
-      return null;
-    })),
-  ]);
-  const mutualGuilds = targetInGuilds.filter(item => item);
-
-  if (mutualGuilds.length > 0) {
-    return {
-      score: mutualGuilds.length,
-      reasoning: `+${mutualGuilds.length} | I currently share ${mutualGuilds.length} guilds with them\n`,
-    };
-  }
-  return { score: 0, reasoning: '+0 | Account is only in this guild, that i can tell\n' };
-}
-
-async function scoreBans(targetId: string): Promise<ScoreResult> {
-  await discordClient.guilds.fetch();
-  const notFoundGuilds = [] as Guild[];
-  const errorGuilds = [] as Guild[];
-
-  // Separate promises for checking permissions and bans
-  const permissionsPromises = discordClient.guilds.cache.map(guild => checkGuildPermissions(guild, ['BanMembers' as PermissionResolvable]));
-  const bansPromises = discordClient.guilds.cache.map(async guild => {
-    try {
-      return guild.bans.cache.get(targetId);
-    } catch (err: unknown) {
-      if ((err as DiscordAPIError).code === 10026) {
-        notFoundGuilds.push(guild);
-        return null;
-      }
-      errorGuilds.push(guild);
-      return null;
-    }
-  });
-
-  const [permissionsResults, bannedTest] = await Promise.all([
-    Promise.all(permissionsPromises),
-    Promise.all(bansPromises),
-  ]);
-
-  // count how many 'banned' appear in the array
-  const bannedGuilds = bannedTest.filter(item => item) as GuildBan[];
-
-  // count how many i didn't have permission to check
-  const noPermissionGuilds = permissionsResults.filter(item => !item.hasPermission);
-  const checkedGuildNumber = bannedTest.length - noPermissionGuilds.length;
-
-  if (bannedGuilds.length === 0) {
-    return { score: 0, reasoning: stripIndents`+0 | Not banned in ${checkedGuildNumber} other guilds that I can see.` };
-  }
-
-  const tsBanReasons = (await Promise.all(bannedGuilds.map(async banData => {
-    if (banData.partial) {
-      await banData.fetch();
-    }
-
-    let reasonStr = ': No reason found.';
-    if (banData.reason) {
-      reasonStr = `: ${banData.reason}`;
-    }
-
-    return `${banData.guild.name}${reasonStr}`;
-  }))).join('\n');
-
-  return {
-    score: -(bannedGuilds.length * 5),
-    reasoning: stripIndents`-${(bannedGuilds.length * 5)} | Banned in least ${bannedGuilds.length} of the ${checkedGuildNumber} guilds I can check.
-    ${tsBanReasons}
-    `,
-  };
-}
-
 export async function tripSitTrustScore(
   targetId: string,
 ): Promise<{
@@ -117,7 +31,6 @@ export async function tripSitTrustScore(
     tsReasoning: string;
   }> {
   const targetPromise = discordClient.users.fetch(targetId);
-  const guildsPromise = discordClient.guilds.fetch();
 
   const target = await targetPromise; // Await here since target is needed for the calculations below
   // Calculate how like it is that this user is a trust.
@@ -128,12 +41,8 @@ export async function tripSitTrustScore(
     ? { score: 1, reasoning: '+1 | Account has a profile picture\n' }
     : { score: 0, reasoning: '+0 | Account does not have a profile picture\n' };
 
-  // Check how many guilds the member is in
-  const mutual = await scoreMutualGuilds(target.id, guildsPromise);
-  const bans = await scoreBans(target.id);
-
   return {
-    trustScore: age.score + avatar.score + mutual.score + bans.score,
-    tsReasoning: age.reasoning + avatar.reasoning + mutual.reasoning + bans.reasoning,
+    trustScore: age.score + avatar.score,
+    tsReasoning: age.reasoning + avatar.reasoning,
   };
 }

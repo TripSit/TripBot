@@ -45,17 +45,17 @@ describe('idose', () => {
     volume: 100, units: 'µG', substance: 'LSD', roa: 'ORAL',
   };
 
-  it('records doses, privately in guilds and in the DM otherwise', async () => {
+  it('records doses with an ephemeral reply and never sends a DM', async () => {
     mocks.idose.mockResolvedValue([{ name: 'Success', value: 'ok' }]);
     const stub = slashStub({ subcommand: 'set', options: { ...set, offset: '1h' } });
     expect(await dIdose.execute(stub as never)).toBe(true);
     expect(stub.deferReply).toHaveBeenCalledWith({ flags: 64 });
     expect(embedOf(stub).title).toBe('New iDose entry:');
     expect(embedOf(stub).fields?.[0].name).toContain('100 µG of LSD Oral');
-    expect(stub.user.send).toHaveBeenCalled();
+    expect(stub.user.send).not.toHaveBeenCalled();
     const dm = slashStub({ subcommand: 'set', options: set, channel: { type: 1 } });
     await dIdose.execute(dm as never);
-    expect(dm.deferReply).toHaveBeenCalledWith({ flags: undefined });
+    expect(dm.deferReply).toHaveBeenCalledWith({ flags: 64 });
     expect(dm.user.send).not.toHaveBeenCalled();
   });
 

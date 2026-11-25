@@ -19,23 +19,18 @@ describe('AI consent controls without chat', () => {
     const stub = slashStub({ subcommand });
     expect(await aiCommand.execute(stub as never)).toBe(true);
     expect(stub.deferReply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral });
-    expect(stub.editReply).toHaveBeenCalledWith({ content: expect.stringContaining('agree:True') });
+    expect(stub.editReply).toHaveBeenCalledWith({ content: expect.stringContaining('agree:False') });
     expect(dbMock.ai_info.upsert).not.toHaveBeenCalled();
     expect(dbMock.ai_info.updateMany).not.toHaveBeenCalled();
     expect(dbMock.users.upsert).not.toHaveBeenCalled();
   });
 
-  it.each([
-    ['tos', 'ai_tos_agree'], ['privacy', 'ai_privacy_agree'],
-  ])('saves only the selected %s agreement', async (subcommand, field) => {
+  it.each(['tos', 'privacy'])('does not record new %s agreement while AI is disabled', async subcommand => {
     const stub = slashStub({ subcommand, options: { agree: true } });
     await aiCommand.execute(stub as never);
-    expect(dbMock.ai_info.upsert).toHaveBeenCalledWith({
-      where: { user_id: CONSENT_USER_ID },
-      create: { user_id: CONSENT_USER_ID, [field]: expect.any(Date) },
-      update: { [field]: expect.any(Date) },
-    });
-    expect(stub.editReply).toHaveBeenCalledWith({ content: expect.stringContaining('agreement was saved') });
+    expect(dbMock.ai_info.upsert).not.toHaveBeenCalled();
+    expect(dbMock.ai_info.updateMany).not.toHaveBeenCalled();
+    expect(stub.editReply).toHaveBeenCalledWith({ content: expect.stringContaining('no agreement was saved') });
   });
 
   it.each([
@@ -59,7 +54,7 @@ describe('AI consent controls without chat', () => {
   it('does not revive retired chat controls invoked from stale command definitions', async () => {
     const stub = slashStub({ subcommand: 'setup', options: { agree: true } });
     expect(await aiCommand.execute(stub as never)).toBe(false);
-    expect(stub.editReply).toHaveBeenCalledWith({ content: expect.stringContaining('chat has been removed') });
+    expect(stub.editReply).toHaveBeenCalledWith({ content: expect.stringContaining('AI features have been removed') });
     expect(dbMock.ai_info.upsert).not.toHaveBeenCalled();
   });
 });

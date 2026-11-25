@@ -668,6 +668,8 @@ async function checkMoodle() { // eslint-disable-line
                     Finally, if you have any feedback on the course, please let us know in the ${channelContent} channel, or on the forum in the course!
 
                     Thanks so much for taking the time to learn with us, we hope you enjoyed it!
+
+                    You're receiving this one-time message because you linked your TripSit Learn account with \`/learn\` and completed this course.
                     `),
                 ],
               });

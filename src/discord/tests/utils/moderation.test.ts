@@ -1,15 +1,10 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import axios from 'axios';
 import { EmbedBuilder } from 'discord.js';
 import type { Message, MessageReaction, User } from 'discord.js';
 import { paginationEmbed } from '../../utils/pagination';
 import { thoughtPolice } from '../../utils/thoughtPolice';
-import { isToxic, monitorToxicity } from '../../utils/moderateHatespeech';
 import { chitragupta } from '../../utils/chitragupta';
 import { dbMock } from '../../../vitest/utils/mockDb';
-
-vi.mock('axios');
-const e = env as unknown as Record<string, string | number>;
 
 describe('paginationEmbed', () => {
   const pages = () => [new EmbedBuilder().setTitle('a'), new EmbedBuilder().setTitle('b'), new EmbedBuilder().setTitle('c')];
@@ -141,125 +136,6 @@ describe('thoughtPolice', () => {
     await thoughtPolice(message);
     expect(raw.delete).not.toHaveBeenCalled();
     expect(channelSend).not.toHaveBeenCalled();
-  });
-});
-
-describe('isToxic', () => {
-  const original = { token: e.MODERATE_HATESPEECH_TOKEN, normal: e.MODERATE_HATESPEECH_NORMAL_CONFIDENCE, flag: e.MODERATE_HATESPEECH_FLAG_CONFIDENCE };
-  beforeEach(() => {
-    e.MODERATE_HATESPEECH_TOKEN = 'token';
-    e.MODERATE_HATESPEECH_NORMAL_CONFIDENCE = 0.8;
-    e.MODERATE_HATESPEECH_FLAG_CONFIDENCE = 0.7;
-  });
-  afterEach(() => {
-    e.MODERATE_HATESPEECH_TOKEN = original.token;
-    e.MODERATE_HATESPEECH_NORMAL_CONFIDENCE = original.normal;
-    e.MODERATE_HATESPEECH_FLAG_CONFIDENCE = original.flag;
-  });
-
-  it('does nothing without configuration', async () => {
-    e.MODERATE_HATESPEECH_TOKEN = '';
-    expect(await isToxic('x')).toEqual({ class: null, confidence: 0, isFlaggedOrLowConfidence: false });
-    e.MODERATE_HATESPEECH_TOKEN = 'token';
-    e.MODERATE_HATESPEECH_NORMAL_CONFIDENCE = 0;
-    expect((await isToxic('x')).isFlaggedOrLowConfidence).toBe(false);
-    expect(axios.post).not.toHaveBeenCalled();
-  });
-
-  it.each([
-    ['confident flag', { class: 'flag', confidence: 0.9 }, true],
-    ['weak flag', { class: 'flag', confidence: 0.5 }, false],
-    ['confident normal', { class: 'normal', confidence: 0.95 }, false],
-    ['unsure normal', { class: 'normal', confidence: 0.5 }, true],
-  ])('classifies a %s', async (_label, data, flagged) => {
-    vi.mocked(axios.post).mockResolvedValue({ data });
-    expect(await isToxic('text')).toEqual({ ...data, isFlaggedOrLowConfidence: flagged });
-  });
-
-  it('fails open when the API errors', async () => {
-    vi.mocked(axios.post).mockRejectedValue(new Error('timeout'));
-    expect(await isToxic('text')).toEqual({ class: null, confidence: 0, isFlaggedOrLowConfidence: false });
-  });
-});
-
-describe('monitorToxicity', () => {
-  const original = {
-    token: e.MODERATE_HATESPEECH_TOKEN, normal: e.MODERATE_HATESPEECH_NORMAL_CONFIDENCE, flag: e.MODERATE_HATESPEECH_FLAG_CONFIDENCE, env: e.NODE_ENV,
-  };
-  beforeEach(() => {
-    e.MODERATE_HATESPEECH_TOKEN = 'token';
-    e.MODERATE_HATESPEECH_NORMAL_CONFIDENCE = 0.8;
-    e.MODERATE_HATESPEECH_FLAG_CONFIDENCE = 0.7;
-    e.NODE_ENV = 'test';
-  });
-  afterEach(() => {
-    e.MODERATE_HATESPEECH_TOKEN = original.token;
-    e.MODERATE_HATESPEECH_NORMAL_CONFIDENCE = original.normal;
-    e.MODERATE_HATESPEECH_FLAG_CONFIDENCE = original.flag;
-    e.NODE_ENV = original.env;
-  });
-
-  function setup(opts: { reference?: boolean; fetchFails?: boolean } = {}) {
-    const send = vi.fn();
-    (global as unknown as { discordClient: unknown }).discordClient = { channels: { fetch: vi.fn(async () => ({ send })) } };
-    const message = {
-      content: 'bad words',
-      author: '<@a>',
-      url: 'https://m',
-      reference: opts.reference ? { messageId: 'r1' } : null,
-      channel: {
-        messages: {
-          fetch: opts.fetchFails
-            ? vi.fn().mockRejectedValue(new Error('Unknown Message'))
-            : vi.fn(async () => ({ content: 'earlier', author: '<@b>', url: 'https://r' })),
-        },
-      },
-    };
-    return { message: message as unknown as Message, send };
-  }
-
-  it('does nothing for clean messages', async () => {
-    vi.mocked(axios.post).mockResolvedValue({ data: { class: 'normal', confidence: 0.99 } });
-    const { message, send } = setup();
-    await monitorToxicity(message);
-    expect(send).not.toHaveBeenCalled();
-  });
-
-  it('reports flagged messages to the dev log channel outside production', async () => {
-    vi.mocked(axios.post).mockResolvedValue({ data: { class: 'flag', confidence: 0.9 } });
-    const { message, send } = setup();
-    await monitorToxicity(message);
-    const [{ embeds, allowedMentions }] = send.mock.calls[0];
-    expect(embeds[0].description).toContain('**Message:** bad words');
-    expect(embeds[0].description).not.toContain('Replying to');
-    expect(allowedMentions).toEqual({ parse: [] });
-    const channelFetch = (global as unknown as { discordClient: { channels: { fetch: ReturnType<typeof vi.fn> } } }).discordClient.channels.fetch;
-    expect(channelFetch).toHaveBeenCalledWith(e.CHANNEL_BOTSPAM);
-  });
-
-  it('uses the AI mod channel in production and the error channel for uncertain results', async () => {
-    e.NODE_ENV = 'production';
-    vi.mocked(axios.post).mockResolvedValue({ data: { class: 'flag', confidence: 0.9 } });
-    const prod = setup();
-    await monitorToxicity(prod.message);
-    const channelFetch = (global as unknown as { discordClient: { channels: { fetch: ReturnType<typeof vi.fn> } } }).discordClient.channels.fetch;
-    expect(channelFetch).toHaveBeenCalledWith(e.CHANNEL_AIMOD_LOG);
-
-    vi.mocked(axios.post).mockResolvedValue({ data: { class: 'normal', confidence: 0.1 } });
-    const unsure = setup();
-    await monitorToxicity(unsure.message);
-    const unsureFetch = (global as unknown as { discordClient: { channels: { fetch: ReturnType<typeof vi.fn> } } }).discordClient.channels.fetch;
-    expect(unsureFetch).toHaveBeenCalledWith(e.CHANNEL_BOTERRORS);
-  });
-
-  it('includes the replied-to message when available, and survives fetch errors', async () => {
-    vi.mocked(axios.post).mockResolvedValue({ data: { class: 'flag', confidence: 0.9 } });
-    const withReply = setup({ reference: true });
-    await monitorToxicity(withReply.message);
-    expect(withReply.send.mock.calls[0][0].embeds[0].description).toContain('**Replying to**: earlier');
-    const broken = setup({ reference: true, fetchFails: true });
-    await monitorToxicity(broken.message);
-    expect(broken.send.mock.calls[0][0].embeds[0].description).not.toContain('Replying to');
   });
 });
 

@@ -1,16 +1,13 @@
 import { dFeedback, feedbackReportModal } from '../../commands/global/d.feedback';
-import { mTranslate } from '../../commands/global/m.translate';
 import { dRemindme } from '../../commands/global/d.remindme';
 import { lastReply, slashStub, resolvingModal } from '../../../vitest/utils/commandStubs';
 import { flushPromises } from '../../../vitest/utils/discordStubs';
 
 const mocks = vi.hoisted(() => ({
-  aiTranslate: vi.fn(), consent: vi.fn(), remindMe: vi.fn(), paginate: vi.fn(),
+  remindMe: vi.fn(), paginate: vi.fn(),
 }));
 
 vi.mock('../../utils/context', () => ({ default: vi.fn(async () => 'ctx') }));
-vi.mock('../../../global/commands/g.ai', () => ({ aiTranslate: mocks.aiTranslate }));
-vi.mock('../../../global/utils/aiConsent', () => ({ hasAiConsent: mocks.consent }));
 vi.mock('../../../global/commands/g.remindme', () => ({ remindMe: mocks.remindMe }));
 vi.mock('../../utils/pagination', () => ({ paginationEmbed: mocks.paginate, default: mocks.paginate }));
 
@@ -66,32 +63,6 @@ describe('feedback', () => {
     await feedbackReportModal(noChan.stub as never);
     await flushPromises();
     expect(noChan.submit.editReply).not.toHaveBeenCalled();
-  });
-});
-
-describe('Translate (message command)', () => {
-  it('translates the selected message', async () => {
-    mocks.aiTranslate.mockResolvedValue({ response: 'Hello', promptTokens: 1, completionTokens: 1 });
-    mocks.consent.mockResolvedValue(true);
-    const stub = { ...slashStub(), targetMessage: { content: 'Hola', author: { id: 'author1' } } };
-    expect(await mTranslate.execute(stub as never)).toBe(true);
-    expect(mocks.consent).toHaveBeenCalledWith('author1');
-    expect(mocks.aiTranslate).toHaveBeenCalledWith('English', [{ role: 'user', content: 'Hola' }]);
-    expect(JSON.stringify(lastReply(stub))).toContain('Hello');
-  });
-
-  it('refuses to send text from authors who have not agreed to the AI terms', async () => {
-    mocks.aiTranslate.mockClear();
-    mocks.consent.mockResolvedValue(false);
-    const stub = { ...slashStub(), targetMessage: { content: 'Hola', author: { id: 'author2' } } };
-    expect(await mTranslate.execute(stub as never)).toBe(true);
-    expect(mocks.aiTranslate).not.toHaveBeenCalled();
-    expect(JSON.stringify(lastReply(stub))).toContain('agreed to the AI terms');
-  });
-
-  it('does nothing outside guilds', async () => {
-    const stub = { ...slashStub({ guild: null }), targetMessage: { content: 'x' } };
-    expect(await mTranslate.execute(stub as never)).toBe(false);
   });
 });
 

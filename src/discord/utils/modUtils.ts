@@ -1450,6 +1450,8 @@ export async function acknowledgeReportButton(
 
       This was for your report on ${reporteeName}, submitted on <t:${Math.floor(buttonInt.message.createdTimestamp / 1000)}:F>.
 
+      You're receiving this one-time message only because you submitted this report. We won't message you again about it.
+
       Regards,
       Team TripSit
     `);

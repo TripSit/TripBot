@@ -584,7 +584,9 @@ export async function applicationReject(
   const message = stripIndents`Thank you so much for your interest in helping out here at ${interaction.guild.name}. We review all applications with rigor and deep consideration, and the same was true for yours.
   At this time, the team has decided not to move forward, though your application has been saved and will be pulled as needed in the future unless rescinded.
   
-  As we feel you have a right to know, your application was denied because ${rejectionWording}`;
+  As we feel you have a right to know, your application was denied because ${rejectionWording}
+
+  You're receiving this one-time message only because you submitted this application.`;
 
   await target.send(stripIndents`${message}`);
   (interaction.channel as ThreadChannel).setName(`🖤│${target.displayName}'s ${role.name} application!`);
