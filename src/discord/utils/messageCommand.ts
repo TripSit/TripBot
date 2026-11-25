@@ -13,7 +13,6 @@ import {
 import { sleep } from './sleep';
 import { getOrCreateUser } from '../../global/utils/dbRecords';
 import { randomItem } from '../../global/utils/random';
-import { handleCodeAgentRequest } from './codeAgentRequest';
 
 const F = f(__filename); // eslint-disable-line
 
@@ -308,9 +307,6 @@ async function handleMention(context: GuildTextContext): Promise<void> {
   // If the bot was mentioned
   const lowerContent = message.content.toLowerCase();
   const fromOwner = await isBotOwner(message);
-
-  // "@tripbot there's an issue with X, fix it" (developers only; see canUseCodeAgent)
-  if (await handleCodeAgentRequest(message)) return;
 
   if (fromOwner && lowerContent.includes('tokens') && lowerContent.includes('give')) {
     await giveTokens(message);
