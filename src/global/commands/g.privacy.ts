@@ -170,10 +170,10 @@ function describeStoredData(userData: UserRecord, counts: RecordCounts): string 
     response += `\n\nYou have ${counts.doses} Idose records. Use /idose get to see specifics!`;
   }
   if (counts.experience > 0) {
-    response += `\n\nYou have ${counts.experience} experience records. Use /experience get to see specifics!`;
+    response += `\n\nYou have ${counts.experience} experience records. Use /levels to see your levels!`;
   }
   if (counts.reminders > 0) {
-    response += `\n\nYou have ${counts.reminders} reminders. Use /reminders get to see specifics!`;
+    response += `\n\nYou have ${counts.reminders} reminders. Use /remind_me get to see specifics!`;
   }
   if (counts.tickets > 0) response += `\n\nYou have ${counts.tickets} support ticket lifecycle records and any remaining Discord threads.`;
   if (counts.appeals > 0) response += `\n\nYou have ${counts.appeals} moderation appeal records.`;

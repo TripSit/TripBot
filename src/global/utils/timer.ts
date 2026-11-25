@@ -636,16 +636,7 @@ async function checkMoodle() { // eslint-disable-line
               return; // Skip to next course
             }
 
-            if (channelContent) {
-              await (channelContent as TextChannel).send({
-                embeds: [
-                  embedTemplate()
-                    .setColor(Colors.Green)
-                    .setDescription(`Congratulate ${member} on completing "${course}"!`),
-                ],
-              }); // eslint-disable-line
-            }
-
+            // Completions are not announced in a server channel: only the member is told, by DM below.
             if (!member.roles.cache.has(env.ROLE_NEEDS_HELP)) {
               await member.roles.add(role);
               log.info(F, `Gave ${member.user.username} the ${role.name} role`);
