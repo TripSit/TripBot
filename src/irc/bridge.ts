@@ -210,6 +210,11 @@ export function registerIrcBridge(client: Client): void {
       return;
     }
     if (command !== 'FAIL' || params[0] !== 'RELAYMSG') return;
+    if (params[1] !== 'PRIVS_NEEDED' && params[1] !== 'NOT_ENABLED') {
+      // Nickname, message, and ban failures affect one send, not the bot's ability to relay.
+      log.warn(F, `RELAYMSG refused (${params[1]})`);
+      return;
+    }
     // Without the relaymsg oper capability or channel op, fall back to `<nick> message`
     if (Date.now() >= relayMsgDeniedUntil) {
       log.error(F, `RELAYMSG refused (${params.slice(1).join(' ')}), falling back to plain messages for 10 minutes`);
