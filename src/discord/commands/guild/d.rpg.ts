@@ -2072,13 +2072,7 @@ function flairReply(title: string, description: string, color: number) {
 }
 
 /** Reviews a new flair with the local keyword automod, and saves or answers accordingly. */
-async function reviewFlair(
-  interaction: ChatInputCommandInteraction,
-  flairInventoryItem: rpg_inventory,
-  flairInput: string,
-) {
-  const flairItem = flairInventoryItem;
-  const newFlair = flairInput;
+async function reviewFlair(flairItem: rpg_inventory, newFlair: string) {
   const oldFlair = flairItem.effect_value;
 
   // Flairs are reviewed locally with the keyword automod used on chat messages (bigBrother); nothing leaves the bot.
@@ -2088,11 +2082,11 @@ async function reviewFlair(
     return flairReply('Flair Rejected', 'Your flair contains language that isn\'t allowed here. Please try something else.', Colors.Red);
   }
 
-  flairItem.effect_value = newFlair;
+  const updatedItem = { ...flairItem, effect_value: newFlair };
   await db.rpg_inventory.upsert({
-    where: { id: flairItem.id },
-    create: flairItem,
-    update: flairItem,
+    where: { id: updatedItem.id },
+    create: updatedItem,
+    update: updatedItem,
   });
   return flairReply('Flair Updated', `Your flair has been updated!\n\n**Old flair:** ${oldFlair}\n**New flair:** ${newFlair}`, Colors.Green);
 }
@@ -2145,7 +2139,7 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
     return flairReply('Flair Rejected', 'Your flair is too long! Please keep it under 50 characters.', Colors.Red);
   }
   // If the user does own the flair item, get the old flair and continue
-  return reviewFlair(interaction, flairItem, newFlair);
+  return reviewFlair(flairItem, newFlair);
 }
 
 export async function rpgFlairAccept(
