@@ -149,6 +149,12 @@ describe('IRC bridge target', () => {
     expect(client.raw).toHaveBeenCalledWith('RELAYMSG', '#lounge', 'Moonbe/d', 'hello');
   });
 
+  it('sanitizes display names before applying the server nick length', async () => {
+    client.network.supports.mockReturnValue('8');
+    await sendToIrc(outgoing({ nick: '🌙éMoon🌙Bear' }));
+    expect(client.raw).toHaveBeenCalledWith('RELAYMSG', '#lounge', '_Moon_/d', 'hello');
+  });
+
   it('drops lines beyond the queue limit', async () => {
     const text = Array.from({ length: bridge.IRC_MESSAGE_QUEUE + 10 }, (_, i) => `line ${i}`).join('\n');
     await sendToIrc(outgoing({ text }));
@@ -242,6 +248,40 @@ describe('registerIrcBridge', () => {
     expect(client.say).toHaveBeenCalledWith('#lounge', FALLBACK_HELLO);
     client.raw.mockClear();
     await vi.advanceTimersByTimeAsync(10 * 60 * 1000 + bridge.IRC_MESSAGE_DELAY_MS);
+    await sendToIrc(outgoing());
+    expect(client.raw).toHaveBeenCalledWith('RELAYMSG', '#lounge', RELAYED_NICK, 'hello');
+  });
+
+  it.each(['INVALID_NICK', 'BLANK_MSG', 'BANNED'])('does not disable RELAYMSG after %s', async code => {
+    await sendToIrc(outgoing({ text: 'first\nsecond' }));
+    client.emit(UNKNOWN_COMMAND, { command: FAIL, params: ['RELAYMSG', code, 'refused'], tags: {} });
+    await sendToIrc(outgoing({ nick: 'AnotherUser' }), '#movies');
+    await vi.advanceTimersByTimeAsync(bridge.IRC_MESSAGE_DELAY_MS);
+
+    expect(client.raw).toHaveBeenCalledWith('RELAYMSG', '#movies', 'AnotherUser/d', 'hello');
+    expect(client.raw).toHaveBeenCalledWith('RELAYMSG', '#lounge', RELAYED_NICK, 'second');
+    expect(client.say).not.toHaveBeenCalled();
+    expect(global.log.warn).toHaveBeenCalledWith('bridge', `RELAYMSG refused (${code})`);
+    expect(global.log.error).not.toHaveBeenCalled();
+  });
+
+  it('does not extend a permission cooldown when a nickname is rejected', async () => {
+    client.emit(UNKNOWN_COMMAND, { command: FAIL, params: ['RELAYMSG', PRIVS_NEEDED, 'nope'], tags: {} });
+    await vi.advanceTimersByTimeAsync(9 * 60 * 1000);
+    client.emit(UNKNOWN_COMMAND, { command: FAIL, params: ['RELAYMSG', 'INVALID_NICK', 'refused'], tags: {} });
+    await sendToIrc(outgoing());
+    expect(client.say).toHaveBeenCalledWith('#lounge', FALLBACK_HELLO);
+    await vi.advanceTimersByTimeAsync(60 * 1000);
+    await sendToIrc(outgoing());
+    expect(client.raw).toHaveBeenCalledWith('RELAYMSG', '#lounge', RELAYED_NICK, 'hello');
+  });
+
+  it('keeps the cooldown when RELAYMSG is disabled on the server', async () => {
+    client.emit(UNKNOWN_COMMAND, { command: FAIL, params: ['RELAYMSG', 'NOT_ENABLED', 'disabled'], tags: {} });
+    await sendToIrc(outgoing());
+    expect(client.say).toHaveBeenCalledWith('#lounge', FALLBACK_HELLO);
+    expect(client.raw).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(10 * 60 * 1000);
     await sendToIrc(outgoing());
     expect(client.raw).toHaveBeenCalledWith('RELAYMSG', '#lounge', RELAYED_NICK, 'hello');
   });

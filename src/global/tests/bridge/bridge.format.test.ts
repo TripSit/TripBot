@@ -83,6 +83,24 @@ describe('toIrcNick', () => {
     expect(toIrcNick('Moon Bear!@#/x', 'd', 32)).toBe('Moon_Bear_x/d');
   });
 
+  it.each([
+    ['Moon🌙Bear', 'Moon_Bear/d'],
+    ['🌙✨', '_/d'],
+    ['José', 'Jos_/d'],
+    ['東京', '_/d'],
+    ['e\u0301', 'e_/d'],
+    ['<Moon>"Bear\';', '_Moon_Bear_/d'],
+    ['~+%&user', '_user/d'],
+    ['a\u0000\r\n\tb', 'a_b/d'],
+  ])('sanitizes %j to an ASCII relay nick', (input, expected) => {
+    expect(toIrcNick(input, 'd', 32)).toBe(expected);
+  });
+
+  it('preserves conventional IRC nickname characters', () => {
+    const nick = '[Moon]\\`_^{Bear|}-9';
+    expect(toIrcNick(nick, 'd', 32)).toBe(`${nick}/d`);
+  });
+
   it('does not start with a digit or dash', () => {
     expect(toIrcNick('1user', 'd', 32)).toBe('_1user/d');
     expect(toIrcNick('-user', 'd', 32)).toBe('_-user/d');
@@ -91,6 +109,21 @@ describe('toIrcNick', () => {
   it('truncates to the nick length including the label', () => {
     const nick = toIrcNick('a'.repeat(40), 'd', 32);
     expect(nick).toBe(`${'a'.repeat(30)}/d`);
+  });
+
+  it.each(['d', 'M', 'i'])('keeps /%s and counts the complete nickname in UTF-8 bytes', label => {
+    const nick = toIrcNick('🌙éMoon'.repeat(1000), label, 8);
+    expect(nick).toBe(`_Moon_/${label}`);
+    expect(Buffer.byteLength(nick, 'utf8')).toBe(8);
+  });
+
+  it('fits a single base character with the suffix', () => {
+    expect(toIrcNick('123', 'd', 3)).toBe('_/d');
+    expect(toIrcNick('', 'M', 3)).toBe('u/M');
+  });
+
+  it('rejects a byte limit that cannot fit a relay nickname', () => {
+    expect(() => toIrcNick('user', 'd', 2)).toThrow(RangeError);
   });
 
   it('falls back when nothing usable is left', () => {
