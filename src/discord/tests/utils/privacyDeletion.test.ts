@@ -5,7 +5,7 @@ const DELETION_REASON = 'User requested deletion of their TripBot data';
 const MISSING_PERMISSIONS = 'missing permissions';
 const MODERATION_LOG = 'moderation-log';
 const USER_ID = 'user-1';
-const LOG_CHANNELS = new Set([env.CHANNEL_BOTERRORS, env.CHANNEL_BOTLOG, env.CHANNEL_MODLOG]);
+const LOG_CHANNELS = new Set([env.CHANNEL_BOTERRORS, env.CHANNEL_BOTLOG, env.CHANNEL_MODLOG, env.CHANNEL_QUOTE_LOG]);
 const REQUESTER_ID = '123456789012345678';
 
 describe('deleteDiscordPrivacyData', () => {
@@ -40,7 +40,7 @@ describe('deleteDiscordPrivacyData', () => {
       ? emptyLogChannel()
       : { isThread: () => true, delete: deleteThread }));
     await deleteDiscordPrivacyData(USER_ID, ['ticket-thread', 'mod-thread'], []);
-    expect(fetchChannel).toHaveBeenCalledTimes(5);
+    expect(fetchChannel).toHaveBeenCalledTimes(6);
     expect(deleteThread).toHaveBeenCalledWith(DELETION_REASON);
     expect(removeRole).toHaveBeenCalledWith(env.ROLE_IRC_BRIDGE, DELETION_REASON);
   });
@@ -92,6 +92,8 @@ describe('deleteDiscordPrivacyData', () => {
     await deleteDiscordPrivacyData(REQUESTER_ID, [], []);
     expect(deleteLogMessage).toHaveBeenCalledWith();
     expect(deleteUnrelatedLogMessage).not.toHaveBeenCalled();
+    // The quote log holds copies of saved quotes, so it is searched like the other log channels
+    expect(fetchChannel).toHaveBeenCalledWith(env.CHANNEL_QUOTE_LOG);
   });
 
   const apiError = (code: number) => new DiscordAPIError({ message: 'synthetic Discord failure', code }, code, 404, 'GET', 'https://discord.invalid', {});

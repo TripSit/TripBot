@@ -38,6 +38,7 @@ const h = vi.hoisted(() => {
     rpgHomeNameChange: vi.fn(),
     ensure: vi.fn(),
     relayDelete: vi.fn(),
+    removeCopies: vi.fn(),
   };
 });
 
@@ -64,6 +65,7 @@ vi.mock('../../commands/guild/d.purge', () => ({ purgeButton: h.purgeButton }));
 vi.mock('../../utils/hrUtils', () => ({ mushroomPageEmbed: h.mushroomPageEmbed }));
 vi.mock('../../utils/checkPermissions', () => ({ ensurePermissions: h.ensure }));
 vi.mock('../../utils/chatBridge', () => ({ relayDiscordDelete: h.relayDelete }));
+vi.mock('../../utils/deletedMessageCopies', () => ({ removeDeletedMessageCopies: h.removeCopies }));
 
 beforeEach(() => { h.context.mockResolvedValue('ctx'); });
 
@@ -167,6 +169,7 @@ describe('messageDelete', () => {
     const message = { client: { channels: { fetch: vi.fn(async () => ({ send })) } } };
     await messageDelete.execute(message as never);
     expect(h.relayDelete).toHaveBeenCalledWith(message);
+    expect(h.removeCopies).toHaveBeenCalledWith(message);
     expect(send).not.toHaveBeenCalled();
   });
 });

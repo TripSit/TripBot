@@ -39,6 +39,21 @@ describe('Discord log transport', () => {
     expect(channel.send.mock.calls[0][0]).toContain('it broke');
   });
 
+  it('keeps info and debug lines out of Discord', async () => {
+    const channel = textChannel();
+    (global as unknown as { discordClient: unknown }).discordClient = {
+      isReady: () => true, channels: { fetch: vi.fn(async () => channel) },
+    };
+    const log = await loadProductionLog();
+    log.info('F', 'user 123 removed a reaction');
+    log.debug('F', 'targetData: {"birthday":"2000-01-01"}');
+    log.warn('F', 'something to look at');
+    await vi.waitFor(() => expect(channel.send).toHaveBeenCalledTimes(1));
+    await nextTick();
+    expect(channel.send).toHaveBeenCalledTimes(1);
+    expect(channel.send.mock.calls[0][0]).toContain('something to look at');
+  });
+
   it('does nothing when the client is missing or not ready', async () => {
     const fetch = vi.fn();
     const log = await loadProductionLog();
