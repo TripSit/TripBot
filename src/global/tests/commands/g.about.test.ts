@@ -30,10 +30,10 @@ describe('About', () => {
     expect(About.privacy).toContain('Channels & Roles');
     expect(About.privacy).toContain('including queued messages');
     expect(About.privacy).not.toContain('/privacy bridge');
-    expect(About.privacy).toContain('Translation sends the selected message to OpenAI');
-    expect(About.privacy).toContain('RPG flair review');
+    expect(About.privacy).toContain('Nothing you write is sent to an AI provider');
+    expect(About.privacy).toContain('RPG flair is reviewed locally');
     expect(About.privacy).toContain('or delete ordinary Discord messages');
-    expect(About.privacy).toContain('AI chat has been removed');
+    expect(About.privacy).toContain('TripBot has no AI features');
     expect(About.privacy).toContain('removes the IRC Bridge role');
     expect(About.privacy).toContain('moderation history');
     expect(About.privacy).toContain('messages containing your Discord ID in TripBot');

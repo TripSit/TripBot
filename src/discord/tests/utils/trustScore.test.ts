@@ -1,15 +1,15 @@
 import { tripSitTrustScore } from '../../utils/trustScore';
 import { collectionOf } from '../../../vitest/utils/discordStubs';
 
-const mocks = vi.hoisted(() => ({ checkGuild: vi.fn() }));
-vi.mock('../../utils/checkPermissions', () => ({ checkGuildPermissions: mocks.checkGuild }));
-
 const NOW = new Date('2024-06-15T12:00:00Z').getTime();
 const MIN = 60_000;
 const HOUR = 60 * MIN;
 const DAY = 24 * HOUR;
 
-type Guild = { members: { cache: { get: (id: string) => unknown } }; bans: { cache: { get: (id: string) => unknown } } };
+type Guild = {
+  members: { cache: { get: (id: string) => unknown } };
+  bans: { cache: { get: (id: string) => unknown } };
+};
 
 function guild(opts: { member?: boolean; ban?: object | Error } = {}): Guild {
   return {
@@ -40,7 +40,6 @@ function setup(ageMs: number, opts: { avatar?: boolean; guilds?: Guild[] } = {})
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(NOW);
-  mocks.checkGuild.mockResolvedValue({ hasPermission: true });
 });
 afterEach(() => vi.useRealTimers());
 
@@ -71,37 +70,19 @@ describe('other signals', () => {
     expect((await tripSitTrustScore('t')).tsReasoning).toContain('does not have a profile picture');
   });
 
-  it('adds a point per mutual guild', async () => {
+  it('ignores which other guilds the account is in', async () => {
     setup(2 * 365 * DAY, { guilds: [guild({ member: true }), guild({ member: true }), guild()] });
     const result = await tripSitTrustScore('t');
-    expect(result.trustScore).toBe(8);
-    expect(result.tsReasoning).toContain('share 2 guilds');
+    expect(result.trustScore).toBe(6);
+    expect(result.tsReasoning).not.toContain('guilds');
   });
 
-  it('reports how many guilds it could check for bans', async () => {
-    setup(2 * 365 * DAY, { guilds: [guild(), guild()] });
-    mocks.checkGuild.mockResolvedValueOnce({ hasPermission: false }).mockResolvedValueOnce({ hasPermission: true });
-    expect((await tripSitTrustScore('t')).tsReasoning).toContain('Not banned in 1 other guilds');
-  });
-
-  it('subtracts five per ban and lists reasons, fetching partial bans', async () => {
-    const fetch = vi.fn();
-    const partial = {
-      partial: true, fetch, reason: null, guild: { name: 'GuildA' },
-    };
-    const full = { partial: false, reason: 'spam', guild: { name: 'GuildB' } };
-    setup(2 * 365 * DAY, { guilds: [guild({ ban: partial }), guild({ ban: full }), guild()] });
+  it('never looks at bans in other guilds', async () => {
+    const ban = { partial: false, reason: 'spam', guild: { name: 'GuildB' } };
+    setup(2 * 365 * DAY, { guilds: [guild({ ban })] });
     const result = await tripSitTrustScore('t');
-    expect(result.trustScore).toBe(6 - 10);
-    expect(fetch).toHaveBeenCalled();
-    expect(result.tsReasoning).toContain('Banned in least 2 of the 3 guilds');
-    expect(result.tsReasoning).toContain('GuildA: No reason found.');
-    expect(result.tsReasoning).toContain('GuildB: spam');
-  });
-
-  it('treats ban lookup errors as not banned', async () => {
-    const notFound = Object.assign(new Error('Unknown Ban'), { code: 10026 });
-    setup(2 * 365 * DAY, { guilds: [guild({ ban: notFound }), guild({ ban: new Error('boom') })] });
-    expect((await tripSitTrustScore('t')).trustScore).toBe(6);
+    expect(result.trustScore).toBe(6);
+    expect(result.tsReasoning).not.toContain('Banned');
+    expect(result.tsReasoning).not.toContain('GuildB');
   });
 });

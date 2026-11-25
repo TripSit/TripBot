@@ -95,8 +95,6 @@ export const env = {
   YOUTUBE_TOKEN: process.env.YOUTUBE_TOKEN,
   IMDB_TOKEN: process.env.IMDB_TOKEN,
   LOGTAIL_TOKEN: process.env.LOGTAIL_TOKEN,
-  OPENAI_API_ORG: process.env.OPENAI_API_ORG ?? '',
-  OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? '',
 
   SONAR_URL: process.env.SONAR_URL,
   SONAR_TOKEN: process.env.SONAR_TOKEN,
@@ -105,10 +103,6 @@ export const env = {
   TRIPBOT_API_TOKEN: process.env.TRIPBOT_API_TOKEN,
   TRIPBOT_API_URL: process.env.TRIPBOT_API_URL,
   API_PORT: '1337',
-
-  MODERATE_HATESPEECH_TOKEN: process.env.MODERATE_HATESPEECH_TOKEN,
-  MODERATE_HATESPEECH_NORMAL_CONFIDENCE: 0.92,
-  MODERATE_HATESPEECH_FLAG_CONFIDENCE: 0.88,
 
   TS_ICON_URL: 'https://i.gyazo.com/b48b08a853fefaafb6393837eec1a501.png',
   FLAME_ICON_URL: 'https://i.gyazo.com/19276c297cca0761dc9689ac7c320b8e.png',

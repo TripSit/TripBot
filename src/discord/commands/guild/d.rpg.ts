@@ -1,7 +1,6 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable max-len */
-import OpenAI from 'openai';
 import {
   Colors,
   SlashCommandBuilder,
@@ -41,7 +40,6 @@ import commandContext from '../../utils/context';
 import getAsset from '../../utils/getAsset';
 import { customButton } from '../../utils/emoji';
 import { getProfilePreview } from './d.profile';
-import { aiFlairMod } from '../../../global/commands/g.ai';
 import { refundRpgItem } from '../../../global/commands/g.rpgRefund';
 import { bigBrother } from '../../../global/utils/thoughtPolice';
 import { getOrCreatePersona, getOrCreateUser } from '../../../global/utils/dbRecords';
@@ -2073,135 +2071,30 @@ function flairReply(title: string, description: string, color: number) {
   };
 }
 
-/** Has the AI (or keyword automod, when the AI is unavailable) review a new flair, and saves or answers accordingly. */
+/** Reviews a new flair with the local keyword automod, and saves or answers accordingly. */
 async function reviewFlair(
   interaction: ChatInputCommandInteraction,
   flairInventoryItem: rpg_inventory,
   flairInput: string,
 ) {
   const flairItem = flairInventoryItem;
-  let newFlair = flairInput;
+  const newFlair = flairInput;
   const oldFlair = flairItem.effect_value;
 
-  let aiApproved = 'rejected';
-  // eslint-disable-next-line sonarjs/no-duplicate-string
-  let adjustmentReason: string;
-
-  const messageList = [{
-    role: 'user',
-    content: newFlair,
-  }] as OpenAI.Chat.ChatCompletionMessageParam[];
-
-  const { response } = await aiFlairMod(messageList);
-
-  // AI moderation is unavailable (OpenAI errored, no key, or AI turned off), so aiFlairMod returns
-  // an empty response. Fall back to the same keyword automod used on chat messages (bigBrother):
-  // if it flags the flair, reject it; otherwise save it as-is. The length (<50) and @mention
-  // checks above still apply.
-  if (!response) {
-    const flairCategory = await bigBrother(newFlair.toLowerCase());
-    if (['offensive', 'harm', 'horny', 'pg13'].includes(flairCategory)) {
-      return flairReply('Flair Rejected', 'Your flair contains language that isn\'t allowed here. Please try something else.', Colors.Red);
-    }
-
-    flairItem.effect_value = newFlair;
-    await db.rpg_inventory.upsert({
-      where: { id: flairItem.id },
-      create: flairItem,
-      update: flairItem,
-    });
-    return flairReply('Flair Updated', `Your flair has been updated!\n\n**Old flair:** ${oldFlair}\n**New flair:** ${newFlair}`, Colors.Green);
+  // Flairs are reviewed locally with the keyword automod used on chat messages (bigBrother); nothing leaves the bot.
+  // The length (<50) and @mention checks in rpgFlair still apply.
+  const flairCategory = await bigBrother(newFlair.toLowerCase());
+  if (['offensive', 'harm', 'horny', 'pg13'].includes(flairCategory)) {
+    return flairReply('Flair Rejected', 'Your flair contains language that isn\'t allowed here. Please try something else.', Colors.Red);
   }
 
-  // Regex to see the approval status
-  if (response.match(/Status: Approved/g)) {
-    aiApproved = 'approved';
-  } else if (response.match(/Status: Adjusted/g)) {
-    aiApproved = 'adjusted';
-  }
-
-  const aiAdjusted = response.match(/Adjusted: (.*)/g)?.[0].replace('Adjusted: ', '');
-  log.debug(F, `aiAdjusted: ${aiAdjusted}`);
-
-  // If the flair is approved or the same as what the user entered, update the flair and send the user a confirmation message
-  // Also regex to see if the flair is the same as what the user entered but ignoring capitalization
-  if (newFlair.toLowerCase() === aiAdjusted?.toLowerCase()) {
-    // Update the flair
-    if (aiAdjusted) {
-      flairItem.effect_value = aiAdjusted;
-      newFlair = aiAdjusted;
-    } else {
-      flairItem.effect_value = newFlair;
-    }
-    await db.rpg_inventory.upsert({
-      where: {
-        id: flairItem.id,
-      },
-      create: flairItem,
-      update: flairItem,
-    });
-    // Send the user a confirmation message
-    return flairReply('Flair Updated', `Your flair has been updated!\n\n**Old flair:** ${oldFlair}\n**New flair:** ${newFlair}`, Colors.Green);
-  }
-
-  // If the flair needed to be adjusted, ask the user if they want to use the adjusted flair
-  // Also check if the flair was set as approved but the flair is actually different than what the user entered
-  if ((aiApproved === 'adjusted' || newFlair.toLowerCase() !== aiAdjusted?.toLowerCase()) && aiApproved !== 'rejected') {
-  // If the flair is null, send an error message
-    if (!aiAdjusted) {
-      return flairReply(
-        FLAIR_ERROR_TITLE,
-        'Oops!\n\nSomething went wrong with TripBot\'s AI.\n\nPlease try again later or contact a moderator to have your flair manually reviewed.',
-        Colors.Red,
-      );
-    }
-    // Regex to get the reason for adjustment from the AI response where it says "Reason: "
-    // If it doesn't exist, set it to "No reason given"
-    adjustmentReason = response.match(/Reason: (.*)/g)?.[0].replace('Reason: ', '') ?? 'No reason given';
-
-    return {
-      embeds: [embedTemplate()
-        .setAuthor(null)
-        // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
-        .setTitle(`${emojiGet('itemFlair')} Flair Adjusted`)
-        .setDescription(stripIndents`
-
-        Your flair has been adjusted by TripBot to meet our guidelines.
-
-        **Original:** ${newFlair}
-        **TripBot Adjusted:** ${aiAdjusted}
-
-        **Adjustment Reason:** ${adjustmentReason}
-        
-        Please confirm that you want to use the adjusted flair, or try something else.`)
-        .setColor(Colors.Gold)],
-      components: [
-        new ActionRowBuilder<ButtonBuilder>()
-          .addComponents(
-            customButton(`rpgFlairAccept,user:${interaction.user.id}`, 'Accept', 'buttonAccept', ButtonStyle.Success),
-            customButton(`rpgFlairDecline,user:${interaction.user.id}`, 'Reject', 'buttonQuit', ButtonStyle.Danger),
-          ),
-      ],
-    };
-  }
-
-  // Everything else was handled above, so the verdict can only be a rejection
-  adjustmentReason = response.match(/Reason: (.*)/g)?.[0].replace('Reason: ', '') ?? 'No reason given';
-
-  // Send the user a rejection message
-  return {
-    embeds: [embedTemplate()
-      .setAuthor(null)
-      // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
-      .setTitle(`${emojiGet('itemFlair')} Flair Rejected`)
-      .setDescription(stripIndents`
-      Your flair has been rejected by TripBot.
-      
-      **Rejection Reason:** ${adjustmentReason}
-      
-      Please try something else.`)
-      .setColor(Colors.Red)],
-  };
+  flairItem.effect_value = newFlair;
+  await db.rpg_inventory.upsert({
+    where: { id: flairItem.id },
+    create: flairItem,
+    update: flairItem,
+  });
+  return flairReply('Flair Updated', `Your flair has been updated!\n\n**Old flair:** ${oldFlair}\n**New flair:** ${newFlair}`, Colors.Green);
 }
 
 export async function rpgFlair(interaction: ChatInputCommandInteraction) {

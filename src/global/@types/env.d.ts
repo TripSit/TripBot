@@ -21,8 +21,6 @@ declare global {
       YOUTUBE_TOKEN: string | undefined;
       IMDB_TOKEN: string | undefined;
       LOGTAIL_TOKEN: string | undefined;
-      OPENAI_API_ORG: string | undefined;
-      OPENAI_API_KEY: string | undefined;
 
       SONAR_URL: string | undefined;
       SONAR_TOKEN: string | undefined;

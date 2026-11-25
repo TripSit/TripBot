@@ -1,5 +1,5 @@
 import { drug_mass_unit, drug_roa } from '@db/tripbot';
-import { ChannelType, MessageFlags } from 'discord-api-types/v10';
+import { MessageFlags } from 'discord-api-types/v10';
 import {
   ChatInputCommandInteraction,
   Colors,
@@ -86,8 +86,8 @@ export const dIdose: SlashCommand = {
         .setDescription('Which record? (0, 1, 2, etc)')
         .setRequired(true))),
   async execute(interaction) {
-    const ephemeral = interaction.channel?.type !== ChannelType.DM ? MessageFlags.Ephemeral : undefined;
-    await interaction.deferReply({ flags: ephemeral });
+    // Dose records are private health information: always reply ephemerally, and never copy them into a DM.
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const command = interaction.options.getSubcommand() as 'get' | 'set' | 'delete';
     const embed = embedTemplate();
 
@@ -156,12 +156,7 @@ export const dIdose: SlashCommand = {
       embed.setTitle('New iDose entry:');
       embed.addFields(embedField);
 
-      if (interaction.channel?.type === ChannelType.DM) {
-        await interaction.editReply({ embeds: [embed] });
-      } else {
-        await interaction.editReply({ embeds: [embed] });
-        await interaction.user.send({ embeds: [embed] });
-      }
+      await interaction.editReply({ embeds: [embed] });
     }
     return true;
   },

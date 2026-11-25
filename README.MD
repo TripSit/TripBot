@@ -162,7 +162,7 @@ To use moderation commands in your TripBot instance, you must have the Moderator
 
 If you need this role, please ask Moonbear.
 
-AI chat has been removed. Translation (the Translate message command) and RPG flair AI review still use OPENAI_API_ORG and OPENAI_API_KEY. Translation requires the message author to accept both /ai tos agree:True and /ai privacy agree:True; agree:False revokes consent. The chat-history migration removes chat and image history while preserving consent and moderation settings. Historical Discord chat audit posts and bot replies require separate cleanup.
+All AI features have been removed: AI chat, the Translate message command and AI flair review. RPG flair is reviewed locally with the keyword filter, and no message content is sent to an AI provider. The /ai command remains only so users can read and revoke earlier consent. Historical Discord chat audit posts and bot replies require separate cleanup.
 
 ### Database Development ###
 

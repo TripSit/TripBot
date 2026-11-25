@@ -27,12 +27,10 @@ describe('env.config optional secrets', () => {
   it('falls back to empty strings when the keys are not set', async () => {
     const saved = { ...process.env };
     try {
-      delete process.env.OPENAI_API_ORG;
-      delete process.env.OPENAI_API_KEY;
       vi.resetModules();
       vi.doMock('dotenv', () => ({ default: { config: vi.fn() }, config: vi.fn() }));
       const config = await import('../../../global/utils/env.config');
-      expect(config.env.OPENAI_API_KEY).toBe('');
+      expect(config.env).not.toHaveProperty('OPENAI_API_KEY');
       expect(config.env).not.toHaveProperty('GEMINI_KEY');
     } finally {
       process.env = saved;
