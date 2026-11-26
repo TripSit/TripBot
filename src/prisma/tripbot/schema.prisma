@@ -42,7 +42,6 @@ model users {
   partner                                                   Boolean?             @default(true)
   supporter                                                 Boolean?             @default(false)
   moodle_id                                                 String?
-  ai_info                                                   ai_info?
   appeals                                                   appeals[]
   drug_articles_drug_articles_last_modified_byTousers       drug_articles[]      @relation("drug_articles_last_modified_byTousers")
   drug_articles_drug_articles_posted_byTousers              drug_articles[]      @relation("drug_articles_posted_byTousers")
@@ -219,7 +218,6 @@ model members {
 }
 
 model discord_guilds {
-  ai_moderation        ai_moderation?
   id                   String           @id
   is_banned            Boolean          @default(false)
   last_drama_at        DateTime?        @db.Timestamptz(6)
@@ -626,38 +624,6 @@ enum appeal_status {
   RECEIVED
   ACCEPTED
   DENIED
-}
-
-model ai_info {
-  id               String    @id @default(uuid()) @db.Uuid
-  user_id          String    @unique @db.Uuid
-  ai_tos_agree     DateTime?
-  ai_privacy_agree DateTime?
-
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @updatedAt
-
-  users users @relation(fields: [user_id], references: [id])
-}
-
-model ai_moderation {
-  id                     String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  guild_id               String?
-  harassment             Float   @default(0.01)
-  harassment_threatening Float   @default(0.01) @map("harassment/threatening")
-  hate                   Float   @default(0.01)
-  hate_threatening       Float   @default(0.01) @map("hate/threatening")
-  self_harm              Float   @default(0.01) @map("self-harm")
-  self_harm_instructions Float   @default(0.01) @map("self-harm/instructions")
-  self_harm_intent       Float   @default(0.01) @map("self-harm/intent")
-  sexual                 Float   @default(0.01)
-  sexual_minors          Float   @default(0.01) @map("sexual/minors")
-  violence               Float   @default(0.01)
-  violence_graphic       Float   @default(0.01) @map("violence/graphic")
-
-  discord_guilds discord_guilds? @relation(fields: [guild_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "appeals_guildid_foreign")
-
-  @@unique([guild_id], map: "aimoderation_guildid_unique")
 }
 
 /// Maps a Discord channel to the IRC channel (and Matrix room) it is bridged with.

@@ -107,7 +107,7 @@ describe('privacy delete', () => {
     });
     const out = await privacy('delete', '1');
     expect(dbMock.users.delete).toHaveBeenCalledWith({ where: { id: 'u' } });
-    [dbMock.wordle_scores, dbMock.connections_scores, dbMock.mini_scores, dbMock.personas, dbMock.ai_info]
+    [dbMock.wordle_scores, dbMock.connections_scores, dbMock.mini_scores, dbMock.personas]
       .forEach(table => expect(table.deleteMany).toHaveBeenCalledWith({ where: { user_id: 'u' } }));
     expect(dbMock.quotes.deleteMany).toHaveBeenCalledWith({
       where: { OR: [{ user_id: 'u' }, { created_by: 'u' }] },

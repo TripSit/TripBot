@@ -162,7 +162,7 @@ To use moderation commands in your TripBot instance, you must have the Moderator
 
 If you need this role, please ask Moonbear.
 
-All AI features have been removed: AI chat, the Translate message command and AI flair review. RPG flair is reviewed locally with the keyword filter, and no message content is sent to an AI provider. The /ai command remains only so users can read and revoke earlier consent. Historical Discord chat audit posts and bot replies require separate cleanup.
+TripBot has no AI features. RPG flair is reviewed locally with the keyword filter, and no message content is sent to an AI provider.
 
 ### Database Development ###
 
