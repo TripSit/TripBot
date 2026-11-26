@@ -137,7 +137,10 @@ describe('techHelpOwn / techHelpClose', () => {
   const interaction = (over: Record<string, unknown> = {}) => ({
     guild: { members: { fetch: vi.fn(async () => target) } },
     customId: 'techHelpOwn~discord~111',
+    user: { id: '999' },
     reply: vi.fn(),
+    deferReply: vi.fn(),
+    editReply: vi.fn(),
     member: { displayName: 'Mod' },
     channel: { name: 'x│y' },
     ...over,
@@ -145,14 +148,26 @@ describe('techHelpOwn / techHelpClose', () => {
 
   it('own: ignores DMs, blocks self-claims, and renames the thread when claimed', async () => {
     await techHelpOwn(interaction({ guild: null }) as never);
-    const self = interaction({ member: target });
+    const self = interaction({ user: { id: '111' } });
     await techHelpOwn(self as never);
     expect(self.reply).toHaveBeenCalledWith(expect.objectContaining({ flags: 64 }));
+    expect(self.deferReply).not.toHaveBeenCalled();
+    expect(self.guild.members.fetch).not.toHaveBeenCalled();
     expect(mocks.setModName).not.toHaveBeenCalled();
     const claim = interaction();
     await techHelpOwn(claim as never);
     expect(mocks.setModName).toHaveBeenCalledWith(claim.channel, expect.stringContaining("Ally's discord issue!"));
-    expect(JSON.stringify(claim.reply.mock.calls[0][0])).toContain('Mod has claimed this');
+    expect(JSON.stringify(claim.editReply.mock.calls[0][0])).toContain('Mod has claimed this');
+  });
+
+  it('own: acknowledges the click before fetching the member so slow lookups cannot time out', async () => {
+    const order: string[] = [];
+    const claim = interaction({
+      deferReply: vi.fn(async () => { order.push('defer'); }),
+      guild: { members: { fetch: vi.fn(async () => { order.push('fetch'); return target; }) } },
+    });
+    await techHelpOwn(claim as never);
+    expect(order).toEqual(['defer', 'fetch']);
   });
 
   it('close: ignores DMs and anonymous clicks', async () => {
@@ -162,19 +177,21 @@ describe('techHelpOwn / techHelpClose', () => {
   });
 
   it('close: distinguishes users closing their own issue from mods resolving it', async () => {
-    const own = interaction({ member: target, customId: 'techHelpClose~discord~111' });
+    const own = interaction({ user: { id: '111' }, customId: 'techHelpClose~discord~111' });
     await techHelpClose(own as never);
+    expect(own.deferReply).toHaveBeenCalled();
     expect(mocks.setModName).toHaveBeenLastCalledWith(own.channel, expect.stringContaining('│y'));
-    expect(JSON.stringify(own.reply.mock.calls[0][0])).toContain('no longer need help');
+    expect(JSON.stringify(own.editReply.mock.calls[0][0])).toContain('no longer need help');
     const mod = interaction({ customId: 'techHelpClose~discord~111' });
     await techHelpClose(mod as never);
-    expect(JSON.stringify(mod.reply.mock.calls[0][0])).toContain('has been resolved');
+    expect(JSON.stringify(mod.editReply.mock.calls[0][0])).toContain('has been resolved');
   });
 
-  it('close: copes with users who left the guild', async () => {
+  it('close: works for users who left the guild without fetching them', async () => {
     const gone = interaction({ guild: { members: { fetch: vi.fn().mockRejectedValue(new Error('Unknown Member')) } } });
     await techHelpClose(gone as never);
-    expect(gone.reply).toHaveBeenCalled();
+    expect(gone.editReply).toHaveBeenCalled();
+    expect(gone.guild.members.fetch).not.toHaveBeenCalled();
   });
 });
 
