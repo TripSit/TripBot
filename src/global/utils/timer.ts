@@ -226,6 +226,12 @@ async function deleteTicket(ticket: TicketRow): Promise<void> {
       log.debug(F, `Ticket thread ${threadId} was deleted`);
     } catch (error) {
       if (error instanceof DiscordAPIError && error.code === RESTJSONErrorCodes.UnknownChannel) continue; // eslint-disable-line no-continue
+      // The bot cannot see or manage the thread (removed from the guild or channel, or permissions revoked),
+      // so retrying every run only spams the error channel. Clear the reference instead.
+      if (error instanceof DiscordAPIError && error.code === RESTJSONErrorCodes.MissingAccess) {
+        log.debug(F, `Ticket thread ${threadId} is not accessible; clearing its reference`);
+        continue; // eslint-disable-line no-continue
+      }
       log.error(F, 'Failed to delete a ticket thread; ticket cleanup will retry.');
       throw error;
     }

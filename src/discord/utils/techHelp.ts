@@ -152,9 +152,8 @@ export async function techHelpOwn(interaction:ButtonInteraction) {
   if (!interaction.guild) return;
   const issueType = interaction.customId.split('~')[1];
   const targetId = interaction.customId.split('~')[2];
-  const target = await interaction.guild.members.fetch(targetId);
 
-  if (interaction.member === target) {
+  if (interaction.user.id === targetId) {
     await interaction.reply({
       embeds: [
         new EmbedBuilder()
@@ -166,10 +165,14 @@ export async function techHelpOwn(interaction:ButtonInteraction) {
     return;
   }
 
+  // Acknowledge within Discord's 3 second window before the slower member fetch.
+  await interaction.deferReply();
+  const target = await interaction.guild.members.fetch(targetId);
+
   const thread = interaction.channel as ThreadChannel;
   setModTicketChannelName(thread, `${modTicketIcons.inProgress}│${target.displayName}'s ${issueType} issue!`);
 
-  await interaction.reply({
+  await interaction.editReply({
     embeds: [
       new EmbedBuilder()
         .setDescription(stripIndents`${(interaction.member as GuildMember).displayName} has claimed this \
@@ -189,22 +192,19 @@ export async function techHelpClose(interaction:ButtonInteraction) {
 
   const targetId = interaction.customId.split('~')[2];
 
-  let target = {} as GuildMember;
-  try {
-    target = await interaction.guild.members.fetch(targetId);
-  } catch {
-    log.debug(F, `Failed to fetch member ${targetId}! They probably left the guild.`);
-  }
+  // Acknowledge within Discord's 3 second window before any slower lookups.
+  await interaction.deferReply();
+  const isOwner = interaction.user.id === targetId;
 
-  const message = interaction.member === target
-    ? stripIndents`${interaction.member.displayName} has indicated that they no longer need help!`
+  const message = isOwner
+    ? stripIndents`${(interaction.member as GuildMember).displayName} has indicated that they no longer need help!`
     : stripIndents`${(interaction.member as GuildMember).displayName} has indicated that this issue has been resolved!`;
 
   const thread = interaction.channel as ThreadChannel;
-  const status = interaction.member === target ? 'closedByUser' : 'closedByMod';
+  const status = isOwner ? 'closedByUser' : 'closedByMod';
   setModTicketChannelName(thread, retagModTicketChannelName(thread.name, status));
 
-  await interaction.reply({
+  await interaction.editReply({
     embeds: [
       new EmbedBuilder()
         .setDescription(message)
