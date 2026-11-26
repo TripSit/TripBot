@@ -9,6 +9,7 @@ import {
   PermissionResolvable,
   Role,
   TextChannel,
+  ThreadChannel,
 } from 'discord.js';
 import { sleep } from './sleep';
 import { getOrCreateUser } from '../../global/utils/dbRecords';
@@ -64,7 +65,7 @@ async function isBotOwner(message: Message): Promise<boolean> {
 
 type GuildTextContext = {
   message: Message;
-  channel: TextChannel;
+  channel: TextChannel | ThreadChannel;
   guild: Guild;
   displayName: string;
 };
@@ -73,7 +74,10 @@ async function handleTripsitCommand({
   message, channel, guild, displayName,
 }: GuildTextContext): Promise<void> {
   // If not in a tripsit channel and not in a specific users custom tripsit channel, tell them where to go and return.
-  if (!tripsitChannels.includes(channel.id) && !channel.name.endsWith(`${message.author.displayName}'s channel!`)) {
+  // Ticket threads are named after the member's server display name, which can differ from their account name.
+  const isOwnChannel = [displayName, message.author.displayName]
+    .some(name => channel.name.endsWith(`${name}'s channel!`));
+  if (!tripsitChannels.includes(channel.id) && !isOwnChannel) {
     const channelTripsit = await guild.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
     const channelOpenTripsit1 = await guild.channels.fetch(env.CHANNEL_OPENTRIPSIT1) as TextChannel;
     await channel.send({
@@ -191,7 +195,7 @@ async function giveTokens(message: Message): Promise<void> {
   });
 }
 
-async function runPhoenixProtocol(message: Message, channel: TextChannel): Promise<void> {
+async function runPhoenixProtocol(message: Message, channel: TextChannel | ThreadChannel): Promise<void> {
   const phoenixMessage = await channel.send('Phoenix protocol initiated... ');
   await sleep(1000);
   await phoenixMessage.edit('Phoenix protocol initiated... 35%');
@@ -347,16 +351,21 @@ export async function messageCommand(message: Message): Promise<void> {
   // Ignore messages that start with ~~, these are usually strikethrough messages
   if (message.content.startsWith('~~')) { return; }
 
-  if (!(message.channel instanceof TextChannel)) {
+  const { channel } = message;
+  // Threads are accepted for ~ commands so ~tripsit works inside a user's private ticket thread
+  const isThread = channel instanceof ThreadChannel;
+  if (!(channel instanceof TextChannel) && !isThread) {
     return;
   }
 
   const context: GuildTextContext = {
-    message, channel: message.channel, guild: message.guild, displayName,
+    message, channel, guild: message.guild, displayName,
   };
 
   if (await isIrcCommand(message)) {
     await handleIrcCommand(context);
+  } else if (isThread) {
+    // Pokes, mentions and heart reactions stay limited to regular text channels
   } else if (await isPokingTripbot(message)) {
     // If you poke tripbot
     const faces = [
@@ -368,7 +377,7 @@ export async function messageCommand(message: Message): Promise<void> {
       '🫣',
       '🤨',
     ];
-    await message.channel.send(randomItem(faces));
+    await channel.send(randomItem(faces));
   } else if (await isMentioningTripbot(message)) {
     await handleMention(context);
   } else if (await messageContainsHearts(message)) {

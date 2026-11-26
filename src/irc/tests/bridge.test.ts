@@ -152,7 +152,7 @@ describe('IRC bridge target', () => {
   it('sanitizes display names before applying the server nick length', async () => {
     client.network.supports.mockReturnValue('8');
     await sendToIrc(outgoing({ nick: '🌙éMoon🌙Bear' }));
-    expect(client.raw).toHaveBeenCalledWith('RELAYMSG', '#lounge', '_Moon_/d', 'hello');
+    expect(client.raw).toHaveBeenCalledWith('RELAYMSG', '#lounge', '_eMoon/d', 'hello');
   });
 
   it('drops lines beyond the queue limit', async () => {

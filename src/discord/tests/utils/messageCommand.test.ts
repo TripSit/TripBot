@@ -1,4 +1,4 @@
-import { DMChannel, TextChannel } from 'discord.js';
+import { DMChannel, TextChannel, ThreadChannel } from 'discord.js';
 import { messageCommand } from '../../utils/messageCommand';
 import { dbMock } from '../../../vitest/utils/mockDb';
 import { collectionOf, flushPromises, stubInstance } from '../../../vitest/utils/discordStubs';
@@ -9,7 +9,7 @@ vi.mock('../../utils/sleep', () => ({ sleep: mocks.sleep }));
 
 let userCounter = 0;
 
-function build(over: Record<string, unknown> = {}, opts: { channel?: 'text' | 'dm' | 'other'; channelName?: string; channelId?: string; mentionBot?: boolean; mentioned?: Array<{ id: string; bot?: boolean; username?: string }>; stickers?: Array<{ name: string; url: string }> } = {}) {
+function build(over: Record<string, unknown> = {}, opts: { channel?: 'text' | 'dm' | 'thread' | 'other'; channelName?: string; channelId?: string; mentionBot?: boolean; mentioned?: Array<{ id: string; bot?: boolean; username?: string }>; stickers?: Array<{ name: string; url: string }> } = {}) {
   userCounter += 1;
   const sent = { edit: vi.fn(), delete: vi.fn() };
   const send = vi.fn(async () => sent);
@@ -17,7 +17,7 @@ function build(over: Record<string, unknown> = {}, opts: { channel?: 'text' | 'd
     send, name: opts.channelName ?? 'general', id: opts.channelId ?? 'chan', messages: { fetch: vi.fn() },
   };
   const channel = opts.channel === 'other' ? { ...channelProps }
-    : stubInstance(opts.channel === 'dm' ? DMChannel : TextChannel, channelProps);
+    : stubInstance({ dm: DMChannel, thread: ThreadChannel, text: TextChannel }[opts.channel ?? 'text'], channelProps);
   const members = new Map<string, { displayName: string }>([['u-known', { displayName: 'Known' }]]);
   const guild = {
     id: e.DISCORD_GUILD_ID,
@@ -107,6 +107,25 @@ describe('old tilde commands', () => {
     await messageCommand(m.message);
     expect(sentText(m.send, 2)).toContain('you just used that command');
     expect(m.send).toHaveBeenCalledTimes(3);
+  });
+
+  it('answers ~tripsit inside the user\'s private ticket thread', async () => {
+    const m = tilde('~tripsit', {}, { channel: 'thread', channelName: "🧡│Ally's channel!" });
+    await messageCommand(m.message);
+    expect(sentText(m.send)).toContain('will be with you');
+  });
+
+  it('redirects ~tripsit from someone else\'s ticket thread', async () => {
+    const m = tilde('~tripsit', {}, { channel: 'thread', channelName: "🧡│Bob's channel!" });
+    await messageCommand(m.message);
+    expect(sentText(m.send)).toContain('reserved for the tripsitting channels');
+  });
+
+  it('ignores pokes, mentions and hearts in threads', async () => {
+    const m = build({ content: 'love you ❤', cleanContent: 'love you ❤' }, { channel: 'thread', mentionBot: true });
+    await messageCommand(m.message);
+    expect(m.send).not.toHaveBeenCalled();
+    expect(m.raw.react).not.toHaveBeenCalled();
   });
 
   it('answers ~tripsit in the main tripsit channel', async () => {

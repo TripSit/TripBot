@@ -90,7 +90,9 @@ export function toIrcNick(nick: string, label: string, maxBytes: number): string
   if (baseBytes < 1) {
     throw new RangeError('IRC nick length must fit a base character and the relay suffix');
   }
-  const base = nick.replace(IRC_NICK_INVALID, '_').replace(/^[-\d]/, '_$&') || 'unknown';
+  // NFKD turns styled letters (𝕸𝖔𝖔𝖓, ｆｕｌｌｗｉｄｔｈ) into plain ones and splits accents off so they can be dropped
+  const plain = nick.normalize('NFKD').replace(/\p{M}/gu, '');
+  const base = plain.replace(IRC_NICK_INVALID, '_').replace(/^[-\d]/, '_$&') || 'unknown';
   // The allowlist makes the base ASCII, so slicing characters also limits UTF-8 bytes.
   return base.slice(0, baseBytes) + suffix;
 }
