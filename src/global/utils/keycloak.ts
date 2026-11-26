@@ -23,8 +23,15 @@ function isCacheValid(timestamp: number): boolean {
 
 // Authenticate with Keycloak admin client
 async function authenticateAdmin(): Promise<void> {
+  // The client_credentials grant issues no refresh token, so the admin client cannot refresh
+  // itself: once the access token expires it throws "Cannot refresh token" instead of sending
+  // the request. Log in again before that happens.
   if (isAuthenticated) {
-    return;
+    if (!kcAdminClient.isTokenExpired()) {
+      return;
+    }
+    isAuthenticated = false;
+    authPromise = null;
   }
 
   if (authPromise) {
@@ -100,7 +107,7 @@ export async function getDiscordIdFromFederatedIdentity(userId: string): Promise
     return await lookupDiscordId(userId);
   } catch (error) {
     // If we get a 401, the admin token expired - reset authentication and try once more
-    if (!(error instanceof Error && error.message.includes('401'))) {
+    if (!(error instanceof Error && /401|Cannot refresh token/.test(error.message))) {
       log.error(F, `Error getting Discord ID: ${error}`);
       throw error;
     }
