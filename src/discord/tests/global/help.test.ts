@@ -9,6 +9,7 @@ describe('help', () => {
     expect(await dHelp.execute(stub as never)).toBe(true);
     const reply = stub.editReply.mock.calls[0][0] as { embeds: Array<{ data: { title: string } }>; components: unknown[] };
     expect(reply.embeds[0].data.title).toContain('Welcome to TripSit');
+    expect(JSON.stringify(reply.embeds[0].data)).toContain('https://tripsit.me/tripbot/privacy');
     expect(reply.components).toHaveLength(1);
   });
 

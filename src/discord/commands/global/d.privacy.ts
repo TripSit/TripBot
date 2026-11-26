@@ -6,6 +6,7 @@ import type { TextChannel } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { privacy } from '../../../global/commands/g.privacy';
+import tripsitInfo from '../../../global/commands/g.about';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { deleteDiscordPrivacyData } from '../../utils/privacyDeletion';
 
@@ -86,6 +87,7 @@ export const dPrivacy: SlashCommand = {
       }
     }
 
+    embed.addFields({ name: 'Privacy Policy', value: tripsitInfo.privacyPolicyUrl });
     await interaction.editReply({ embeds: [embed] });
     return true;
   },
