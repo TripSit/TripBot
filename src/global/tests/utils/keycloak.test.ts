@@ -33,6 +33,16 @@ describe('getAdminClient', () => {
     expect(a).toBe(b);
     expect((a.auth as unknown as ReturnType<typeof vi.fn>)).toHaveBeenCalledTimes(1);
   });
+
+  it('logs in again once the admin token has expired', async () => {
+    const { mod, client, auth } = await load();
+    const isTokenExpired = client.isTokenExpired as unknown as ReturnType<typeof vi.fn>;
+    isTokenExpired.mockReturnValueOnce(true);
+    await mod.getAdminClient();
+    expect(auth).toHaveBeenCalledTimes(2);
+    await mod.getAdminClient();
+    expect(auth).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe('getDiscordIdFromFederatedIdentity', () => {
@@ -72,6 +82,15 @@ describe('getDiscordIdFromFederatedIdentity', () => {
       .mockRejectedValueOnce(new Error('Request failed with status code 401'))
       .mockResolvedValueOnce([discord('999')]);
     expect(await mod.getDiscordIdFromFederatedIdentity('kc2')).toBe('999');
+    expect(auth).toHaveBeenCalledTimes(2);
+  });
+
+  it('re-authenticates and retries when the admin client cannot refresh its token', async () => {
+    const { mod, users, auth } = await load();
+    users.listFederatedIdentities
+      .mockRejectedValueOnce(new Error('Cannot refresh token: missing refresh token or credentials'))
+      .mockResolvedValueOnce([discord('999')]);
+    expect(await mod.getDiscordIdFromFederatedIdentity('kc3')).toBe('999');
     expect(auth).toHaveBeenCalledTimes(2);
   });
 
