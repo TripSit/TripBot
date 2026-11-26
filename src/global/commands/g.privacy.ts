@@ -95,7 +95,6 @@ async function deleteUserRecords(tx: TransactionClient, userData: UserRecord, di
   await tx.mini_scores.deleteMany({ where: { user_id: userData.id } });
   await tx.rpg_inventory.deleteMany({ where: { personas: { user_id: userData.id } } });
   await tx.personas.deleteMany({ where: { user_id: userData.id } });
-  await tx.ai_info.deleteMany({ where: { user_id: userData.id } });
   // Remove this person's moderation history and unlink their moderator identity from other people's records.
   await tx.user_actions.updateMany({
     where: { created_by: userData.id, NOT: { user_id: userData.id } },

@@ -2,9 +2,10 @@ import { execFileSync } from 'child_process';
 import { readFileSync } from 'fs';
 
 // Explicitly opt in: this suite creates and removes its own isolated PostgreSQL container.
-describe.skipIf(process.env.TRIPBOT_TEST_AI_MIGRATION !== '1')('AI purge migration', () => {
+describe.skipIf(process.env.TRIPBOT_TEST_AI_MIGRATION !== '1')('AI purge migrations', () => {
   const container = `tripbot-ai-migration-test-${process.pid}`;
   const migration = readFileSync('src/prisma/tripbot/migrations/20261124150000_remove_ai_chat_history/migration.sql', 'utf8');
+  const dropRemaining = readFileSync('src/prisma/tripbot/migrations/20261126120000_drop_ai_consent_and_moderation/migration.sql', 'utf8');
   const overhaul = readFileSync('src/prisma/tripbot/migrations/20260419175925_ai_overhaul/migration.sql', 'utf8');
   const moderation = readFileSync('src/prisma/tripbot/migrations/20231115203612_ai_mod_update/migration.sql', 'utf8');
   const history = `${overhaul}\n${moderation}`;
@@ -75,6 +76,18 @@ describe.skipIf(process.env.TRIPBOT_TEST_AI_MIGRATION !== '1')('AI purge migrati
     expect(sql('SELECT id FROM discord_guilds;').trim()).toBe('test-guild');
     expect(sql('SELECT command, usage_count FROM command_usage;').trim().split('\n').sort())
       .toEqual(['Translate|3', 'ai|1', 'help|4']);
+  });
+
+  it('drops the remaining AI consent and moderation tables and keeps users and guilds', () => {
+    sql(migration);
+    sql(dropRemaining);
+    const tables = sql(`SELECT count(*) FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name LIKE 'ai_%';`);
+    expect(tables.trim()).toBe('0');
+    expect(sql('SELECT marker FROM users;').trim()).toBe('preserve-me');
+    expect(sql('SELECT id FROM discord_guilds;').trim()).toBe('test-guild');
+    // Re-running is harmless, so an environment that already dropped the tables still migrates
+    expect(() => sql(dropRemaining)).not.toThrow();
   });
 
   it('rolls back the purge if a dependency prevents a table drop', () => {

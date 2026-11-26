@@ -38,6 +38,9 @@ describe('About', () => {
     expect(About.privacy).toContain('We do not send promotional DMs');
     expect(About.privacy).toContain('or delete ordinary Discord messages');
     expect(About.privacy).toContain('TripBot has no AI features');
+    expect(About.privacy).toContain('never used to train AI models');
+    expect(About.privacy).not.toContain('/ai');
+    expect(About.privacy).not.toContain('consent');
     expect(About.privacy).toContain('removes the IRC Bridge role');
     expect(About.privacy).toContain('moderation history');
     expect(About.privacy).toContain('messages containing your Discord ID in TripBot');
