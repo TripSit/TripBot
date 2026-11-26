@@ -20,6 +20,8 @@ export default class About {
 
   public static readonly botEmail: string = 'discord@tripsit.me';
 
+  public static readonly privacyPolicyUrl: string = 'https://tripsit.me/tripbot/privacy';
+
   public static readonly contentEmail: string = 'content@tripsit.me';
 
   public static readonly patreon: string = 'https://www.patreon.com/TripSit';

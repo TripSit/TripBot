@@ -113,6 +113,10 @@ export async function startPage():Promise<InteractionEditReplyOptions> {
             name: 'Disclaimer',
             value: tripsit.disclaimer,
           },
+          {
+            name: 'Privacy',
+            value: `Read our privacy policy at ${tripsit.privacyPolicyUrl}. Use /privacy to see or delete your data.`,
+          },
         ),
     ],
     components: [

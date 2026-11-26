@@ -133,6 +133,16 @@ describe('privacy', () => {
     expect(embedOf(stub).description).toContain('a@b.c');
   });
 
+  it.each([
+    [{ subcommand: 'get' }],
+    [{ subcommand: 'delete' }],
+    [{ subcommand: 'delete', options: { confirmation: CONFIRMATION } }],
+  ])('links the privacy policy in every reply (%j)', async opts => {
+    const { stub } = await run(dPrivacy, opts);
+    const { fields } = (lastReply(stub).embeds as Array<{ data: { fields?: Array<{ name: string; value: string }> } }>)[0].data;
+    expect(fields).toContainEqual({ name: 'Privacy Policy', value: 'https://tripsit.me/tripbot/privacy' });
+  });
+
   it('asks for confirmation before deleting', async () => {
     const { stub } = await run(dPrivacy, { subcommand: 'delete' });
     expect(embedOf(stub).title).toBe('Are you sure?');
