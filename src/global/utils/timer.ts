@@ -218,17 +218,7 @@ async function deleteTicket(ticket: TicketRow): Promise<void> {
   const threadIds = [ticket.thread_id, ticket.meta_thread_id].filter((id): id is string => Boolean(id));
   for (const threadId of threadIds) { // eslint-disable-line no-restricted-syntax
     try {
-      let channel;
-      try {
-        channel = await global.discordClient.channels.fetch(threadId); // eslint-disable-line no-await-in-loop
-      } catch (fetchError) {
-        // The bot can no longer see the thread (removed from the guild or channel), so retrying can never succeed.
-        if (fetchError instanceof DiscordAPIError && fetchError.code === RESTJSONErrorCodes.MissingAccess) {
-          log.debug(F, `Ticket thread ${threadId} is no longer accessible; clearing its reference`);
-          continue; // eslint-disable-line no-continue
-        }
-        throw fetchError;
-      }
+      const channel = await global.discordClient.channels.fetch(threadId); // eslint-disable-line no-await-in-loop
       if (!channel) continue; // eslint-disable-line no-continue
       if (!channel.isThread()) throw new Error(`Ticket cleanup target ${threadId} is not a thread`);
       const thread = channel as ThreadChannel;
@@ -236,6 +226,12 @@ async function deleteTicket(ticket: TicketRow): Promise<void> {
       log.debug(F, `Ticket thread ${threadId} was deleted`);
     } catch (error) {
       if (error instanceof DiscordAPIError && error.code === RESTJSONErrorCodes.UnknownChannel) continue; // eslint-disable-line no-continue
+      // The bot cannot see or manage the thread (removed from the guild or channel, or permissions revoked),
+      // so retrying every run only spams the error channel. Clear the reference instead.
+      if (error instanceof DiscordAPIError && error.code === RESTJSONErrorCodes.MissingAccess) {
+        log.debug(F, `Ticket thread ${threadId} is not accessible; clearing its reference`);
+        continue; // eslint-disable-line no-continue
+      }
       log.error(F, 'Failed to delete a ticket thread; ticket cleanup will retry.');
       throw error;
     }

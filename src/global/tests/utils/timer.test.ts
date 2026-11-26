@@ -534,6 +534,30 @@ describe('tickets', () => {
     expect(logError).not.toHaveBeenCalled();
   });
 
+  it('clears ticket references when deleting the thread is denied (Missing Access)', async () => {
+    dbMock.user_tickets.findMany.mockResolvedValue([ticket({ status: 'ARCHIVED', deleted_at: past() })] as never);
+    client().channels.fetch = vi.fn(async () => ({
+      isThread: () => true,
+      delete: vi.fn(async () => {
+        throw new DiscordAPIError(
+          { message: 'Missing Access', code: RESTJSONErrorCodes.MissingAccess },
+          RESTJSONErrorCodes.MissingAccess,
+          403,
+          'DELETE',
+          'https://discord.invalid',
+          {},
+        );
+      }),
+    }));
+    const logError = vi.spyOn(log, 'error');
+    const { run } = await start();
+    await run('tickets');
+    expect(dbMock.user_tickets.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ status: 'DELETED', thread_id: null }),
+    }));
+    expect(logError).not.toHaveBeenCalled();
+  });
+
   it('clears ticket references when both threads are already gone', async () => {
     dbMock.user_tickets.findMany.mockResolvedValue([ticket({ status: 'ARCHIVED', deleted_at: past(), thread_id: null })] as never);
     const { run } = await start();
