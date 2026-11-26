@@ -86,13 +86,16 @@ describe('toIrcNick', () => {
   it.each([
     ['Moon🌙Bear', 'Moon_Bear/d'],
     ['🌙✨', '_/d'],
-    ['José', 'Jos_/d'],
+    ['José', 'Jose/d'],
     ['東京', '_/d'],
-    ['e\u0301', 'e_/d'],
+    ['e\u0301', 'e/d'],
+    ['𝕸𝖔𝖔𝖓𝕭𝖊𝖆𝖗', 'MoonBear/d'],
+    ['ＭｏｏｎＢｅａｒ', 'MoonBear/d'],
+    ['𝐌𝐨𝐨𝐧 🌙', 'Moon_/d'],
     ['<Moon>"Bear\';', '_Moon_Bear_/d'],
     ['~+%&user', '_user/d'],
     ['a\u0000\r\n\tb', 'a_b/d'],
-  ])('sanitizes %j to an ASCII relay nick', (input, expected) => {
+  ])('sanitizes %j to a plain ASCII relay nick', (input, expected) => {
     expect(toIrcNick(input, 'd', 32)).toBe(expected);
   });
 
@@ -113,7 +116,7 @@ describe('toIrcNick', () => {
 
   it.each(['d', 'M', 'i'])('keeps /%s and counts the complete nickname in UTF-8 bytes', label => {
     const nick = toIrcNick('🌙éMoon'.repeat(1000), label, 8);
-    expect(nick).toBe(`_Moon_/${label}`);
+    expect(nick).toBe(`_eMoon/${label}`);
     expect(Buffer.byteLength(nick, 'utf8')).toBe(8);
   });
 
