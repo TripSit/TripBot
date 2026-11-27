@@ -11,4 +11,4 @@ For a same-repository, non-draft PR from a human with repository write access:
 5. Production remains pending independent human QA approval of the current UAT-to-main promotion PR.
 
 A successful enrollment job alone is insufficient: verify the merge-group run, UAT merge, and deployment record.
-Sensitive files continue to require code-owner review, and UAT has no bypass actors.
+Sensitive files continue to require code-owner review. Only org admins can bypass the UAT rules.

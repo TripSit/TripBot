@@ -50,9 +50,11 @@ class RolloutTests(unittest.TestCase):
         deployment = next(r for r in main['rules'] if r['type'] == 'required_deployments')
         self.assertEqual(deployment['parameters']['required_deployment_environments'], ['uat'])
 
-    def test_queue_requires_every_named_check_from_github_and_no_bypass(self):
-        _, queue = rollout.desired('queue', None)
-        self.assertEqual(queue['bypass_actors'], [])
+    def test_queue_requires_every_named_check_and_only_org_admins_bypass(self):
+        invariants, queue = rollout.desired('queue', None)
+        self.assertEqual(invariants['bypass_actors'], [])
+        self.assertEqual(queue['bypass_actors'], [
+            {'actor_type': 'OrganizationAdmin', 'actor_id': None, 'bypass_mode': 'always'}])
         checks = next(r for r in queue['rules'] if r['type'] == 'required_status_checks')['parameters']
         self.assertEqual({c['context'] for c in checks['required_status_checks']}, set(rollout.CHECKS))
         self.assertTrue(all(c['integration_id'] == 15368 for c in checks['required_status_checks']))
