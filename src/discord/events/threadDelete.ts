@@ -1,4 +1,5 @@
 import postAuditLog from '@discord/utils/auditLog';
+import { restoreRolesForDeletedTicket } from '@discord/utils/tripsitme';
 import { AuditLogEvent } from 'discord.js';
 import {
   ThreadDeleteEvent,
@@ -42,6 +43,13 @@ export const threadDelete: ThreadDeleteEvent = {
           status: 'DELETED',
         },
       });
+
+      // Maintenance skips DELETED tickets, so give the member their roles back now
+      try {
+        await restoreRolesForDeletedTicket(thread.guild, ticketData);
+      } catch (err) {
+        log.error(F, `Failed to restore roles for a deleted ticket thread: ${err}`);
+      }
     }
   },
 };
