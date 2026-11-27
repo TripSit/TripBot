@@ -1,4 +1,5 @@
 import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
+import requireGuildId from '../../../global/utils/requireGuildId';
 
 const F = f(__filename);
 
@@ -13,7 +14,7 @@ export default {
 
   async checkBanStatus(discordId: string) {
     try {
-      const guild = await discordClient.guilds.fetch(process.env.DISCORD_GUILD_ID);
+      const guild = await discordClient.guilds.fetch(requireGuildId());
 
       try {
         const ban = await guild.bans.fetch(discordId);

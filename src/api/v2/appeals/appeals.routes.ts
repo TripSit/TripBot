@@ -8,6 +8,7 @@ import { messageModThread, AppealData } from '../../../discord/utils/modUtils';
 import appeals from './appeals.queries';
 import users from '../users/users.queries';
 import staff from './staff.routes';
+import requireGuildId from '../../../global/utils/requireGuildId';
 
 const F = f(__filename);
 
@@ -109,7 +110,7 @@ router.post('/create', async (req: AuthenticatedRequest, res) => {
 
     const appealData = {
       ...answers,
-      guildId: process.env.DISCORD_GUILD_ID,
+      guildId: requireGuildId(),
       discordId: req.user.discord_id,
     };
 
@@ -134,7 +135,7 @@ router.post('/create', async (req: AuthenticatedRequest, res) => {
     }
 
     try {
-      const guild = await discordClient.guilds.fetch(process.env.DISCORD_GUILD_ID);
+      const guild = await discordClient.guilds.fetch(requireGuildId());
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const botMember = await guild.members.fetch(discordClient.user!.id);
       if (!botMember) throw new Error('Failed to fetch bot user.');

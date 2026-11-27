@@ -26,6 +26,7 @@ import db from './prisma/tripbot/client';
 import { initBridgeMappings } from './global/bridge/bridge.mappings';
 import ircConnect, { ircDisconnect } from './irc/irc';
 import startHeartbeat from './global/utils/heartbeat';
+import requireGuildId from './global/utils/requireGuildId';
 // import startMatrix from './matrix/matrix';
 // import telegramConnect from './telegram/telegram';
 
@@ -78,7 +79,7 @@ const destroy = () => {
   // } catch (err) {
   //   log.error(F, `${err}`);
   // }
-  const existingConnection = getVoiceConnection(env.DISCORD_GUILD_ID);
+  const existingConnection = getVoiceConnection(requireGuildId());
   if (existingConnection) {
     existingConnection.destroy();
   }

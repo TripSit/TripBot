@@ -5,7 +5,6 @@ import {
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-// Child environments intentionally omit app configuration; #1544 tracks the ProcessEnv augmentation.
 const script = path.resolve('src/docker/wait-for-ready.sh');
 const probe = readFileSync('src/docker/readiness.js', 'utf8');
 
@@ -27,7 +26,7 @@ function runProbe(failures: number, mode = 'starting') {
     const result = spawnSync('sh', [script], {
       env: {
         PATH: `${dir}:${process.env.PATH}`, CHECK_DIR: dir, FAILURES: String(failures), MODE: mode,
-      } as unknown as NodeJS.ProcessEnv,
+      },
       encoding: 'utf8',
       timeout: 5000,
     });
@@ -94,7 +93,7 @@ it.each([
     ? "global.fetch = async () => { throw new Error('connection failed'); };"
     : `global.fetch = async () => ({ ok: ${http === 'ready'} });`;
   const result = spawnSync(process.execPath, ['-e', fetch + probe], {
-    env: (credentials ? { DISCORD_CLIENT_TOKEN: 'synthetic-test-token' } : {}) as NodeJS.ProcessEnv,
+    env: credentials ? { DISCORD_CLIENT_TOKEN: 'synthetic-test-token' } : {},
     encoding: 'utf8',
     timeout: 5000,
   });
@@ -105,7 +104,7 @@ it.each([
 it('probes the configured API port', () => {
   const fetch = "global.fetch = async url => ({ ok: url === 'http://127.0.0.1:1447/api/health' });";
   const result = spawnSync(process.execPath, ['-e', fetch + probe], {
-    env: { DISCORD_CLIENT_TOKEN: 'synthetic-test-token', API_PORT: '1447' } as unknown as NodeJS.ProcessEnv,
+    env: { DISCORD_CLIENT_TOKEN: 'synthetic-test-token', API_PORT: '1447' },
     encoding: 'utf8',
     timeout: 5000,
   });

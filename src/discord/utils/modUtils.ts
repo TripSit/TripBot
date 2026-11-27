@@ -55,6 +55,7 @@ import { last } from '../../global/commands/g.last';
 import { appealAccept, appealReject } from './appeal';
 import { getOrCreateGuild, getOrCreateUser } from '../../global/utils/dbRecords';
 import { GUILD_ONLY_TEXT } from './guildOnly';
+import requireGuildId from '../../global/utils/requireGuildId';
 
 /* Future work:
 add dates to bans
@@ -656,7 +657,7 @@ export async function modResponse(
           let userBan = {} as GuildBan;
           try {
             if (appealData) {
-              const guild = await discordClient.guilds.fetch(process.env.DISCORD_GUILD_ID);
+              const guild = await discordClient.guilds.fetch(requireGuildId());
               userBan = await guild.bans.fetch(appealData.discordId);
             } else if (interaction.guild) {
               userBan = await interaction.guild.bans.fetch(userId);
@@ -764,7 +765,7 @@ export async function modResponse(
   if (!process.env.DISCORD_GUILD_ID) {
     throw new Error('DISCORD_GUILD_ID environment variable is not set');
   }
-  const guild = interaction?.guild ?? await discordClient.guilds.fetch(process.env.DISCORD_GUILD_ID);
+  const guild = interaction?.guild ?? await discordClient.guilds.fetch(requireGuildId());
   if (!guild) {
     throw new Error('Failed to fetch guild');
   }
