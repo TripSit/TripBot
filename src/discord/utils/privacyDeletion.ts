@@ -1,6 +1,8 @@
 // Pagination and dependent deletions must finish in order so failures leave cleanup retryable.
 /* eslint-disable no-await-in-loop */
-import { DiscordAPIError, RESTJSONErrorCodes, TextChannel } from 'discord.js';
+import {
+  DiscordAPIError, RESTJSONErrorCodes, SnowflakeUtil, TextChannel,
+} from 'discord.js';
 import type { Channel, Message } from 'discord.js';
 
 const DELETION_REASON = 'User requested deletion of their TripBot data';
@@ -97,6 +99,32 @@ async function deleteThreads(channelIds: string[]): Promise<void> {
       throw error;
     }
   }
+}
+
+/**
+ * Deletes a moderator thread whose last activity is before `cutoff`. Returns true when the thread is gone (deleted
+ * now or already missing) and false when it is still active.
+ */
+export async function deleteStaleModThread(threadId: string, cutoff: Date): Promise<boolean> {
+  let channel: Channel | null;
+  try {
+    channel = await discordClient.channels.fetch(threadId);
+  } catch (error) {
+    if (isDiscordError(error, MISSING_CHANNEL_CODES)) return true;
+    throw error;
+  }
+  if (!channel) return true;
+  if (!channel.isThread()) throw new Error(`Moderator thread ${threadId} is not a thread`);
+
+  const lastMessageAt = channel.lastMessageId ? Number(SnowflakeUtil.timestampFrom(channel.lastMessageId)) : 0;
+  if (Math.max(lastMessageAt, channel.createdTimestamp ?? 0) >= cutoff.getTime()) return false;
+
+  try {
+    await channel.delete('Moderator thread inactive past the retention period');
+  } catch (error) {
+    if (!isDiscordError(error, [RESTJSONErrorCodes.UnknownChannel])) throw error;
+  }
+  return true;
 }
 
 async function revokeIrcBridgeRole(discordId: string): Promise<void> {

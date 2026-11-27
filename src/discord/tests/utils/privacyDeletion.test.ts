@@ -1,5 +1,5 @@
 import { Collection, DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
-import { deleteDiscordPrivacyData } from '../../utils/privacyDeletion';
+import { deleteDiscordPrivacyData, deleteStaleModThread } from '../../utils/privacyDeletion';
 
 const DELETION_REASON = 'User requested deletion of their TripBot data';
 const MISSING_PERMISSIONS = 'missing permissions';
@@ -181,5 +181,59 @@ describe('deleteDiscordPrivacyData', () => {
     await deleteDiscordPrivacyData(REQUESTER_ID, [], [], [MODERATION_LOG]);
     expect(fetchChannel).toHaveBeenCalledWith(MODERATION_LOG);
     expect(deleteMessage).toHaveBeenCalledWith();
+  });
+});
+
+describe('deleteStaleModThread', () => {
+  const cutoff = new Date('2026-08-29T00:00:00Z');
+  const fetchChannel = vi.fn();
+  // Snowflakes encode creation time as ms since the Discord epoch (2015-01-01), shifted left 22 bits
+  const snowflakeAt = (date: Date) => String((BigInt(date.getTime()) - 1420070400000n) * 4194304n);
+  const thread = (lastMessageAt: Date | null, createdAt = new Date('2026-01-01T00:00:00Z')) => ({
+    isThread: () => true,
+    createdTimestamp: createdAt.getTime(),
+    lastMessageId: lastMessageAt ? snowflakeAt(lastMessageAt) : null,
+    delete: vi.fn(),
+  });
+
+  beforeEach(() => {
+    fetchChannel.mockReset();
+    (global as unknown as { discordClient: unknown }).discordClient = { channels: { fetch: fetchChannel } };
+  });
+
+  it('deletes a thread whose last message is older than the cutoff', async () => {
+    const stale = thread(new Date('2026-06-01T00:00:00Z'));
+    fetchChannel.mockResolvedValueOnce(stale);
+    expect(await deleteStaleModThread('t', cutoff)).toBe(true);
+    expect(stale.delete).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps a thread with a message after the cutoff', async () => {
+    const active = thread(new Date('2026-10-01T00:00:00Z'));
+    fetchChannel.mockResolvedValueOnce(active);
+    expect(await deleteStaleModThread('t', cutoff)).toBe(false);
+    expect(active.delete).not.toHaveBeenCalled();
+  });
+
+  it('keeps a recently created thread that has no messages yet', async () => {
+    const fresh = thread(null, new Date('2026-11-01T00:00:00Z'));
+    fetchChannel.mockResolvedValueOnce(fresh);
+    expect(await deleteStaleModThread('t', cutoff)).toBe(false);
+    expect(fresh.delete).not.toHaveBeenCalled();
+  });
+
+  it('treats a thread that no longer exists as gone', async () => {
+    const code = RESTJSONErrorCodes.UnknownChannel;
+    fetchChannel.mockRejectedValueOnce(
+      new DiscordAPIError({ message: 'Unknown Channel', code }, code, 404, 'GET', 'https://discord.invalid', {}),
+    );
+    expect(await deleteStaleModThread('t', cutoff)).toBe(true);
+    fetchChannel.mockResolvedValueOnce(null);
+    expect(await deleteStaleModThread('t', cutoff)).toBe(true);
+  });
+
+  it('fails closed when the target is not a thread', async () => {
+    fetchChannel.mockResolvedValueOnce({ isThread: () => false });
+    await expect(deleteStaleModThread('t', cutoff)).rejects.toThrow('is not a thread');
   });
 });

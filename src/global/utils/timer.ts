@@ -27,8 +27,10 @@ import { experience } from './experience';
 import { profile } from '../commands/g.learn';
 import getTripSitStatistics from '../commands/g.tripsitstats';
 import { getOrCreateGuild } from './dbRecords';
-import { pruneModerationActions, purgeInactiveUsers, reconcileLiftedBans } from '../commands/g.privacy';
-import { deleteDiscordPrivacyData } from '../../discord/utils/privacyDeletion';
+import {
+  pruneModerationActions, pruneModThreads, purgeInactiveUsers, reconcileLiftedBans,
+} from '../commands/g.privacy';
+import { deleteDiscordPrivacyData, deleteStaleModThread } from '../../discord/utils/privacyDeletion';
 import { fetchGuildBanIds } from '../../discord/utils/guildBans';
 import { remindUnansweredTripSitTicket } from '../../discord/utils/tripsitResponseReminder';
 
@@ -904,6 +906,7 @@ async function enforceRetention(): Promise<void> {
   }
   await purgeInactiveUsers(new Date(), deleteDiscordPrivacyData);
   await pruneModerationActions();
+  await pruneModThreads(deleteStaleModThread);
 }
 
 async function checkEvery(
