@@ -99,6 +99,14 @@ export function warningRejectionExtension(remainingMs: number): number {
   return Math.max(warningRejectionTimeout, scaled);
 }
 
+/** Works out how long a rejection times someone out for, given when their current timeout (if any) ends. */
+function planRejectionTimeout(existingTimeout: number | null): { extended: boolean; addedMs: number; totalMs: number } {
+  const remainingMs = existingTimeout !== null ? Math.max(existingTimeout - Date.now(), 0) : 0;
+  const extended = remainingMs > 0;
+  const addedMs = extended ? warningRejectionExtension(remainingMs) : warningRejectionTimeout;
+  return { extended, addedMs, totalMs: Math.min(remainingMs + addedMs, maxTimeoutMs) };
+}
+
 const warningRejectionNote = 'Automatic timeout: this user rejected the warning they were given.';
 
 // Internal-note keywords that mark a vendor/bot ban. Full bans whose internal
@@ -1228,13 +1236,8 @@ export async function refusalButton(
     }
   }
 
-  const now = Date.now();
-  const existingTimeout = targetMember?.communicationDisabledUntilTimestamp ?? null;
-  const remainingMs = existingTimeout !== null && existingTimeout > now ? existingTimeout - now : 0;
-  const extended = remainingMs > 0;
-  const addedMs = extended ? warningRejectionExtension(remainingMs) : warningRejectionTimeout;
-  const totalMs = Math.min(remainingMs + addedMs, maxTimeoutMs);
-  const timeoutEnds = new Date(now + totalMs);
+  const { extended, addedMs, totalMs } = planRejectionTimeout(targetMember?.communicationDisabledUntilTimestamp ?? null);
+  const timeoutEnds = new Date(Date.now() + totalMs);
   const humanDuration = msToHuman(extended ? addedMs : totalMs);
   const willTimeout = !!targetMember;
 
