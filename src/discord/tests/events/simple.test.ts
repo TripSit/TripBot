@@ -28,6 +28,7 @@ const mocks = vi.hoisted(() => ({
   chitragupta: vi.fn(),
   bestOf: vi.fn(),
   relayEdit: vi.fn(),
+  restoreRoles: vi.fn(),
 }));
 
 vi.mock('../../utils/auditLog', () => ({ default: mocks.postAuditLog, postAuditLog: mocks.postAuditLog }));
@@ -35,6 +36,7 @@ vi.mock('../../utils/trust', () => ({ default: mocks.trust }));
 vi.mock('../../../global/utils/experience', () => ({ giveMilestone: mocks.giveMilestone }));
 vi.mock('../../utils/chitragupta', () => ({ chitragupta: mocks.chitragupta }));
 vi.mock('../../utils/bestOfTripsit', () => ({ bestOf: mocks.bestOf }));
+vi.mock('../../utils/tripsitme', () => ({ restoreRolesForDeletedTicket: mocks.restoreRoles }));
 vi.mock('../../utils/chatBridge', () => ({ relayDiscordEdit: mocks.relayEdit }));
 
 const send = vi.fn();
@@ -142,12 +144,20 @@ describe('threadDelete', () => {
     await threadDelete.execute(thread as never);
     expect(mocks.postAuditLog).toHaveBeenCalledWith(expect.objectContaining({ action: 'deleted', targetId: 't1' }));
     expect(dbMock.user_tickets.update).toHaveBeenCalledWith({ where: { id: 'ticket1' }, data: { status: 'DELETED' } });
+    expect(mocks.restoreRoles).toHaveBeenCalledWith(thread.guild, { id: 'ticket1' });
+  });
+
+  it('still finishes when restoring roles fails', async () => {
+    dbMock.user_tickets.findFirst.mockResolvedValue({ id: 'ticket1' } as never);
+    mocks.restoreRoles.mockRejectedValueOnce(new Error('discord down'));
+    await expect(threadDelete.execute(thread as never)).resolves.toBeUndefined();
   });
 
   it('does nothing further when no open ticket uses the thread', async () => {
     dbMock.user_tickets.findFirst.mockResolvedValue(null);
     await threadDelete.execute(thread as never);
     expect(dbMock.user_tickets.update).not.toHaveBeenCalled();
+    expect(mocks.restoreRoles).not.toHaveBeenCalled();
   });
 
   it('ignores threads without a guild', async () => {

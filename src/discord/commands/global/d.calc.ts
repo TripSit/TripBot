@@ -139,6 +139,7 @@ async function dCalcKetamine(
 
   const data = await calcKetamine(givenWeight, weightUnits);
 
+  embed.setDescription('More about ketamine: `/drug substance:ketamine`');
   embed.addFields(
     {
       name: 'Insufflated',
@@ -185,6 +186,7 @@ async function dCalcMDMA(
     As dosage increases, so does the likelihood of experiencing negative side effects. \
     Keeping doses in the light to medium range can help maximize pleasurable effects while minimizing discomfort. \
     For more information check out [RollSafe](https://rollsafe.org/mdma-dosage/).`;
+  description += '\n\nMore about MDMA: `/drug substance:mdma`';
   embed.setDescription(description);
   return embed;
 }
@@ -264,6 +266,8 @@ async function dCalcPsychedelics(
     stripIndents`
     This ESTIMATE only works for lysergamides such as LSD and tryptamines such as Magic Mushrooms.
     As all bodies and brains are different, results may vary. 
+    More about this substance: \`/drug substance:${drugType === 'lsd' ? 'lsd' : 'mushrooms'}\`
+
     [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) `,
     Colors.Red,
   );
