@@ -868,6 +868,18 @@ async function announceUserClose(
   }
 }
 
+const CLOSE_CONFIRMATION_WINDOW_MS = 5 * 60 * 1000;
+
+/** True when the user's open ticket was made within the last few minutes. */
+async function isRecentTicket(discordId: string): Promise<boolean> {
+  const userData = await getOrCreateUser(discordId);
+  const ticket = await db.user_tickets.findFirst({
+    where: { user_id: userData.id, status: { not: { in: ['CLOSED', 'DELETED'] } } },
+    select: { created_at: true },
+  });
+  return !!ticket && Date.now() - ticket.created_at.getTime() < CLOSE_CONFIRMATION_WINDOW_MS;
+}
+
 /**
  * Handles removing of the NeedsHelp mode
  * @param {ButtonInteraction} interaction
@@ -884,6 +896,25 @@ export async function tripsitmeUserClose(
 
   if (!cooldown.success && cooldown.message) {
     await interaction.reply({ content: cooldown.message, flags: MessageFlags.Ephemeral });
+    return;
+  }
+
+  const [closeAction, closeTargetId, closeConfirmed] = interaction.customId.split('~');
+  // People sometimes click this by accident, or before a helper has had time to answer, which marks the ticket
+  // as resolved and tells the team they no longer need help, so ask first during the first few minutes.
+  if (closeAction === 'tripsitmeUserClose' && !closeConfirmed && interaction.user.id === closeTargetId
+    && await isRecentTicket(closeTargetId)) {
+    await interaction.reply({
+      content: stripIndents`Are you sure you don't need help anymore?
+      It can take a few minutes for our helpers to respond, and the team may stop looking at your thread if you close it.`,
+      components: [new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`tripsitmeUserClose~${closeTargetId}~confirmed`)
+          .setLabel('Yes, I\'m good now')
+          .setStyle(ButtonStyle.Success),
+      )],
+      flags: MessageFlags.Ephemeral,
+    });
     return;
   }
 
