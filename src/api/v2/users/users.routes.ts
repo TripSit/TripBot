@@ -34,11 +34,8 @@ router.get('/banned', async (req: AuthenticatedRequest, res) => {
     return res.json(banStatus);
   } catch (error) {
     log.error(F, `Error checking ban status: ${error}`);
-    return res.status(200).json({
-      success: false,
-      banned: false,
-      error: 'Failed to check ban status',
-    });
+    // An unknown ban status is a failure, not "not banned": answer with an error status and no `banned` flag.
+    return res.status(503).json({ error: 'Failed to check ban status' });
   }
 });
 
