@@ -185,6 +185,30 @@ describe('guildMemberUpdate', () => {
       expect(elsewhere.members.remove).not.toHaveBeenCalled();
     });
 
+    it('keeps helpers in their threads when help mode removed the role (saved for restore)', async () => {
+      const other = thread({ id: 'other' });
+      setup([other], 'own');
+      dbMock.users.findUnique.mockResolvedValue({ id: 'uid', roles: 'a,helper,b' } as never);
+      await change(['helper'], []);
+      expect(other.members.remove).not.toHaveBeenCalled();
+    });
+
+    it('still removes the role holder when the saved roles do not include it', async () => {
+      const other = thread({ id: 'other' });
+      setup([other], 'own');
+      dbMock.users.findUnique.mockResolvedValue({ id: 'uid', roles: 'a,b' } as never);
+      await change(['helper'], []);
+      expect(other.members.remove).toHaveBeenCalledWith('m1');
+    });
+
+    it('removes them when roles are saved but there is no open ticket', async () => {
+      const other = thread({ id: 'other' });
+      setup([other], null);
+      dbMock.users.findUnique.mockResolvedValue({ id: 'uid', roles: 'helper' } as never);
+      await change(['helper'], []);
+      expect(other.members.remove).toHaveBeenCalledWith('m1');
+    });
+
     it('does not create a user record for the ex-helper, and still removes them from threads', async () => {
       const t = thread();
       setup([t]);

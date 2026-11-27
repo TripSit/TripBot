@@ -197,9 +197,19 @@ async function removeExTeamFromThreads(
     log.debug(F, `${newMember.displayName} was a helper/tripsitter!`);
     const channelTripsit = await discordClient.channels.fetch(guildData.channel_tripsit) as TextChannel;
     // Only look the user up; a helper leaving a role shouldn't create a record
-    const userData = await db.users.findUnique({ where: { discord_id: newMember.user.id }, select: { id: true } });
+    const userData = await db.users.findUnique({
+      where: { discord_id: newMember.user.id },
+      select: { id: true, roles: true },
+    });
 
     const ticketData = userData ? await getOpenTicket(userData.id) : null;
+
+    // Help mode strips the helper role and saves it in users.roles to be given back when the ticket closes.
+    // Nothing re-adds thread memberships afterwards, so leave the helper in the threads they were already in.
+    if (ticketData && userData?.roles?.split(',').includes(roleId)) {
+      log.debug(F, `${newMember.displayName}'s role was removed for help mode; keeping them in their threads`);
+      return;
+    }
 
     const fetchedThreads = await channelTripsit.threads.fetch();
     fetchedThreads.threads.forEach(async thread => {
