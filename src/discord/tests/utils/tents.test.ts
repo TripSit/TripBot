@@ -229,6 +229,20 @@ describe('pitchTent', () => {
     expect(setChannel).toHaveBeenCalledWith('owned');
   });
 
+  it('does not create a tent when moving a host back to their tent fails', async () => {
+    const { pitchTent } = await load();
+    const owned = {
+      ...tent({ id: 'owned', overwrites: { m1: { allow: [Flags.MoveMembers] } } }), parentId: e.CATEGORY_VOICE,
+    };
+    const {
+      Old, New, create, setChannel,
+    } = states(GuildPremiumTier.None, false, collectionOf([['owned', owned]] as never));
+    setChannel.mockRejectedValue(new Error('Target user is not connected to voice'));
+    await expect(pitchTent(Old, New)).resolves.toBeUndefined();
+    expect(setChannel).toHaveBeenCalledWith('owned');
+    expect(create).not.toHaveBeenCalled();
+  });
+
   it('keeps tent names within the Discord limit', async () => {
     const { pitchTent } = await load();
     const { Old, New, create } = states();
