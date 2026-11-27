@@ -14,6 +14,7 @@ import {
   ButtonInteraction,
   ChatInputCommandInteraction,
   Colors,
+  DiscordAPIError,
   Guild,
   GuildMember,
   Message,
@@ -26,6 +27,7 @@ import {
   ModalBuilder,
   ModalSubmitInteraction,
   PermissionResolvable,
+  RESTJSONErrorCodes,
   Role,
   TextChannel,
   TextInputBuilder,
@@ -794,6 +796,37 @@ async function restoreOldRoles(
         log.error(F, `${roleObj.name} could not be added to ${target.displayName} (${target.id}) in ${roleGuild}!`);
       }
     }));
+  }
+}
+
+/**
+ * Undoes help mode for a ticket whose thread was deleted by hand in Discord: removes the needshelp role, gives back
+ * the saved roles, and clears the saved snapshot. Members that left the guild have nothing to restore.
+ */
+export async function restoreRolesForDeletedTicket(guild: Guild, ticket: user_tickets): Promise<void> {
+  const userData = await getOrCreateUser(ticket.user_id);
+  if (!userData.discord_id) return;
+
+  let target: GuildMember;
+  try {
+    target = await guild.members.fetch(userData.discord_id);
+  } catch (err) {
+    if (err instanceof DiscordAPIError && err.code === RESTJSONErrorCodes.UnknownMember) {
+      // They left, so there is nothing to restore; the snapshot is dropped
+      if (userData.roles) await db.users.update({ where: { id: userData.id }, data: { roles: null } });
+      return;
+    }
+    // Keep the snapshot so the roles are not lost
+    log.error(F, `Could not fetch a member to restore roles after their ticket thread was deleted: ${err}`);
+    return;
+  }
+
+  const guildData = await getOrCreateGuild(guild.id);
+  const roleNeedshelp = await removeNeedsHelpRole(guild, guild.client.user.id, guildData, target);
+  await restoreOldRoles(guild, guild.client.user.id, target, userData, roleNeedshelp);
+
+  if (userData.roles) {
+    await db.users.update({ where: { id: userData.id }, data: { roles: null } });
   }
 }
 
