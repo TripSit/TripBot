@@ -438,7 +438,7 @@ describe('messageCreate', () => {
 });
 
 describe('voiceStateUpdate', () => {
-  const auditSend = { send: vi.fn() };
+  const auditSend = { send: vi.fn(async () => undefined) };
   const state = (over: Record<string, unknown> = {}) => ({
     guild: { id: e.DISCORD_GUILD_ID, channels: { fetch: vi.fn(async () => auditSend) } },
     member: { displayName: 'Ally', user: { bot: false } },
@@ -447,6 +447,14 @@ describe('voiceStateUpdate', () => {
     ...over,
   });
   const chan = (name: string) => ({ name });
+
+  it('keeps going when the audit log message cannot be sent', async () => {
+    auditSend.send.mockRejectedValueOnce(new Error('Missing Access'));
+    const join = state({ channel: chan('Lounge'), channelId: 'l' });
+    await expect(voiceStateUpdate.execute(state() as never, join as never)).resolves.toBeUndefined();
+    await flushPromises();
+    expect(mocks.teardownTent).toHaveBeenCalled();
+  });
 
   it('logs joins, leaves and moves', async () => {
     const join = state({ channel: chan('Lounge'), channelId: 'l' });
