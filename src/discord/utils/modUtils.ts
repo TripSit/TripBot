@@ -31,6 +31,7 @@ import {
   MessageActionRowComponentBuilder,
   MessageContextMenuCommandInteraction,
   ModalBuilder,
+  StringSelectMenuBuilder,
   ModalSubmitInteraction,
   Role,
   Snowflake,
@@ -46,6 +47,9 @@ import {
 } from 'discord.js';
 import { Duration } from 'luxon';
 import { parseDuration, validateDurationInput } from '../../global/utils/parseDuration';
+import {
+  applyBanReason, BAN_REASON_SELECT_ID, BAN_REASONS, selectedBanReason,
+} from './banReasons';
 import { embedTemplate, errorEmbed } from './embedTemplate';
 import { getDiscordMember } from './guildMemberLookup';
 import { modActionCounts, modHistoryRows } from './modHistory';
@@ -1657,6 +1661,7 @@ export async function moderate(
     description = modalInt.fields.getTextInputValue('description');
   }
   let internalNote = modalInt.fields.getTextInputValue('internalNote');
+  ({ internalNote, description } = applyBanReason(selectedBanReason(modalInt), internalNote, description));
 
   // Check if this is a vendor/bot ban (none of these should DM the user)
   const isVendorBotBan = isFullBan(command)
@@ -2063,10 +2068,10 @@ export async function moderate(
     const newActionFiled = actionField?.value.concat(`
     
     ${buttonInt.user.toString()} muted this user:
-    > ${modalInt.fields.getTextInputValue('internalNote')}
+    > ${internalNote}
     
     Message sent to user:
-    > ${modalInt.fields.getTextInputValue('description')}`);
+    > ${description}`);
 
     // Replace the action field with the new one
     embed.fields?.splice(embed.fields?.findIndex(field => field.name === 'Actions'), 1, {
@@ -2079,10 +2084,10 @@ export async function moderate(
       {
         name: 'Actions',
         value: stripIndents`${buttonInt.user.toString()} muted this user:
-      > ${modalInt.fields.getTextInputValue('internalNote')}
+      > ${internalNote}
   
       Message sent to user:
-      > ${!isNote(command) && !isReport(command) ? modalInt.fields.getTextInputValue('description') : ''}`,
+      > ${!isNote(command) && !isReport(command) ? description : ''}`,
         inline: true,
       },
     );
@@ -2302,6 +2307,17 @@ export async function modModal(
       .setRequired(command === 'WARNING')
       .setCustomId('description')));
   }
+  // Warnings, timeouts and bans can name the rule that was broken, which fills in the message to the user
+  if (isWarning(command) || isTimeout(command) || isFullBan(command)) {
+    modal.addLabelComponents(new LabelBuilder().setLabel('Rule broken (optional)').setStringSelectMenuComponent(
+      new StringSelectMenuBuilder()
+        .setCustomId(BAN_REASON_SELECT_ID)
+        .setPlaceholder('Pick a rule to fill in the message')
+        .setRequired(false)
+        .addOptions(BAN_REASONS.map(reason => ({ label: reason.label, value: reason.value }))),
+    ));
+  }
+
   // Only timeout and full ban can have a duration, but they're different, so separate.
   if (isTimeout(command)) {
     modal.addLabelComponents(new LabelBuilder().setLabel('Timeout for how long?').setTextInputComponent(new TextInputBuilder()

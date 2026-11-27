@@ -250,183 +250,74 @@ async function dGame(interaction: ChatInputCommandInteraction): Promise<boolean>
   return true;
 }
 
-async function dBook(interaction: ChatInputCommandInteraction): Promise<boolean> {
-  const query = interaction.options.getString('book', true);
-  let result;
+type BookResult = {
+  title: string;
+  url: string;
+  description: string;
+  thumb?: string;
+  fields: { name: string; value: string; inline: boolean }[];
+};
+
+function bookFallbackResult(query: string, description: string): BookResult {
+  return {
+    title: `Book: ${query}`,
+    url: `https://books.google.com/books?vid=ISBN${encodeURIComponent(query)}`,
+    description,
+    fields: [],
+  };
+}
+
+function bookResultFromVolume(query: string, book: Record<string, any>): BookResult {
+  const infoLink = book.infoLink ?? `https://books.google.com/books?vid=ISBN${encodeURIComponent(query)}`;
+  const authors = book.authors ? book.authors.join(', ') : 'Unknown';
+
+  // Use title and author for platform search URLs
+  const searchTerm = encodeURIComponent(`${book.title} ${authors !== 'Unknown' ? authors : ''}`.trim());
+  const platforms = [
+    { name: 'Kobo', url: `https://www.kobo.com/search?query=${searchTerm}` },
+    { name: 'Amazon', url: `https://www.amazon.com/s?k=${searchTerm}` },
+    { name: 'Google Books', url: infoLink },
+    { name: 'Apple Books', url: `https://books.apple.com/us/search?term=${searchTerm}` },
+  ];
+
+  return {
+    title: `Book: ${book.title ?? query}`,
+    url: infoLink,
+    description: book.description ?? 'No description available.',
+    thumb: book.imageLinks?.thumbnail ?? '',
+    fields: [
+      { name: 'Author', value: authors, inline: true },
+      { name: 'Publisher', value: book.publisher ?? 'Unknown', inline: true },
+      { name: 'Published Date', value: book.publishedDate ?? 'Unknown', inline: true },
+      {
+        name: 'Platforms',
+        value: platforms.map(p => `[${p.name}](${p.url})`).join(' | '),
+        inline: false,
+      },
+    ],
+  };
+}
+
+async function lookupBook(query: string): Promise<BookResult> {
   try {
     const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=1`;
     const response = await fetch(url);
     if (!response.ok) {
-      result = {
-        title: `Book: ${query}`,
-        url: `https://books.google.com/books?vid=ISBN${encodeURIComponent(query)}`,
-        description: 'Google Books API is currently unavailable. Please try again later.',
-        fields: [],
-      };
-    } else {
-      const data = await response.json();
-      if (!data.items || data.items.length === 0) {
-        result = {
-          title: `Book: ${query}`,
-          url: `https://books.google.com/books?vid=ISBN${encodeURIComponent(query)}`,
-          description: `No results found for "${query}".`,
-          fields: [],
-        };
-      } else {
-        const book = data.items[0].volumeInfo;
-        const infoLink = book.infoLink ?? `https://books.google.com/books?vid=ISBN${encodeURIComponent(query)}`;
-        const thumbnail = book.imageLinks?.thumbnail ?? '';
-        const authors = book.authors ? book.authors.join(', ') : 'Unknown';
-        const description = book.description ?? 'No description available.';
-        const publisher = book.publisher ?? 'Unknown';
-        const publishedDate = book.publishedDate ?? 'Unknown';
-
-        // Use title and author for platform search URLs
-        const searchTerm = encodeURIComponent(`${book.title} ${authors !== 'Unknown' ? authors : ''}`.trim());
-        const platforms = [
-          { name: 'Kobo', url: `https://www.kobo.com/search?query=${searchTerm}` },
-          { name: 'Amazon', url: `https://www.amazon.com/s?k=${searchTerm}` },
-          { name: 'Google Books', url: infoLink },
-          { name: 'Apple Books', url: `https://books.apple.com/us/search?term=${searchTerm}` },
-        ];
-
-        result = {
-          title: `Book: ${book.title ?? query}`,
-          url: infoLink,
-          description,
-          thumb: thumbnail,
-          fields: [
-            { name: 'Author', value: authors, inline: true },
-            { name: 'Publisher', value: publisher, inline: true },
-            { name: 'Published Date', value: publishedDate, inline: true },
-            {
-              name: 'Platforms',
-              value: platforms.map(p => `[${p.name}](${p.url})`).join(' | '),
-              inline: false,
-            },
-          ],
-        };
-      }
+      return bookFallbackResult(query, 'Google Books API is currently unavailable. Please try again later.');
     }
+    const data = await response.json();
+    if (!data.items || data.items.length === 0) {
+      return bookFallbackResult(query, `No results found for "${query}".`);
+    }
+    return bookResultFromVolume(query, data.items[0].volumeInfo);
   } catch {
-    result = {
-      title: `Book: ${query}`,
-      url: `https://books.google.com/books?vid=ISBN${encodeURIComponent(query)}`,
-      description: 'Book search is currently unavailable. Please try again later.',
-      fields: [],
-    };
+    return bookFallbackResult(query, 'Book search is currently unavailable. Please try again later.');
   }
-
-  const embed = embedTemplate()
-    .setTitle(result.title)
-    .setURL(result.url)
-    .setDescription(result.description);
-
-  if (result.thumb) embed.setThumbnail(result.thumb);
-  if (result.fields) {
-    result.fields.forEach(field => {
-      embed.addFields({
-        name: field.name,
-        value: field.value,
-        inline: field.inline ?? false,
-      });
-    });
-  }
-
-  await interaction.editReply({ embeds: [embed] });
-  return true;
 }
 
-async function dSong(interaction: ChatInputCommandInteraction): Promise<boolean> {
-  const query = interaction.options.getString('song', true);
-  let result;
-  let odesliInputUrl = '';
-  let odesliUrl = `https://odesli.co/search/${encodeURIComponent(query)}`;
-  let platformsField = '';
-  let title = query;
-  let artist = 'Unknown';
-  let artwork = '';
-
-  const isUrl = /^https?:\/\/\S+$/.test(query);
-
-  try {
-    if (isUrl) {
-      odesliInputUrl = query;
-    } else {
-      // Future: Get YouTube API key and use that instead of iTunes for better results
-      const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=1`;
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('iTunes API unavailable');
-      const data = await response.json();
-      if (!data.results || data.results.length === 0) throw new Error('No song found');
-      const song = data.results[0];
-      odesliInputUrl = song.trackViewUrl ?? `https://music.apple.com/us/search?term=${encodeURIComponent(song.trackName ?? query)}`;
-    }
-
-    try {
-      const odesliRes = await fetch(`https://api.song.link/v1-alpha.1/links?url=${encodeURIComponent(odesliInputUrl)}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      const odesliData = await odesliRes.json();
-      if (odesliData.entitiesByUniqueId && odesliData.linksByPlatform) {
-        odesliUrl = odesliData.pageUrl ?? odesliUrl;
-        const entityKey = Object.keys(odesliData.entitiesByUniqueId)[0];
-        const entity = odesliData.entitiesByUniqueId[entityKey];
-        title = entity.title ?? title;
-        artist = entity.artistName ?? artist;
-        artwork = entity.thumbnailUrl ?? artwork;
-
-        const platformsToShow = [
-          'spotify',
-          'soundcloud',
-          'youtubeMusic',
-          'appleMusic',
-          'amazonMusic',
-        ];
-        platformsField = platformsToShow
-          .filter(platform => odesliData.linksByPlatform[platform])
-          .map(platform => {
-            const platformName = {
-              spotify: 'Spotify',
-              appleMusic: 'Apple',
-              youtubeMusic: 'YouTube',
-              soundcloud: 'SoundCloud',
-              amazonMusic: 'Amazon',
-            }[platform] ?? platform;
-            const { url } = odesliData.linksByPlatform[platform];
-            return `[${platformName}](${url})`;
-          })
-          .join(' | ');
-      } else {
-        platformsField = `[Apple Music](${odesliInputUrl})`;
-      }
-    } catch {
-      platformsField = `[Apple Music](${odesliInputUrl})`;
-    }
-
-    result = {
-      title: `Song: ${title}`,
-      url: odesliUrl,
-      description: ' ',
-      thumb: artwork,
-      fields: [
-        { name: 'Artist', value: artist, inline: true },
-        {
-          name: 'Platforms',
-          value: platformsField,
-          inline: false,
-        },
-      ],
-    };
-  } catch {
-    result = {
-      title: `Song: ${query}`,
-      url: odesliUrl,
-      description: 'Song search is currently unavailable or no results found.',
-      fields: [],
-    };
-  }
+async function dBook(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  const query = interaction.options.getString('book', true);
+  const result = await lookupBook(query);
 
   const embed = embedTemplate()
     .setTitle(result.title)
@@ -604,16 +495,6 @@ export const dSearch: SlashCommand = {
         .setName('ephemeral')
         .setDescription('Set to "True" to show the response only to you')))
     .addSubcommand(sub => sub
-      .setName('song')
-      .setDescription('Search for a song and where to listen')
-      .addStringOption(option => option
-        .setName('song')
-        .setDescription('Song title or artist')
-        .setRequired(true))
-      .addBooleanOption(option => option
-        .setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
-    .addSubcommand(sub => sub
       .setName('wikipedia')
       .setDescription('Query a topic on Wikipedia')
       .addStringOption(option => option
@@ -648,8 +529,6 @@ export const dSearch: SlashCommand = {
         return dGame(interaction);
       case 'book':
         return dBook(interaction);
-      case 'song':
-        return dSong(interaction);
       case 'wikipedia':
         return dWikipedia(interaction);
       case 'weather':
