@@ -249,7 +249,14 @@ export async function pitchTent(
       },
     ],
   }).then(async newChannel => {
-    New.member?.voice.setChannel(newChannel.id);
+    try {
+      await New.member?.voice.setChannel(newChannel.id);
+    } catch (err) {
+      // They left the campfire while the tent was being made, so no voice event will ever tear it down
+      log.debug(F, `pitchTent: ${New.member?.displayName} could not be moved, deleting the new tent: ${err}`);
+      await newChannel.delete('Tent creator left before being moved in').catch(() => undefined);
+      return;
+    }
     await newChannel.fetch();
     await newChannel.send({
       components: [

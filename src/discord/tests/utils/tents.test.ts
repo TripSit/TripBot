@@ -151,7 +151,7 @@ describe('registerTentStatusSync', () => {
 describe('pitchTent', () => {
   function states(premiumTier: GuildPremiumTier | number = GuildPremiumTier.None, createFails = false) {
     const newChannel = {
-      id: 'new1', fetch: vi.fn(), send: vi.fn(), name: '⛺│Ally\'s tent', client: { rest: { put: vi.fn() } }, guild: { roles: { everyone: { id: 'everyone' } } }, permissionsFor: () => ({ has: () => true }), permissionOverwrites: { cache: new Map() },
+      id: 'new1', delete: vi.fn(async () => undefined), fetch: vi.fn(), send: vi.fn(), name: '⛺│Ally\'s tent', client: { rest: { put: vi.fn() } }, guild: { roles: { everyone: { id: 'everyone' } } }, permissionsFor: () => ({ has: () => true }), permissionOverwrites: { cache: new Map() },
     };
     const setChannel = vi.fn();
     const create = createFails ? vi.fn().mockRejectedValue(new Error('Missing Permissions')) : vi.fn(async () => newChannel);
@@ -187,6 +187,30 @@ describe('pitchTent', () => {
     await pitchTent(Old, New);
     expect((create.mock.calls[0] as unknown as [{ bitrate: number }])[0].bitrate).toBe(bitrate);
     await flushPromises();
+  });
+
+  it('deletes the new tent when the creator left before they could be moved in', async () => {
+    const { pitchTent } = await load();
+    const {
+      Old, New, setChannel, newChannel,
+    } = states();
+    setChannel.mockRejectedValue(new Error('Target user is not connected to voice'));
+    await pitchTent(Old, New);
+    await flushPromises();
+    expect(newChannel.delete).toHaveBeenCalledWith('Tent creator left before being moved in');
+    expect(newChannel.send).not.toHaveBeenCalled();
+  });
+
+  it('still finishes when the empty tent cannot be deleted either', async () => {
+    const { pitchTent } = await load();
+    const {
+      Old, New, setChannel, newChannel,
+    } = states();
+    setChannel.mockRejectedValue(new Error('not connected'));
+    newChannel.delete.mockRejectedValue(new Error('Unknown Channel'));
+    await expect(pitchTent(Old, New)).resolves.toBeUndefined();
+    await flushPromises();
+    expect(newChannel.send).not.toHaveBeenCalled();
   });
 
   it('logs failures instead of throwing', async () => {
