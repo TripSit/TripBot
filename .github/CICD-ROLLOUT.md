@@ -129,8 +129,8 @@ python3 .github/scripts/configure-cicd.py --repository TripSit/TripBot --phase q
 ```
 
 The script refuses this phase unless verified promotion is enabled. It installs the native UAT
-merge queue, required checks and CodeQL thresholds, sensitive-path code-owner review, and no
-UAT bypass. It removes only superseded classic UAT status-check requirements, enables repository
+merge queue, required checks and CodeQL thresholds, sensitive-path code-owner review, and a UAT
+bypass for org admins only. It removes only superseded classic UAT status-check requirements, enables repository
 auto-merge, changes default workflow permissions to read, retains GitHub Actions PR creation, and finally
 leaves `CICD_QUEUE_ENABLED=false` for the manual trial. Build concurrency and merge group size start at one.
 

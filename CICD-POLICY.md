@@ -5,6 +5,8 @@ The delivery contract and phased rollout are defined in [.github/CICD-ROLLOUT.md
 - Trusted same-repository non-draft human PRs target `uat` and enter its native merge queue.
 - Ordinary application PRs need successful required checks, not human approval. Sensitive paths
   in `.github/CODEOWNERS` require independent code-owner approval. Resolve review conversations.
+- Org admins can bypass the UAT rules, because the code-owner team can be one person who can't
+  approve their own PRs. Nobody can bypass the branch invariants (no deletion or force-push).
 - Every required check must run on both PRs and merge groups. Failed, missing, cancelled, and
   skipped validation cannot satisfy the CI Passed gate. CodeQL errors and high/critical alerts block merging.
 - Record authenticated UAT deployment evidence for the exact source SHA and CI run/attempt.

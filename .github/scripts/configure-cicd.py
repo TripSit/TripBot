@@ -44,7 +44,10 @@ def desired(phase, app_id):
             {'type': 'merge_queue', 'parameters': {'check_response_timeout_minutes': 60,
              'grouping_strategy': 'ALLGREEN', 'max_entries_to_build': 1, 'max_entries_to_merge': 1,
              'merge_method': 'SQUASH', 'min_entries_to_merge': 1, 'min_entries_to_merge_wait_minutes': 0}}]
-        bypass = []
+        # The code-owner team can be a single person, who can't approve their own PRs, so org
+        # admins may bypass these rules. The invariants ruleset (no deletion or force-push) still
+        # has no bypass. This matches the live setting; --apply must not quietly remove it.
+        bypass = [{'actor_type': 'OrganizationAdmin', 'actor_id': None, 'bypass_mode': 'always'}]
         name, branch = 'UAT', 'uat'
     return [invariants, {'name': name, 'target': 'branch', 'enforcement': 'active',
                         'conditions': conditions(branch), 'bypass_actors': bypass, 'rules': rules}]
