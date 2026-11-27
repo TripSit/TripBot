@@ -250,72 +250,74 @@ async function dGame(interaction: ChatInputCommandInteraction): Promise<boolean>
   return true;
 }
 
-async function dBook(interaction: ChatInputCommandInteraction): Promise<boolean> {
-  const query = interaction.options.getString('book', true);
-  let result;
+type BookResult = {
+  title: string;
+  url: string;
+  description: string;
+  thumb?: string;
+  fields: { name: string; value: string; inline: boolean }[];
+};
+
+function bookFallbackResult(query: string, description: string): BookResult {
+  return {
+    title: `Book: ${query}`,
+    url: `https://books.google.com/books?vid=ISBN${encodeURIComponent(query)}`,
+    description,
+    fields: [],
+  };
+}
+
+function bookResultFromVolume(query: string, book: Record<string, any>): BookResult {
+  const infoLink = book.infoLink ?? `https://books.google.com/books?vid=ISBN${encodeURIComponent(query)}`;
+  const authors = book.authors ? book.authors.join(', ') : 'Unknown';
+
+  // Use title and author for platform search URLs
+  const searchTerm = encodeURIComponent(`${book.title} ${authors !== 'Unknown' ? authors : ''}`.trim());
+  const platforms = [
+    { name: 'Kobo', url: `https://www.kobo.com/search?query=${searchTerm}` },
+    { name: 'Amazon', url: `https://www.amazon.com/s?k=${searchTerm}` },
+    { name: 'Google Books', url: infoLink },
+    { name: 'Apple Books', url: `https://books.apple.com/us/search?term=${searchTerm}` },
+  ];
+
+  return {
+    title: `Book: ${book.title ?? query}`,
+    url: infoLink,
+    description: book.description ?? 'No description available.',
+    thumb: book.imageLinks?.thumbnail ?? '',
+    fields: [
+      { name: 'Author', value: authors, inline: true },
+      { name: 'Publisher', value: book.publisher ?? 'Unknown', inline: true },
+      { name: 'Published Date', value: book.publishedDate ?? 'Unknown', inline: true },
+      {
+        name: 'Platforms',
+        value: platforms.map(p => `[${p.name}](${p.url})`).join(' | '),
+        inline: false,
+      },
+    ],
+  };
+}
+
+async function lookupBook(query: string): Promise<BookResult> {
   try {
     const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=1`;
     const response = await fetch(url);
     if (!response.ok) {
-      result = {
-        title: `Book: ${query}`,
-        url: `https://books.google.com/books?vid=ISBN${encodeURIComponent(query)}`,
-        description: 'Google Books API is currently unavailable. Please try again later.',
-        fields: [],
-      };
-    } else {
-      const data = await response.json();
-      if (!data.items || data.items.length === 0) {
-        result = {
-          title: `Book: ${query}`,
-          url: `https://books.google.com/books?vid=ISBN${encodeURIComponent(query)}`,
-          description: `No results found for "${query}".`,
-          fields: [],
-        };
-      } else {
-        const book = data.items[0].volumeInfo;
-        const infoLink = book.infoLink ?? `https://books.google.com/books?vid=ISBN${encodeURIComponent(query)}`;
-        const thumbnail = book.imageLinks?.thumbnail ?? '';
-        const authors = book.authors ? book.authors.join(', ') : 'Unknown';
-        const description = book.description ?? 'No description available.';
-        const publisher = book.publisher ?? 'Unknown';
-        const publishedDate = book.publishedDate ?? 'Unknown';
-
-        // Use title and author for platform search URLs
-        const searchTerm = encodeURIComponent(`${book.title} ${authors !== 'Unknown' ? authors : ''}`.trim());
-        const platforms = [
-          { name: 'Kobo', url: `https://www.kobo.com/search?query=${searchTerm}` },
-          { name: 'Amazon', url: `https://www.amazon.com/s?k=${searchTerm}` },
-          { name: 'Google Books', url: infoLink },
-          { name: 'Apple Books', url: `https://books.apple.com/us/search?term=${searchTerm}` },
-        ];
-
-        result = {
-          title: `Book: ${book.title ?? query}`,
-          url: infoLink,
-          description,
-          thumb: thumbnail,
-          fields: [
-            { name: 'Author', value: authors, inline: true },
-            { name: 'Publisher', value: publisher, inline: true },
-            { name: 'Published Date', value: publishedDate, inline: true },
-            {
-              name: 'Platforms',
-              value: platforms.map(p => `[${p.name}](${p.url})`).join(' | '),
-              inline: false,
-            },
-          ],
-        };
-      }
+      return bookFallbackResult(query, 'Google Books API is currently unavailable. Please try again later.');
     }
+    const data = await response.json();
+    if (!data.items || data.items.length === 0) {
+      return bookFallbackResult(query, `No results found for "${query}".`);
+    }
+    return bookResultFromVolume(query, data.items[0].volumeInfo);
   } catch {
-    result = {
-      title: `Book: ${query}`,
-      url: `https://books.google.com/books?vid=ISBN${encodeURIComponent(query)}`,
-      description: 'Book search is currently unavailable. Please try again later.',
-      fields: [],
-    };
+    return bookFallbackResult(query, 'Book search is currently unavailable. Please try again later.');
   }
+}
+
+async function dBook(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  const query = interaction.options.getString('book', true);
+  const result = await lookupBook(query);
 
   const embed = embedTemplate()
     .setTitle(result.title)
