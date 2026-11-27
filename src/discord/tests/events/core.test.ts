@@ -438,7 +438,7 @@ describe('messageCreate', () => {
 });
 
 describe('voiceStateUpdate', () => {
-  const auditSend = { send: vi.fn() };
+  const auditSend = { send: vi.fn(async () => undefined) };
   const state = (over: Record<string, unknown> = {}) => ({
     guild: { id: e.DISCORD_GUILD_ID, channels: { fetch: vi.fn(async () => auditSend) } },
     member: { displayName: 'Ally', user: { bot: false } },

@@ -26,7 +26,8 @@ export const voiceStateUpdate: VoiceStateUpdateEvent = {
 
     // Mute, deafen and stream changes keep the same channel, so only a changed channel is a join, leave or move
     if (Old.channelId !== New.channelId) {
-      channelAuditlog.send(channelChangeMessage(Old, New));
+      channelAuditlog.send(channelChangeMessage(Old, New))
+        .catch(err => log.error(F, `Failed to post a voice audit log message: ${err}`));
     }
 
     if (New.channelId === env.CHANNEL_CAMPFIRE) {

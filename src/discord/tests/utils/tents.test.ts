@@ -149,14 +149,14 @@ describe('registerTentStatusSync', () => {
 });
 
 describe('pitchTent', () => {
-  function states(premiumTier: GuildPremiumTier | number = GuildPremiumTier.None, createFails = false) {
+  function states(premiumTier: GuildPremiumTier | number = GuildPremiumTier.None, createFails = false, existingTents = collectionOf([])) {
     const newChannel = {
       id: 'new1', delete: vi.fn(async () => undefined), fetch: vi.fn(), send: vi.fn(), name: '⛺│Ally\'s tent', client: { rest: { put: vi.fn() } }, guild: { roles: { everyone: { id: 'everyone' } } }, permissionsFor: () => ({ has: () => true }), permissionOverwrites: { cache: new Map() },
     };
     const setChannel = vi.fn();
     const create = createFails ? vi.fn().mockRejectedValue(new Error('Missing Permissions')) : vi.fn(async () => newChannel);
     const member = {
-      id: 'm1', displayName: 'Ally', voice: { setChannel }, guild: { premiumTier, roles: { everyone: { id: 'everyone' } }, channels: { create } },
+      id: 'm1', displayName: 'Ally', voice: { setChannel }, guild: { premiumTier, roles: { everyone: { id: 'everyone' } }, channels: { create, cache: existingTents } },
     };
     return {
       Old: {} as never, New: { member } as never, create, setChannel, newChannel,
@@ -213,6 +213,31 @@ describe('pitchTent', () => {
     expect(newChannel.send).not.toHaveBeenCalled();
   });
 
+  it('sends a member who already hosts a tent back to it instead of making another', async () => {
+    const { pitchTent } = await load();
+    const owned = {
+      ...tent({ id: 'owned', overwrites: { m1: { allow: [Flags.MoveMembers] } } }), parentId: e.CATEGORY_VOICE,
+    };
+    const someoneElses = {
+      ...tent({ id: 'other', overwrites: { zz: { allow: [Flags.MoveMembers] } } }), parentId: e.CATEGORY_VOICE,
+    };
+    const {
+      Old, New, create, setChannel,
+    } = states(GuildPremiumTier.None, false, collectionOf([['other', someoneElses], ['owned', owned]] as never));
+    await pitchTent(Old, New);
+    expect(create).not.toHaveBeenCalled();
+    expect(setChannel).toHaveBeenCalledWith('owned');
+  });
+
+  it('keeps tent names within the Discord limit', async () => {
+    const { pitchTent } = await load();
+    const { Old, New, create } = states();
+    (New as unknown as { member: { displayName: string } }).member.displayName = 'x'.repeat(150);
+    await pitchTent(Old, New);
+    expect((create.mock.calls[0] as unknown as [{ name: string }])[0].name).toHaveLength(100);
+    await flushPromises();
+  });
+
   it('logs failures instead of throwing', async () => {
     const { pitchTent } = await load();
     const { Old, New } = states(GuildPremiumTier.None, true);
@@ -240,6 +265,15 @@ describe('teardownTent', () => {
     expect(botsOnly.delete).toHaveBeenCalled();
     expect(occupied.delete).not.toHaveBeenCalled();
     expect(regular.delete).not.toHaveBeenCalled();
+  });
+
+  it('leaves a freshly created empty tent alone while its creator is being moved in', async () => {
+    const { teardownTent } = await load();
+    const fresh = { ...tent({ id: 'a', members: [] }), createdTimestamp: Date.now() };
+    const old = { ...tent({ id: 'b', members: [] }), createdTimestamp: Date.now() - 60000 };
+    await teardownTent(oldState(category([fresh, old])));
+    expect(fresh.delete).not.toHaveBeenCalled();
+    expect(old.delete).toHaveBeenCalled();
   });
 
   it('tolerates channels that vanished during teardown', async () => {
@@ -328,6 +362,16 @@ describe('logTent', () => {
     await logTent({ channel: c, member: user('host') } as never, { channel: null } as never);
     await vi.advanceTimersByTimeAsync(300001);
     expect(c.permissionOverwrites.create).toHaveBeenCalledWith('friend', { Connect: true, MoveMembers: true });
+  });
+
+  it('logs instead of crashing when the delayed transfer fails', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+    const { logTent } = await load();
+    const c = tent({ members: [{ id: 'friend', displayName: 'Friend' }], overwrites: { host: { allow: [Flags.MoveMembers] } } });
+    c.permissionOverwrites.create.mockRejectedValue(new Error('Unknown Channel'));
+    await logTent({ channel: c, member: user('host') } as never, { channel: null } as never);
+    await vi.advanceTimersByTimeAsync(300001);
+    expect(c.permissionOverwrites.create).toHaveBeenCalled();
   });
 
   it('stays quiet when the host joins with no transfer pending', async () => {
