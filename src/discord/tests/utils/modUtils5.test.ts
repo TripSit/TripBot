@@ -111,6 +111,7 @@ function setup(command: string, opts: Opts = {}) {
   };
 }
 
+const RULE_PICKER = '"custom_id":"rule"';
 const modalJson = (s: ReturnType<typeof setup>) => JSON.stringify(s.raw.showModal.mock.calls[0][0]);
 
 beforeEach(() => {
@@ -244,6 +245,8 @@ describe('modModal: building the modal', () => {
     const note = setup('NOTE', { submitFails: 'x' });
     await modModal(note.interaction);
     expect(modalJson(note)).not.toContain('"custom_id":"description"');
+    expect(modalJson(warn)).toContain(RULE_PICKER);
+    expect(modalJson(note)).not.toContain(RULE_PICKER);
     const timeout = setup('TIMEOUT', { submitFails: 'x' });
     await modModal(timeout.interaction);
     expect(modalJson(timeout)).toContain('"custom_id":"duration"');
@@ -251,6 +254,8 @@ describe('modModal: building the modal', () => {
     await modModal(ban.interaction);
     expect(modalJson(ban)).toContain('"custom_id":"ban_duration"');
     expect(modalJson(ban)).toContain('"custom_id":"days"');
+    expect(modalJson(ban)).toContain(RULE_PICKER);
+    expect(modalJson(ban)).toContain('Ban evasion');
     const appeal = setup('APPEAL_ACCEPT', { submitFails: 'x' });
     await modModal(appeal.interaction);
     expect(modalJson(appeal)).toContain('appealDescription');
