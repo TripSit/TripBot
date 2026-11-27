@@ -179,31 +179,10 @@ describe('search', () => {
   });
 
   describe('song', () => {
-    const odesli = { pageUrl: 'https://song.link/x', entitiesByUniqueId: { k: { title: 'T', artistName: 'Art', thumbnailUrl: 'https://art' } }, linksByPlatform: { spotify: { url: 'https://sp' }, tidal: { url: 'https://td' } } };
-
-    it('searches iTunes then Odesli', async () => {
-      const { embed } = await run('song', { song: 'q' }, [['itunes', { json: { results: [{ trackViewUrl: 'https://apple/1' }] } }], ['song.link', { json: odesli }]]);
-      expect(embed.title).toBe('Song: T');
-      expect(embed.url).toBe('https://song.link/x');
-      expect((embed.fields ?? []).find(f => f.name === 'Platforms')?.value).toBe('[Spotify](https://sp)');
-      const noTrackUrl = await run('song', { song: 'q' }, [['itunes', { json: { results: [{ trackName: 'N' }] } }], ['song.link', { json: {} }]]);
-      expect((noTrackUrl.embed.fields ?? []).find(f => f.name === 'Platforms')?.value).toContain('Apple Music');
-    });
-
-    it('keeps the defaults when Odesli returns sparse entities', async () => {
-      const sparse = { entitiesByUniqueId: { k: {} }, linksByPlatform: { spotify: { url: 'https://sp' } } };
-      const { embed } = await run('song', { song: 'https://music.example/track' }, [['song.link', { json: sparse }]]);
-      expect(embed.title).toBe('Song: https://music.example/track');
-      expect((embed.fields ?? []).find(f => f.name === 'Platforms')?.value).toBe('[Spotify](https://sp)');
-    });
-
-    it('accepts links directly and degrades gracefully', async () => {
-      const link = await run('song', { song: 'https://music.example/track' }, [['song.link', { json: odesli }]]);
-      expect(link.embed.title).toBe('Song: T');
-      const odesliDown = await run('song', { song: 'https://music.example/track' }, [['song.link', { throws: true }]]);
-      expect((odesliDown.embed.fields ?? []).find(f => f.name === 'Platforms')?.value).toContain('Apple Music');
-      expect((await run('song', { song: 'q' }, [['itunes', { ok: false }]])).embed.description).toContain('unavailable');
-      expect((await run('song', { song: 'q' }, [['itunes', { json: { results: [] } }]])).embed.description).toContain('no results');
+    it('is no longer offered as a subcommand', () => {
+      const names = dSearch.data.toJSON().options?.map(option => option.name) ?? [];
+      expect(names).toContain('wikipedia');
+      expect(names).not.toContain('song');
     });
   });
 
