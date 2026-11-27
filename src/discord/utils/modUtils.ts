@@ -1279,8 +1279,9 @@ export async function refusalButton(
     log.debug(F, `Failed to update the warning message after a refusal: ${err}`);
   }
 
+  const timeoutAction = extended ? 'extending their timeout by' : 'timing them out for';
   const rejectionEmbed = errorEmbed(willTimeout
-    ? `❌ ${interaction.user} (${interaction.user.username}) has **rejected** their warning, so I'm ${extended ? 'extending their timeout by' : 'timing them out for'} ${humanDuration}.`
+    ? `❌ ${interaction.user} (${interaction.user.username}) has **rejected** their warning, so I'm ${timeoutAction} ${humanDuration}.`
     : `❌ ${interaction.user} (${interaction.user.username}) has **rejected** their warning.`);
 
   const existingModThread = await getModThread(targetData);
