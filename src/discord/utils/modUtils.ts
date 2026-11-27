@@ -88,8 +88,17 @@ const noReason = 'No reason provided';
 const mepWarning = 'You cannot use the word "MEP" here.';
 const noMessageSent = '*No message sent to user*';
 
-// Reject the warning, get 15 minutes to think about it.
+// Reject the warning, get 15 minutes to think about it. Someone who is already timed out gets a quarter of what
+// they have left added instead (never less than 15 minutes), so long timeouts don't end on odd leftover values.
 const warningRejectionTimeout = 15 * 60 * 1000; // 15 minutes
+const warningRejectionScale = 0.25;
+const maxTimeoutMs = 28 * 24 * 60 * 60 * 1000; // Discord's limit
+/** How much a rejection adds on top of the `remainingMs` of an existing timeout, in whole minutes. */
+export function warningRejectionExtension(remainingMs: number): number {
+  const scaled = Math.round((remainingMs * warningRejectionScale) / 60_000) * 60_000;
+  return Math.max(warningRejectionTimeout, scaled);
+}
+
 const warningRejectionNote = 'Automatic timeout: this user rejected the warning they were given.';
 
 // Internal-note keywords that mark a vendor/bot ban. Full bans whose internal
@@ -1219,13 +1228,15 @@ export async function refusalButton(
     }
   }
 
-  const timeoutEnds = new Date(Date.now() + warningRejectionTimeout);
-  const humanDuration = msToHuman(warningRejectionTimeout);
-
-  // These buttons ride timeout DMs too. Don't turn a 7 day timeout into 15 minutes.
+  const now = Date.now();
   const existingTimeout = targetMember?.communicationDisabledUntilTimestamp ?? null;
-  const alreadyTimedOutLonger = existingTimeout !== null && existingTimeout > timeoutEnds.getTime();
-  const willTimeout = !!targetMember && !alreadyTimedOutLonger;
+  const remainingMs = existingTimeout !== null && existingTimeout > now ? existingTimeout - now : 0;
+  const extended = remainingMs > 0;
+  const addedMs = extended ? warningRejectionExtension(remainingMs) : warningRejectionTimeout;
+  const totalMs = Math.min(remainingMs + addedMs, maxTimeoutMs);
+  const timeoutEnds = new Date(now + totalMs);
+  const humanDuration = msToHuman(extended ? addedMs : totalMs);
+  const willTimeout = !!targetMember;
 
   const readTheTerms = 'Please use that time to read the [TripSit Terms](https://wiki.tripsit.me/wiki/Terms_of_Service). If you still don\'t want to follow them once it expires, you\'re welcome to leave.';
 
@@ -1235,9 +1246,9 @@ export async function refusalButton(
 
     ${readTheTerms}
   `;
-  if (alreadyTimedOutLonger) {
+  if (extended) {
     noteToUser = stripIndents`
-      You rejected the warning you were given. Your existing timeout still expires ${time(new Date(existingTimeout), 'R')}, and the team has been told you rejected this.
+      You rejected the warning you were given, so your existing timeout has been extended by ${humanDuration}. It will now expire ${time(timeoutEnds, 'R')}.
 
       ${readTheTerms}
     `;
@@ -1266,7 +1277,7 @@ export async function refusalButton(
   }
 
   const rejectionEmbed = errorEmbed(willTimeout
-    ? `❌ ${interaction.user} (${interaction.user.username}) has **rejected** their warning, so I'm timing them out for ${humanDuration}.`
+    ? `❌ ${interaction.user} (${interaction.user.username}) has **rejected** their warning, so I'm ${extended ? 'extending their timeout by' : 'timing them out for'} ${humanDuration}.`
     : `❌ ${interaction.user} (${interaction.user.username}) has **rejected** their warning.`);
 
   const existingModThread = await getModThread(targetData);
@@ -1276,10 +1287,7 @@ export async function refusalButton(
 
   if (!willTimeout) {
     // Nothing to action, but mods still need to know why.
-    let reason = `⚠️ I couldn't time ${interaction.user} out: they're no longer in ${guild ? guild.name : 'the guild'}.`;
-    if (alreadyTimedOutLonger) {
-      reason = `⏳ I left ${targetMember} alone: they're already timed out until ${time(new Date(existingTimeout), 'R')}, which is longer than the ${humanDuration} this would have given them.`;
-    }
+    const reason = `⚠️ I couldn't time ${interaction.user} out: they're no longer in ${guild ? guild.name : 'the guild'}.`;
     if (existingModThread) {
       await existingModThread.send({
         embeds: [errorEmbed(reason)],
@@ -1292,7 +1300,7 @@ export async function refusalButton(
   const timeoutGuild = guild as Guild;
 
   try {
-    await timeoutTarget.timeout(warningRejectionTimeout, warningRejectionNote);
+    await timeoutTarget.timeout(totalMs, warningRejectionNote);
   } catch (err) {
     log.error(F, `Failed to time out ${interaction.user.username} after they rejected a warning: ${err}`);
     if (existingModThread) {
@@ -1330,7 +1338,7 @@ export async function refusalButton(
       internalNote: warningRejectionNote,
       description: noteToUser,
       extraMessage: '',
-      duration: `\n**Timeout Duration:** ${humanDuration}\n**Timeout Ends:** ${time(timeoutEnds, 'R')}`,
+      duration: `\n**Timeout Duration:** ${msToHuman(totalMs)}\n**Timeout Ends:** ${time(timeoutEnds, 'R')}`,
       appealData: null,
       dmDelivered,
     },
