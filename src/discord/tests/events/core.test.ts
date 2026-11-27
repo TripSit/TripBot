@@ -448,6 +448,14 @@ describe('voiceStateUpdate', () => {
   });
   const chan = (name: string) => ({ name });
 
+  it('keeps going when the audit log message cannot be sent', async () => {
+    auditSend.send.mockRejectedValueOnce(new Error('Missing Access'));
+    const join = state({ channel: chan('Lounge'), channelId: 'l' });
+    await expect(voiceStateUpdate.execute(state() as never, join as never)).resolves.toBeUndefined();
+    await flushPromises();
+    expect(mocks.teardownTent).toHaveBeenCalled();
+  });
+
   it('logs joins, leaves and moves', async () => {
     const join = state({ channel: chan('Lounge'), channelId: 'l' });
     await voiceStateUpdate.execute(state() as never, join as never);
