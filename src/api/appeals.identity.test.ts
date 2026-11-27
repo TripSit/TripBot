@@ -71,6 +71,19 @@ describe('appeals authenticated identity', () => {
     );
   });
 
+  it('refuses the appeal, rather than calling the user not banned, when the ban check fails', async () => {
+    mocks.checkBanStatus.mockRejectedValue(new Error('discord token abc123 missing access'));
+    const response = await supertest(app).post('/create').send({
+      reason: 'Reason', solution: 'Solution', future: 'Future', extra: 'Extra',
+    });
+
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual({ error: 'Failed to submit appeal' });
+    expect(JSON.stringify(response.body)).not.toMatch(/token|abc123/);
+    expect(mocks.createAppeal).not.toHaveBeenCalled();
+    expect(mocks.messageModThread).not.toHaveBeenCalled();
+  });
+
   it.each([
     ['creating the appeal', () => mocks.createAppeal.mockRejectedValue(new Error('prisma: relation "appeals" secret detail'))],
     ['notifying the mod thread', () => mocks.messageModThread.mockRejectedValue(new Error('discord token abc123 failed'))],
