@@ -19,6 +19,7 @@
     "tripbot:stop": "tmux kill-session -t tripbot || true",
     "tripbot:restart": "npm run tripbot:stop && npm run tripbot:start && npm run tripbot:logs",
     "tripbot:test": "npx vitest run",
+    "sonar:precheck": "bash scripts/sonar-precheck.sh",
     "tripbot:lint": "npx eslint --fix --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts . --cache",
     "tripbot:deployCommands": "ts-node --transpile-only ./src/discord/utils/commandDeploy.ts -- deployCommands",
     "## DATABASE ##": "",
