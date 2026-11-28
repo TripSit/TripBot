@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import type { Prisma } from '@db/tripbot';
 import {
-  privacy, pruneModerationActions, purgeInactiveUsers, reconcileLiftedBans, SCRUBBED_LAST_SEEN,
+  privacy, pruneModerationActions, pruneModThreads, purgeInactiveUsers, reconcileLiftedBans, SCRUBBED_LAST_SEEN,
 } from '../../commands/g.privacy';
 import { dbMock } from '../../../vitest/utils/mockDb';
 
@@ -259,6 +259,49 @@ describe('pruneModerationActions', () => {
         },
       },
     });
+  });
+});
+
+describe('pruneModThreads', () => {
+  const now = new Date('2026-11-27T00:00:00Z');
+  const cutoff = new Date('2026-08-29T00:00:00Z');
+
+  it('only considers users with no action in force and no recent action', async () => {
+    dbMock.users.findMany.mockResolvedValueOnce([]);
+    expect(await pruneModThreads(vi.fn(), now)).toBe(0);
+    expect(dbMock.users.findMany).toHaveBeenCalledWith({
+      where: {
+        mod_thread_id: { not: null },
+        user_actions_user_actions_user_idTousers: {
+          none: {
+            OR: [
+              { created_at: { gte: cutoff } },
+              {
+                type: { in: ['FULL_BAN', 'TICKET_BAN', 'DISCORD_BOT_BAN', 'HELPER_BAN', 'CONTRIBUTOR_BAN', 'TIMEOUT'] },
+                repealed_at: null,
+                OR: [{ expires_at: null }, { expires_at: { gt: now } }],
+              },
+            ],
+          },
+        },
+      },
+      select: { id: true, mod_thread_id: true },
+    });
+  });
+
+  it('clears the thread reference only for threads that are gone', async () => {
+    dbMock.users.findMany.mockResolvedValueOnce([
+      { id: 'u1', mod_thread_id: 't1' }, { id: 'u2', mod_thread_id: 't2' }, { id: 'u3', mod_thread_id: 't3' },
+      { id: 'u4', mod_thread_id: null },
+    ] as never);
+    const deleteStale = vi.fn(async (id: string) => {
+      if (id === 't3') throw new Error('Missing Permissions');
+      return id === 't1';
+    });
+    expect(await pruneModThreads(deleteStale, now)).toBe(1);
+    expect(deleteStale).toHaveBeenCalledWith('t1', cutoff);
+    expect(dbMock.users.update).toHaveBeenCalledTimes(1);
+    expect(dbMock.users.update).toHaveBeenCalledWith({ where: { id: 'u1' }, data: { mod_thread_id: null } });
   });
 });
 

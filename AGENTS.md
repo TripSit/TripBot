@@ -399,6 +399,8 @@ files and do not introduce a second alias scheme.
 - Discord Developer Policy compliance is a safety constraint: see `docs/discord-developer-policy.md`. Update that file,
   `/privacy` text in `src/global/commands/g.about.ts`, and the README when a change alters what data is collected, stored,
   sent to a third party, or sent to users in DMs.
+- The `/privacy` text is also published on the website. Whenever you update it here, make the matching change in the
+  sibling `../website` repository in the same task, and report it if that repository is unavailable.
 
 ## Verification matrix
 
