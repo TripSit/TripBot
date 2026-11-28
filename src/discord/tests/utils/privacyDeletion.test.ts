@@ -4,6 +4,8 @@ import { deleteDiscordPrivacyData, deleteStaleModThread } from '../../utils/priv
 const DELETION_REASON = 'User requested deletion of their TripBot data';
 const MISSING_PERMISSIONS = 'missing permissions';
 const MODERATION_LOG = 'moderation-log';
+const STALE_AT = '2026-06-01T00:00:00Z';
+const DISCORD_URL = 'https://discord.invalid';
 const USER_ID = 'user-1';
 const LOG_CHANNELS = new Set([env.CHANNEL_BOTERRORS, env.CHANNEL_BOTLOG, env.CHANNEL_MODLOG, env.CHANNEL_QUOTE_LOG]);
 const REQUESTER_ID = '123456789012345678';
@@ -96,7 +98,7 @@ describe('deleteDiscordPrivacyData', () => {
     expect(fetchChannel).toHaveBeenCalledWith(env.CHANNEL_QUOTE_LOG);
   });
 
-  const apiError = (code: number) => new DiscordAPIError({ message: 'synthetic Discord failure', code }, code, 404, 'GET', 'https://discord.invalid', {});
+  const apiError = (code: number) => new DiscordAPIError({ message: 'synthetic Discord failure', code }, code, 404, 'GET', DISCORD_URL, {});
 
   it.each([RESTJSONErrorCodes.UnknownChannel, RESTJSONErrorCodes.UnknownGuild])('ignores deleted log channels and guilds (%s)', async code => {
     fetchChannel.mockRejectedValue(apiError(code));
@@ -202,7 +204,7 @@ describe('deleteStaleModThread', () => {
   });
 
   it('deletes a thread whose last message is older than the cutoff', async () => {
-    const stale = thread(new Date('2026-06-01T00:00:00Z'));
+    const stale = thread(new Date(STALE_AT));
     fetchChannel.mockResolvedValueOnce(stale);
     expect(await deleteStaleModThread('t', cutoff)).toBe(true);
     expect(stale.delete).toHaveBeenCalledTimes(1);
@@ -225,7 +227,7 @@ describe('deleteStaleModThread', () => {
   it('treats a thread that no longer exists as gone', async () => {
     const code = RESTJSONErrorCodes.UnknownChannel;
     fetchChannel.mockRejectedValueOnce(
-      new DiscordAPIError({ message: 'Unknown Channel', code }, code, 404, 'GET', 'https://discord.invalid', {}),
+      new DiscordAPIError({ message: 'Unknown Channel', code }, code, 404, 'GET', DISCORD_URL, {}),
     );
     expect(await deleteStaleModThread('t', cutoff)).toBe(true);
     fetchChannel.mockResolvedValueOnce(null);
@@ -235,5 +237,25 @@ describe('deleteStaleModThread', () => {
   it('fails closed when the target is not a thread', async () => {
     fetchChannel.mockResolvedValueOnce({ isThread: () => false });
     await expect(deleteStaleModThread('t', cutoff)).rejects.toThrow('is not a thread');
+  });
+
+  it('rethrows unexpected fetch errors', async () => {
+    fetchChannel.mockRejectedValueOnce(new Error('fetch failed'));
+    await expect(deleteStaleModThread('t', cutoff)).rejects.toThrow('fetch failed');
+  });
+
+  it('rethrows unexpected delete errors and treats an already-deleted thread as gone', async () => {
+    const broken = thread(new Date(STALE_AT));
+    broken.delete.mockRejectedValueOnce(new Error('delete failed'));
+    fetchChannel.mockResolvedValueOnce(broken);
+    await expect(deleteStaleModThread('t', cutoff)).rejects.toThrow('delete failed');
+
+    const code = RESTJSONErrorCodes.UnknownChannel;
+    const vanished = thread(new Date(STALE_AT));
+    vanished.delete.mockRejectedValueOnce(
+      new DiscordAPIError({ message: 'Unknown Channel', code }, code, 404, 'DELETE', DISCORD_URL, {}),
+    );
+    fetchChannel.mockResolvedValueOnce(vanished);
+    expect(await deleteStaleModThread('t', cutoff)).toBe(true);
   });
 });

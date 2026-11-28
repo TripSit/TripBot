@@ -292,6 +292,7 @@ describe('pruneModThreads', () => {
   it('clears the thread reference only for threads that are gone', async () => {
     dbMock.users.findMany.mockResolvedValueOnce([
       { id: 'u1', mod_thread_id: 't1' }, { id: 'u2', mod_thread_id: 't2' }, { id: 'u3', mod_thread_id: 't3' },
+      { id: 'u4', mod_thread_id: null },
     ] as never);
     const deleteStale = vi.fn(async (id: string) => {
       if (id === 't3') throw new Error('Missing Permissions');
