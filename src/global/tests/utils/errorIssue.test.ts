@@ -49,8 +49,8 @@ afterEach(() => {
 describe('sanitizeForIssue', () => {
   it('redacts ids, emails, tokens and home paths', () => {
     const out = sanitizeForIssue(
-      'user 123456789012345678 a@b.com ghp_abcDEF123 at /home/erich/x.ts '
-      + ['MTIzNDU2Nzg5MDEyMzQ1Njc4', 'GabCdE', 'abcdefghijklmnopqrstuvwxyz1'].join('.'),
+      `user 123456789012345678 a@b.com ghp_abcDEF123 at /home/erich/x.ts ${
+        ['MTIzNDU2Nzg5MDEyMzQ1Njc4', 'GabCdE', 'abcdefghijklmnopqrstuvwxyz1'].join('.')}`,
     );
     expect(out).not.toMatch(/123456789012345678|a@b\.com|ghp_|erich|GabCdE/);
     expect(out).toContain('<id>');
