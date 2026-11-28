@@ -54,7 +54,9 @@ describe('calc', () => {
     mocks.ketamine.mockResolvedValue({ insufflated: '10mg' });
     expect((await run('ketamine', { weight: 200, units: 'kg' })).embed.title).toContain('179 kg');
     expect((await run('ketamine', { weight: 400, units: 'lbs' })).embed.title).toContain('398 lbs');
-    expect((await run('ketamine', { weight: 70, units: 'kg' })).embed.fields?.[0].value).toBe('10mg');
+    const ok = (await run('ketamine', { weight: 70, units: 'kg' })).embed;
+    expect(ok.fields?.[0].value).toBe('10mg');
+    expect(ok.description).toContain('/drug substance:ketamine');
   });
 
   it('mdma lists doses and the 150mg warning', async () => {
@@ -62,6 +64,7 @@ describe('calc', () => {
     const { embed } = await run('mdma', { weight: 70, units: 'kg' });
     expect(embed.description).toContain('**Light**: 50mg');
     expect(embed.description).toContain('150mg');
+    expect(embed.description).toContain('/drug substance:mdma');
     expect((await run('mdma', { weight: 0, units: 'kg' })).embed.title).toBe('Invalid values supplied');
   });
 
@@ -79,7 +82,9 @@ describe('calc', () => {
     mocks.psy.mockResolvedValue(150);
     const base = { last_dose_amount: 100, desired_dose_amount: 100, days: 3 };
     expect((await run('psychedelics', { ...base, drug_type: 'lsd' })).embed.title).toContain('150 ug of LSD');
+    expect((await run('psychedelics', { ...base, drug_type: 'lsd' })).embed.description).toContain('/drug substance:lsd');
     expect((await run('psychedelics', { ...base, drug_type: 'mushrooms' })).embed.title).toContain('Mushrooms');
+    expect((await run('psychedelics', { ...base, drug_type: 'mushrooms' })).embed.description).toContain('/drug substance:mushrooms');
     expect((await run('psychedelics', { ...base, days: 0, drug_type: 'lsd' })).embed.title).toBe('Invalid values supplied');
   });
 

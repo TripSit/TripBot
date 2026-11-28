@@ -1,4 +1,5 @@
 /* eslint-disable max-len */
+import type { user_action_type } from '@db/tripbot';
 import { stripIndents } from 'common-tags';
 import { getOrCreateUser } from '../utils/dbRecords';
 
@@ -11,6 +12,14 @@ export const RETENTION_MONTHS = 6;
 
 /** Moderation actions are pruned after this period unless they concern a currently banned user. */
 export const MODERATION_ACTION_RETENTION_YEARS = 2;
+
+/** A moderator thread is deleted after this many days without activity, unless its user has an action in force. */
+export const MOD_THREAD_RETENTION_DAYS = 90;
+
+/** Action types that keep a user's moderator thread alive for as long as they are in force. */
+const IN_FORCE_ACTION_TYPES: user_action_type[] = [
+  'FULL_BAN', 'TICKET_BAN', 'DISCORD_BOT_BAN', 'HELPER_BAN', 'CONTRIBUTOR_BAN', 'TIMEOUT',
+];
 
 /** Legacy marker for accounts scrubbed by earlier versions; these rows are skipped by the purge. */
 export const SCRUBBED_LAST_SEEN = new Date(1970);
@@ -47,6 +56,9 @@ export type DeleteDiscordData = (
   bestOfMessageIds: string[],
   moderationLogChannelIds: string[],
 ) => Promise<void>;
+
+/** Deletes a moderator thread that has had no activity since `cutoff`. Resolves true once the thread is gone. */
+export type DeleteStaleModThread = (threadId: string, cutoff: Date) => Promise<boolean>;
 
 /** Lists the stored (non-empty, non-hidden) fields of a user, optionally with an explanatory note per field. */
 function describeUserData(userData: UserRecord, includeNotes: boolean): string {
@@ -310,6 +322,51 @@ export async function pruneModerationActions(now: Date = new Date()): Promise<nu
   });
   log.info(F, `Pruned ${count} moderation actions older than ${MODERATION_ACTION_RETENTION_YEARS} years`);
   return count;
+}
+
+/**
+ * Deletes moderator threads with no activity for MOD_THREAD_RETENTION_DAYS. A thread is kept while its user has a
+ * ban, timeout or similar action in force (unrepealed and unexpired) or any action newer than the cutoff, and the
+ * thread reference is cleared once it is gone. Returns how many threads were removed.
+ */
+export async function pruneModThreads(
+  deleteStaleThread: DeleteStaleModThread,
+  now: Date = new Date(),
+): Promise<number> {
+  const cutoff = new Date(now.getTime() - MOD_THREAD_RETENTION_DAYS * 24 * 60 * 60 * 1000);
+  const candidates = await db.users.findMany({
+    where: {
+      mod_thread_id: { not: null },
+      user_actions_user_actions_user_idTousers: {
+        none: {
+          OR: [
+            { created_at: { gte: cutoff } },
+            {
+              type: { in: IN_FORCE_ACTION_TYPES },
+              repealed_at: null,
+              OR: [{ expires_at: null }, { expires_at: { gt: now } }],
+            },
+          ],
+        },
+      },
+    },
+    select: { id: true, mod_thread_id: true },
+  });
+
+  let removed = 0;
+  for (const user of candidates) { // eslint-disable-line no-restricted-syntax
+    if (!user.mod_thread_id) continue; // eslint-disable-line no-continue
+    try {
+      if (await deleteStaleThread(user.mod_thread_id, cutoff)) { // eslint-disable-line no-await-in-loop
+        await db.users.update({ where: { id: user.id }, data: { mod_thread_id: null } }); // eslint-disable-line no-await-in-loop
+        removed += 1;
+      }
+    } catch {
+      log.error(F, 'Failed to delete a stale moderator thread; it will be retried');
+    }
+  }
+  log.info(F, `Deleted ${removed} moderator threads inactive for ${MOD_THREAD_RETENTION_DAYS} days`);
+  return removed;
 }
 
 type UnrepealedBan = {

@@ -31,6 +31,7 @@ import {
   MessageActionRowComponentBuilder,
   MessageContextMenuCommandInteraction,
   ModalBuilder,
+  StringSelectMenuBuilder,
   ModalSubmitInteraction,
   Role,
   Snowflake,
@@ -46,6 +47,9 @@ import {
 } from 'discord.js';
 import { Duration } from 'luxon';
 import { parseDuration, validateDurationInput } from '../../global/utils/parseDuration';
+import {
+  applyBanReason, BAN_REASON_SELECT_ID, BAN_REASONS, selectedBanReason,
+} from './banReasons';
 import { embedTemplate, errorEmbed } from './embedTemplate';
 import { getDiscordMember } from './guildMemberLookup';
 import { modActionCounts, modHistoryRows } from './modHistory';
@@ -55,6 +59,7 @@ import { last } from '../../global/commands/g.last';
 import { appealAccept, appealReject } from './appeal';
 import { getOrCreateGuild, getOrCreateUser } from '../../global/utils/dbRecords';
 import { GUILD_ONLY_TEXT } from './guildOnly';
+import requireGuildId from '../../global/utils/requireGuildId';
 
 /* Future work:
 add dates to bans
@@ -88,8 +93,25 @@ const noReason = 'No reason provided';
 const mepWarning = 'You cannot use the word "MEP" here.';
 const noMessageSent = '*No message sent to user*';
 
-// Reject the warning, get 15 minutes to think about it.
+// Reject the warning, get 15 minutes to think about it. Someone who is already timed out gets a quarter of what
+// they have left added instead (never less than 15 minutes), so long timeouts don't end on odd leftover values.
 const warningRejectionTimeout = 15 * 60 * 1000; // 15 minutes
+const warningRejectionScale = 0.25;
+const maxTimeoutMs = 28 * 24 * 60 * 60 * 1000; // Discord's limit
+/** How much a rejection adds on top of the `remainingMs` of an existing timeout, in whole minutes. */
+export function warningRejectionExtension(remainingMs: number): number {
+  const scaled = Math.round((remainingMs * warningRejectionScale) / 60_000) * 60_000;
+  return Math.max(warningRejectionTimeout, scaled);
+}
+
+/** Works out how long a rejection times someone out for, given when their current timeout (if any) ends. */
+function planRejectionTimeout(existingTimeout: number | null): { extended: boolean; addedMs: number; totalMs: number } {
+  const remainingMs = existingTimeout !== null ? Math.max(existingTimeout - Date.now(), 0) : 0;
+  const extended = remainingMs > 0;
+  const addedMs = extended ? warningRejectionExtension(remainingMs) : warningRejectionTimeout;
+  return { extended, addedMs, totalMs: Math.min(remainingMs + addedMs, maxTimeoutMs) };
+}
+
 const warningRejectionNote = 'Automatic timeout: this user rejected the warning they were given.';
 
 // Internal-note keywords that mark a vendor/bot ban. Full bans whose internal
@@ -656,7 +678,7 @@ export async function modResponse(
           let userBan = {} as GuildBan;
           try {
             if (appealData) {
-              const guild = await discordClient.guilds.fetch(process.env.DISCORD_GUILD_ID);
+              const guild = await discordClient.guilds.fetch(requireGuildId());
               userBan = await guild.bans.fetch(appealData.discordId);
             } else if (interaction.guild) {
               userBan = await interaction.guild.bans.fetch(userId);
@@ -764,7 +786,7 @@ export async function modResponse(
   if (!process.env.DISCORD_GUILD_ID) {
     throw new Error('DISCORD_GUILD_ID environment variable is not set');
   }
-  const guild = interaction?.guild ?? await discordClient.guilds.fetch(process.env.DISCORD_GUILD_ID);
+  const guild = interaction?.guild ?? await discordClient.guilds.fetch(requireGuildId());
   if (!guild) {
     throw new Error('Failed to fetch guild');
   }
@@ -1219,13 +1241,10 @@ export async function refusalButton(
     }
   }
 
-  const timeoutEnds = new Date(Date.now() + warningRejectionTimeout);
-  const humanDuration = msToHuman(warningRejectionTimeout);
-
-  // These buttons ride timeout DMs too. Don't turn a 7 day timeout into 15 minutes.
-  const existingTimeout = targetMember?.communicationDisabledUntilTimestamp ?? null;
-  const alreadyTimedOutLonger = existingTimeout !== null && existingTimeout > timeoutEnds.getTime();
-  const willTimeout = !!targetMember && !alreadyTimedOutLonger;
+  const { extended, addedMs, totalMs } = planRejectionTimeout(targetMember?.communicationDisabledUntilTimestamp ?? null);
+  const timeoutEnds = new Date(Date.now() + totalMs);
+  const humanDuration = msToHuman(extended ? addedMs : totalMs);
+  const willTimeout = !!targetMember;
 
   const readTheTerms = 'Please use that time to read the [TripSit Terms](https://wiki.tripsit.me/wiki/Terms_of_Service). If you still don\'t want to follow them once it expires, you\'re welcome to leave.';
 
@@ -1235,9 +1254,9 @@ export async function refusalButton(
 
     ${readTheTerms}
   `;
-  if (alreadyTimedOutLonger) {
+  if (extended) {
     noteToUser = stripIndents`
-      You rejected the warning you were given. Your existing timeout still expires ${time(new Date(existingTimeout), 'R')}, and the team has been told you rejected this.
+      You rejected the warning you were given, so your existing timeout has been extended by ${humanDuration}. It will now expire ${time(timeoutEnds, 'R')}.
 
       ${readTheTerms}
     `;
@@ -1265,8 +1284,9 @@ export async function refusalButton(
     log.debug(F, `Failed to update the warning message after a refusal: ${err}`);
   }
 
+  const timeoutAction = extended ? 'extending their timeout by' : 'timing them out for';
   const rejectionEmbed = errorEmbed(willTimeout
-    ? `❌ ${interaction.user} (${interaction.user.username}) has **rejected** their warning, so I'm timing them out for ${humanDuration}.`
+    ? `❌ ${interaction.user} (${interaction.user.username}) has **rejected** their warning, so I'm ${timeoutAction} ${humanDuration}.`
     : `❌ ${interaction.user} (${interaction.user.username}) has **rejected** their warning.`);
 
   const existingModThread = await getModThread(targetData);
@@ -1276,10 +1296,7 @@ export async function refusalButton(
 
   if (!willTimeout) {
     // Nothing to action, but mods still need to know why.
-    let reason = `⚠️ I couldn't time ${interaction.user} out: they're no longer in ${guild ? guild.name : 'the guild'}.`;
-    if (alreadyTimedOutLonger) {
-      reason = `⏳ I left ${targetMember} alone: they're already timed out until ${time(new Date(existingTimeout), 'R')}, which is longer than the ${humanDuration} this would have given them.`;
-    }
+    const reason = `⚠️ I couldn't time ${interaction.user} out: they're no longer in ${guild ? guild.name : 'the guild'}.`;
     if (existingModThread) {
       await existingModThread.send({
         embeds: [errorEmbed(reason)],
@@ -1292,7 +1309,7 @@ export async function refusalButton(
   const timeoutGuild = guild as Guild;
 
   try {
-    await timeoutTarget.timeout(warningRejectionTimeout, warningRejectionNote);
+    await timeoutTarget.timeout(totalMs, warningRejectionNote);
   } catch (err) {
     log.error(F, `Failed to time out ${interaction.user.username} after they rejected a warning: ${err}`);
     if (existingModThread) {
@@ -1330,7 +1347,7 @@ export async function refusalButton(
       internalNote: warningRejectionNote,
       description: noteToUser,
       extraMessage: '',
-      duration: `\n**Timeout Duration:** ${humanDuration}\n**Timeout Ends:** ${time(timeoutEnds, 'R')}`,
+      duration: `\n**Timeout Duration:** ${msToHuman(totalMs)}\n**Timeout Ends:** ${time(timeoutEnds, 'R')}`,
       appealData: null,
       dmDelivered,
     },
@@ -1644,6 +1661,7 @@ export async function moderate(
     description = modalInt.fields.getTextInputValue('description');
   }
   let internalNote = modalInt.fields.getTextInputValue('internalNote');
+  ({ internalNote, description } = applyBanReason(selectedBanReason(modalInt), internalNote, description));
 
   // Check if this is a vendor/bot ban (none of these should DM the user)
   const isVendorBotBan = isFullBan(command)
@@ -2050,10 +2068,10 @@ export async function moderate(
     const newActionFiled = actionField?.value.concat(`
     
     ${buttonInt.user.toString()} muted this user:
-    > ${modalInt.fields.getTextInputValue('internalNote')}
+    > ${internalNote}
     
     Message sent to user:
-    > ${modalInt.fields.getTextInputValue('description')}`);
+    > ${description}`);
 
     // Replace the action field with the new one
     embed.fields?.splice(embed.fields?.findIndex(field => field.name === 'Actions'), 1, {
@@ -2066,10 +2084,10 @@ export async function moderate(
       {
         name: 'Actions',
         value: stripIndents`${buttonInt.user.toString()} muted this user:
-      > ${modalInt.fields.getTextInputValue('internalNote')}
+      > ${internalNote}
   
       Message sent to user:
-      > ${!isNote(command) && !isReport(command) ? modalInt.fields.getTextInputValue('description') : ''}`,
+      > ${!isNote(command) && !isReport(command) ? description : ''}`,
         inline: true,
       },
     );
@@ -2289,6 +2307,17 @@ export async function modModal(
       .setRequired(command === 'WARNING')
       .setCustomId('description')));
   }
+  // Warnings, timeouts and bans can name the rule that was broken, which fills in the message to the user
+  if (isWarning(command) || isTimeout(command) || isFullBan(command)) {
+    modal.addLabelComponents(new LabelBuilder().setLabel('Rule broken (optional)').setStringSelectMenuComponent(
+      new StringSelectMenuBuilder()
+        .setCustomId(BAN_REASON_SELECT_ID)
+        .setPlaceholder('Pick a rule to fill in the message')
+        .setRequired(false)
+        .addOptions(BAN_REASONS.map(reason => ({ label: reason.label, value: reason.value }))),
+    ));
+  }
+
   // Only timeout and full ban can have a duration, but they're different, so separate.
   if (isTimeout(command)) {
     modal.addLabelComponents(new LabelBuilder().setLabel('Timeout for how long?').setTextInputComponent(new TextInputBuilder()

@@ -44,6 +44,12 @@ export function getTentLevel(channel: VoiceBasedChannel): number {
   return highestDenied < 0 ? 0 : highestDenied + 10;
 }
 
+// Discord rejects channel names longer than this
+const MAX_CHANNEL_NAME_LENGTH = 100;
+
+// A new tent is empty until its creator is moved in, so teardown leaves tents younger than this alone
+const TENT_TEARDOWN_GRACE_MS = 30 * 1000;
+
 // Store timeouts for each channel to handle host rejoining
 const hostTimeouts: { [channelId: string]: NodeJS.Timeout } = {};
 
@@ -201,9 +207,23 @@ export async function pitchTent(
     }
   }
 
+  // One tent per host: a member who already owns a tent is sent back to it instead of getting another
+  const existingTent = New.member?.guild.channels.cache.find(channel => channel.parentId === env.CATEGORY_VOICE
+    && channel.type === ChannelType.GuildVoice
+    && channel.name.includes('⛺')
+    && channel.permissionOverwrites.cache.get(New.member?.id ?? '')?.allow.has(PermissionsBitField.Flags.MoveMembers));
+  if (existingTent) {
+    try {
+      await New.member?.voice.setChannel(existingTent.id);
+    } catch (err) {
+      log.warn(F, `pitchTent: could not move the host back to their tent: ${err}`);
+    }
+    return;
+  }
+
   log.debug(F, `pitchTent: creating tent for ${New.member?.displayName} under category ${env.CATEGORY_VOICE}`);
   New.member?.guild.channels.create({
-    name: `⛺│${New.member.displayName}'s tent`,
+    name: `⛺│${New.member.displayName}'s tent`.slice(0, MAX_CHANNEL_NAME_LENGTH),
     type: ChannelType.GuildVoice,
     parent: env.CATEGORY_VOICE,
     bitrate: getMaxBitrate(New.member.guild),
@@ -249,7 +269,14 @@ export async function pitchTent(
       },
     ],
   }).then(async newChannel => {
-    New.member?.voice.setChannel(newChannel.id);
+    try {
+      await New.member?.voice.setChannel(newChannel.id);
+    } catch (err) {
+      // They left the campfire while the tent was being made, so no voice event will ever tear it down
+      log.debug(F, `pitchTent: ${New.member?.displayName} could not be moved, deleting the new tent: ${err}`);
+      await newChannel.delete('Tent creator left before being moved in').catch(() => undefined);
+      return;
+    }
     await newChannel.fetch();
     await newChannel.send({
       components: [
@@ -313,9 +340,10 @@ export async function teardownTent(
   const deletePromises = tempVoiceCategory.children.cache.map(async channel => {
     // Get the number of humans in the channel
     const humans = channel.members.filter(member => !member.user.bot).size;
+    const isNew = Date.now() - (channel.createdTimestamp ?? 0) < TENT_TEARDOWN_GRACE_MS;
 
     // If the channel is a voice channel, and it's a tent, and there are no humans in it delete it
-    if (channel.type === ChannelType.GuildVoice && channel.name.includes('⛺') && humans < 1) {
+    if (channel.type === ChannelType.GuildVoice && channel.name.includes('⛺') && humans < 1 && !isNew) {
       // Clear any pending host transfer timeout for this channel
       if (hostTimeouts[channel.id]) {
         clearTimeout(hostTimeouts[channel.id]);
@@ -350,7 +378,7 @@ export async function transferTent(
   oldHost: GuildMember,
 ): Promise<void> {
   // Get the first user that joined that is still in the channel
-  const newHost = channel.members.first();
+  const newHost = channel.members.find(member => !member.user.bot);
   if (newHost) {
     const embed = new EmbedBuilder()
       .setTitle('Host transferred')
@@ -367,19 +395,19 @@ export async function transferTent(
 
   // Remove the host permissions
   if (oldHost) {
-    channel.permissionOverwrites.edit(oldHost.id, {
+    await channel.permissionOverwrites.edit(oldHost.id, {
       MoveMembers: null, // Set to neutral
     });
   }
 
   // Add new host permissions
   if (newHost) {
-    channel.permissionOverwrites.create(newHost.id, {
+    await channel.permissionOverwrites.create(newHost.id, {
       Connect: true,
       MoveMembers: true,
     });
     // Rename the channel
-    channel.setName(`⛺│${newHost.displayName}'s tent`);
+    await channel.setName(`⛺│${newHost.displayName}'s tent`);
   }
 
   // The transfer has fired, so clear the (now stale) pending-transfer marker and
@@ -441,8 +469,12 @@ export async function logTent(
 
       // Set a timeout to transfer host after 5 minutes
       hostTimeouts[Old.channel.id] = setTimeout(async () => {
-        if (Old.channel) {
-          await transferTent(Old.channel, Old.member as GuildMember);
+        try {
+          if (Old.channel) {
+            await transferTent(Old.channel, Old.member as GuildMember);
+          }
+        } catch (err) {
+          log.error(F, `Failed to transfer a tent to a new host: ${err}`);
         }
       }, 300000); // 5 minutes in milliseconds
     } else {

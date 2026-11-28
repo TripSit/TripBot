@@ -32,7 +32,7 @@ beforeEach(() => {
 });
 
 const ticket = (over: Record<string, unknown> = {}) => ({
-  id: 't1', thread_id: 'th', meta_thread_id: null, status: 'OPEN', archived_at: null, deleted_at: null, ...over,
+  id: 't1', thread_id: 'th', meta_thread_id: null, status: 'OPEN', archived_at: null, deleted_at: null, created_at: new Date(0), ...over,
 });
 
 describe('tripsitmeTeamClose', () => {
@@ -130,7 +130,7 @@ describe('tripsitmeUserClose', () => {
   type Opts = {
     guild?: boolean; member?: boolean; channel?: boolean; cooldown?: boolean; targetId?: string; actorId?: string; override?: boolean; ticket?: boolean;
     roles?: string | null; needshelp?: 'ok' | 'above' | 'fail' | 'unset'; metaChannelFetch?: 'ok' | 'fail'; threadFetch?: 'ok' | 'fail'; archived?: boolean;
-    guildId?: string; metaTicket?: boolean; editReplyFails?: boolean;
+    guildId?: string; metaTicket?: boolean; editReplyFails?: boolean; confirmed?: boolean; createdAt?: Date;
   };
 
   function setup(opts: Opts = {}) {
@@ -151,7 +151,7 @@ describe('tripsitmeUserClose', () => {
     };
     const guildRoles = new Map<string, RoleStub>([['r1', role('r1')], ['r-above', role('r-above', 'above', 1)], ['everyone', role('everyone', '@everyone')], ['nh', role('nh', 'needshelp', opts.needshelp === 'above' ? 1 : -1)], [e.ROLE_TEAMTRIPSIT, role(e.ROLE_TEAMTRIPSIT, 'team')]]);
     const interaction = {
-      customId: `${opts.override ? 'tripsitmodeOffOverride' : 'tripsitmeUserClose'}~${opts.targetId ?? 'actor'}`,
+      customId: `${opts.override ? 'tripsitmodeOffOverride' : 'tripsitmeUserClose'}~${opts.targetId ?? 'actor'}${opts.confirmed ? '~confirmed' : ''}`,
       deferReply: vi.fn(),
       editReply: opts.editReplyFails ? vi.fn().mockRejectedValue(new Error('gone')) : vi.fn(),
       reply: vi.fn(),
@@ -175,7 +175,7 @@ describe('tripsitmeUserClose', () => {
     };
     mocks.cooldown.mockResolvedValue(opts.cooldown === false ? { success: false, message: 'slow down' } : { success: true });
     mocks.getOpenTicket.mockResolvedValue(null);
-    dbMock.user_tickets.findFirst.mockResolvedValue((opts.ticket === false ? null : ticket(opts.metaTicket ? { meta_thread_id: 'mt' } : {})) as never);
+    dbMock.user_tickets.findFirst.mockResolvedValue((opts.ticket === false ? null : ticket({ ...(opts.metaTicket ? { meta_thread_id: 'mt' } : {}), ...(opts.createdAt ? { created_at: opts.createdAt } : {}) })) as never);
     dbMock.users.upsert.mockResolvedValue({ id: 'uid', roles: opts.roles === undefined ? null : opts.roles } as never);
     dbMock.discord_guilds.upsert.mockResolvedValue({
       id: 'g1', role_needshelp: opts.needshelp === 'unset' ? null : 'nh', channel_tripsitmeta: 'meta',
@@ -193,6 +193,40 @@ describe('tripsitmeUserClose', () => {
     await tripsitmeUserClose(slow.interaction);
     expect(slow.raw.reply).toHaveBeenCalledWith({ content: 'slow down', flags: 64 });
     expect(slow.raw.deferReply).not.toHaveBeenCalled();
+  });
+
+  it('asks for confirmation when the person closes a ticket made in the last few minutes', async () => {
+    const s = setup({ createdAt: new Date() });
+    await tripsitmeUserClose(s.interaction);
+    expect(s.raw.deferReply).not.toHaveBeenCalled();
+    const reply = s.raw.reply.mock.calls[0][0];
+    expect(reply.content).toContain('Are you sure');
+    expect(reply.flags).toBe(64);
+    expect(JSON.stringify(reply.components)).toContain('tripsitmeUserClose~actor~confirmed');
+    expect(dbMock.user_tickets.update).not.toHaveBeenCalled();
+  });
+
+  it('closes right away once the confirmation is clicked', async () => {
+    const s = setup({ createdAt: new Date(), confirmed: true });
+    await tripsitmeUserClose(s.interaction);
+    expect(s.raw.deferReply).toHaveBeenCalled();
+    expect(s.raw.reply).not.toHaveBeenCalled();
+  });
+
+  it('does not ask when a helper turns tripsit mode off, or when the ticket is older than the window', async () => {
+    const helper = setup({ createdAt: new Date(), override: true, targetId: 'someone' });
+    await tripsitmeUserClose(helper.interaction);
+    expect(helper.raw.deferReply).toHaveBeenCalled();
+    const old = setup();
+    await tripsitmeUserClose(old.interaction);
+    expect(old.raw.deferReply).toHaveBeenCalled();
+    expect(old.raw.reply).not.toHaveBeenCalled();
+  });
+
+  it('does not ask when the user has no open ticket', async () => {
+    const s = setup({ ticket: false });
+    await tripsitmeUserClose(s.interaction);
+    expect(s.raw.reply).not.toHaveBeenCalled();
   });
 
   it('only lets the person being helped click, unless overridden', async () => {

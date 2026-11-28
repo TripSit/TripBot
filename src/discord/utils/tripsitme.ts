@@ -14,6 +14,7 @@ import {
   ButtonInteraction,
   ChatInputCommandInteraction,
   Colors,
+  DiscordAPIError,
   Guild,
   GuildMember,
   Message,
@@ -26,6 +27,7 @@ import {
   ModalBuilder,
   ModalSubmitInteraction,
   PermissionResolvable,
+  RESTJSONErrorCodes,
   Role,
   TextChannel,
   TextInputBuilder,
@@ -797,6 +799,37 @@ async function restoreOldRoles(
   }
 }
 
+/**
+ * Undoes help mode for a ticket whose thread was deleted by hand in Discord: removes the needshelp role, gives back
+ * the saved roles, and clears the saved snapshot. Members that left the guild have nothing to restore.
+ */
+export async function restoreRolesForDeletedTicket(guild: Guild, ticket: user_tickets): Promise<void> {
+  const userData = await getOrCreateUser(ticket.user_id);
+  if (!userData.discord_id) return;
+
+  let target: GuildMember;
+  try {
+    target = await guild.members.fetch(userData.discord_id);
+  } catch (err) {
+    if (err instanceof DiscordAPIError && err.code === RESTJSONErrorCodes.UnknownMember) {
+      // They left, so there is nothing to restore; the snapshot is dropped
+      if (userData.roles) await db.users.update({ where: { id: userData.id }, data: { roles: null } });
+      return;
+    }
+    // Keep the snapshot so the roles are not lost
+    log.error(F, `Could not fetch a member to restore roles after their ticket thread was deleted: ${err}`);
+    return;
+  }
+
+  const guildData = await getOrCreateGuild(guild.id);
+  const roleNeedshelp = await removeNeedsHelpRole(guild, guild.client.user.id, guildData, target);
+  await restoreOldRoles(guild, guild.client.user.id, target, userData, roleNeedshelp);
+
+  if (userData.roles) {
+    await db.users.update({ where: { id: userData.id }, data: { roles: null } });
+  }
+}
+
 /** Tells the team's meta channel (or thread) that the user says they no longer need help. */
 async function announceUserClose(
   guild: Guild,
@@ -835,6 +868,18 @@ async function announceUserClose(
   }
 }
 
+const CLOSE_CONFIRMATION_WINDOW_MS = 5 * 60 * 1000;
+
+/** True when the user's open ticket was made within the last few minutes. */
+async function isRecentTicket(discordId: string): Promise<boolean> {
+  const userData = await getOrCreateUser(discordId);
+  const ticket = await db.user_tickets.findFirst({
+    where: { user_id: userData.id, status: { not: { in: ['CLOSED', 'DELETED'] } } },
+    select: { created_at: true },
+  });
+  return !!ticket && Date.now() - ticket.created_at.getTime() < CLOSE_CONFIRMATION_WINDOW_MS;
+}
+
 /**
  * Handles removing of the NeedsHelp mode
  * @param {ButtonInteraction} interaction
@@ -851,6 +896,25 @@ export async function tripsitmeUserClose(
 
   if (!cooldown.success && cooldown.message) {
     await interaction.reply({ content: cooldown.message, flags: MessageFlags.Ephemeral });
+    return;
+  }
+
+  const [closeAction, closeTargetId, closeConfirmed] = interaction.customId.split('~');
+  // People sometimes click this by accident, or before a helper has had time to answer, which marks the ticket
+  // as resolved and tells the team they no longer need help, so ask first during the first few minutes.
+  if (closeAction === 'tripsitmeUserClose' && !closeConfirmed && interaction.user.id === closeTargetId
+    && await isRecentTicket(closeTargetId)) {
+    await interaction.reply({
+      content: stripIndents`Are you sure you don't need help anymore?
+      It can take a few minutes for our helpers to respond, and the team may stop looking at your thread if you close it.`,
+      components: [new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`tripsitmeUserClose~${closeTargetId}~confirmed`)
+          .setLabel('Yes, I\'m good now')
+          .setStyle(ButtonStyle.Success),
+      )],
+      flags: MessageFlags.Ephemeral,
+    });
     return;
   }
 

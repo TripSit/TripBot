@@ -1,6 +1,8 @@
 /* eslint-disable no-nested-ternary, sonarjs/no-duplicate-string */
 import { GuildMember } from 'discord.js';
-import { acknowledgeButton, acknowledgeReportButton, refusalButton } from '../../utils/modUtils';
+import {
+  acknowledgeButton, acknowledgeReportButton, refusalButton, warningRejectionExtension,
+} from '../../utils/modUtils';
 import { dbMock } from '../../../vitest/utils/mockDb';
 import { stubInstance } from '../../../vitest/utils/discordStubs';
 import warningInteraction from '../../../vitest/utils/warningInteraction';
@@ -126,15 +128,44 @@ describe('refusalButton', () => {
     await expect(refusalButton(quietFail.interaction)).resolves.toBeUndefined();
   });
 
-  it('leaves users who already have a longer timeout alone', async () => {
-    const longer = targetMember({ communicationDisabledUntilTimestamp: Date.now() + 7 * 86_400_000 });
+  it('adds a quarter of the remaining time to an existing timeout', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const now = Date.now();
+    const longer = targetMember({ communicationDisabledUntilTimestamp: now + 4 * 86_400_000 });
     const s = setup({ member: longer, modThread: true });
     await refusalButton(s.interaction);
-    expect((longer as unknown as { timeout: ReturnType<typeof vi.fn> }).timeout).not.toHaveBeenCalled();
-    expect(JSON.stringify(s.raw.editReply.mock.calls[1][0])).toContain('Your existing timeout still expires');
-    expect(JSON.stringify(s.thread.send.mock.calls)).toContain('already timed out until');
-    const noThread = setup({ member: targetMember({ communicationDisabledUntilTimestamp: Date.now() + 7 * 86_400_000 }) });
-    await expect(refusalButton(noThread.interaction)).resolves.toBeUndefined();
+    // 4 days left + 25% (1 day) = 5 days from now
+    expect((longer as unknown as { timeout: ReturnType<typeof vi.fn> }).timeout).toHaveBeenCalledWith(5 * 86_400_000, expect.stringContaining('rejected the warning'));
+    expect(JSON.stringify(s.raw.editReply.mock.calls[1][0])).toContain('has been extended by 1 day');
+    expect(JSON.stringify(s.thread.send.mock.calls)).toContain('extending their timeout by');
+    expect(dbMock.user_actions.create).toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it('never adds less than 15 minutes and never exceeds the 28 day limit', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const now = Date.now();
+    const short = targetMember({ communicationDisabledUntilTimestamp: now + 10 * 60_000 });
+    await refusalButton(setup({ member: short }).interaction);
+    expect((short as unknown as { timeout: ReturnType<typeof vi.fn> }).timeout).toHaveBeenCalledWith(25 * 60_000, expect.any(String));
+    const huge = targetMember({ communicationDisabledUntilTimestamp: now + 27 * 86_400_000 });
+    await refusalButton(setup({ member: huge }).interaction);
+    expect((huge as unknown as { timeout: ReturnType<typeof vi.fn> }).timeout).toHaveBeenCalledWith(28 * 86_400_000, expect.any(String));
+    vi.useRealTimers();
+  });
+
+  it('treats an expired timeout like no timeout', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const expired = targetMember({ communicationDisabledUntilTimestamp: Date.now() - 60_000 });
+    await refusalButton(setup({ member: expired }).interaction);
+    expect((expired as unknown as { timeout: ReturnType<typeof vi.fn> }).timeout).toHaveBeenCalledWith(900_000, expect.any(String));
+    vi.useRealTimers();
+  });
+
+  it('rounds the extension to whole minutes', () => {
+    expect(warningRejectionExtension(4 * 86_400_000)).toBe(86_400_000);
+    expect(warningRejectionExtension(100 * 60_000 + 20_000)).toBe(25 * 60_000);
+    expect(warningRejectionExtension(1)).toBe(15 * 60_000);
   });
 
   it('reports users who left the guild, or when the guild cannot be fetched', async () => {

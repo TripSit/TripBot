@@ -3,6 +3,7 @@ import { PermissionFlagsBits } from 'discord.js';
 import RateLimit from 'express-rate-limit';
 import keycloakAuth, { AuthenticatedRequest } from '../../middlewares/keycloakAuth';
 import { decideStaffAppeal, listStaffAppeals, StaffAppealError } from './staff.queries';
+import requireGuildId from '../../../global/utils/requireGuildId';
 
 const router = express.Router();
 router.use((_req, res, next) => {
@@ -19,7 +20,7 @@ async function requireAppealStaff(req: AuthenticatedRequest, res: Response, next
     return;
   }
   try {
-    const guild = await discordClient.guilds.fetch(process.env.DISCORD_GUILD_ID);
+    const guild = await discordClient.guilds.fetch(requireGuildId());
     const member = await guild.members.fetch({ user: discordId, force: true });
     if (!member.permissions.has(PermissionFlagsBits.BanMembers)) {
       res.status(403).json({ error: 'Ban Members permission is required to review appeals' });

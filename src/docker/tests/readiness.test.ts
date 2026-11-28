@@ -5,7 +5,6 @@ import {
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-// Child environments intentionally omit app configuration; #1544 tracks the ProcessEnv augmentation.
 const script = path.resolve('src/docker/wait-for-ready.sh');
 const probe = readFileSync('src/docker/readiness.js', 'utf8');
 
@@ -27,7 +26,7 @@ function runProbe(failures: number, mode = 'starting') {
     const result = spawnSync('sh', [script], {
       env: {
         PATH: `${dir}:${process.env.PATH}`, CHECK_DIR: dir, FAILURES: String(failures), MODE: mode,
-      } as unknown as NodeJS.ProcessEnv,
+      },
       encoding: 'utf8',
       timeout: 5000,
     });
@@ -73,11 +72,24 @@ it('uses valid POSIX shell syntax', () => {
 });
 
 it('gates only UAT after the rebuild and notifies failures', () => {
-  const pipeline = readFileSync('.drone.yml', 'utf8');
-  const [production, uat] = pipeline.split('\n---\n');
+  // Each Drone server reads its own file: drone.tripsit.me .drone.yml, drone.tripsit.io .drone-uat.yml.
+  const production = readFileSync('.drone.yml', 'utf8');
+  const uat = readFileSync('.drone-uat.yml', 'utf8');
   expect(production).not.toContain('sh src/docker/wait-for-ready.sh');
   expect(uat).toContain('--build --no-deps\n      - sh src/docker/wait-for-ready.sh');
   expect(uat).toContain('when:\n      status: [success, failure]');
+});
+
+// Both Drone servers receive every push, and Drone creates a build for any pipeline whose branch and event match
+// before it checks `trigger: instance`. A pipeline for the other server's branch left builds that never ran.
+it.each([
+  ['.drone.yml', 'main', 'uat'],
+  ['.drone-uat.yml', 'uat', 'main'],
+])('keeps %s to one pipeline that triggers on %s only', (file, branch, otherBranch) => {
+  const config = readFileSync(file, 'utf8');
+  expect(config).not.toContain('\n---\n');
+  expect(config).toContain(`trigger:\n  branch:\n  - ${branch}\n`);
+  expect(config).not.toContain(`  - ${otherBranch}\n`);
 });
 
 it('installs the health probe in the runtime image as the application user', () => {
@@ -94,7 +106,7 @@ it.each([
     ? "global.fetch = async () => { throw new Error('connection failed'); };"
     : `global.fetch = async () => ({ ok: ${http === 'ready'} });`;
   const result = spawnSync(process.execPath, ['-e', fetch + probe], {
-    env: (credentials ? { DISCORD_CLIENT_TOKEN: 'synthetic-test-token' } : {}) as NodeJS.ProcessEnv,
+    env: credentials ? { DISCORD_CLIENT_TOKEN: 'synthetic-test-token' } : {},
     encoding: 'utf8',
     timeout: 5000,
   });
@@ -105,7 +117,7 @@ it.each([
 it('probes the configured API port', () => {
   const fetch = "global.fetch = async url => ({ ok: url === 'http://127.0.0.1:1447/api/health' });";
   const result = spawnSync(process.execPath, ['-e', fetch + probe], {
-    env: { DISCORD_CLIENT_TOKEN: 'synthetic-test-token', API_PORT: '1447' } as unknown as NodeJS.ProcessEnv,
+    env: { DISCORD_CLIENT_TOKEN: 'synthetic-test-token', API_PORT: '1447' },
     encoding: 'utf8',
     timeout: 5000,
   });
