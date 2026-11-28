@@ -27,6 +27,13 @@ describe('handleError', () => {
     expect(fileErrorIssue).toHaveBeenCalledWith(err, expect.stringContaining('unique failure issue'), 'ping');
   });
 
+  it('still reports the error when filing the GitHub issue rejects', async () => {
+    global.discordClient = { isReady: () => false } as never;
+    vi.mocked(fileErrorIssue).mockRejectedValueOnce(new Error('github down'));
+    await expect(handleError(new Error('unique failure rejected'), 'ping')).resolves.toBeUndefined();
+    expect(fileErrorIssue).toHaveBeenCalled();
+  });
+
   it('does not file an issue outside production', async () => {
     env.NODE_ENV = 'development';
     vi.mocked(fileErrorIssue).mockClear();
