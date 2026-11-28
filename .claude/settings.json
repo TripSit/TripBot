@@ -21,7 +21,8 @@
       "Bash(git fetch *)",
       "Bash(npm view *)",
       "Bash(docker compose config *)",
-      "Bash(npm audit)"
+      "Bash(npm audit)",
+      "Bash(npm run sonar:precheck*)"
     ],
     "ask": [
       "Bash(npx prisma migrate*)",
@@ -33,6 +34,21 @@
     "deny": [
       "Bash(npx prisma migrate reset*)",
       "Bash(git push --force*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(gh pr create*)",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/sonar-precheck.sh\" || exit 2",
+            "timeout": 300
+          }
+        ]
+      }
     ]
   }
 }

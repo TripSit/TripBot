@@ -408,6 +408,7 @@ Choose checks proportional to the change; do not claim checks you did not run.
 | --- | --- |
 | Documentation only | Review rendered/plain Markdown, `git diff --check` |
 | TypeScript logic | Targeted ESLint, `npx tsc --noEmit --pretty false`, new or updated tests for the change |
+| Any change you will open a PR for | `npm run sonar:precheck` (lints changed files against `uat` with the Sonar rules as errors); fix every finding first |
 | Discord command | Type-check, targeted ESLint, relevant existing test if configured, inspect interaction lifecycle |
 | Discord data, DMs, roles, scoring, or third-party calls | Discord command checks plus the `docs/discord-developer-policy.md` checklist, and the `/privacy` text updated if data handling changed |
 | Command definition/options | Discord-command checks plus note that registration updates on the next bot startup |
@@ -430,6 +431,10 @@ failure as a source-code failure.
 
 ## Git and change hygiene
 
+- Before opening a pull request, run `npm run sonar:precheck`. SonarScan cannot analyze a PR before merge (the server is
+  Community Build), so this script is the local stand-in for its new-code gate: cognitive complexity above 15
+  (S3776), duplicate strings, and non-null assertions in the files changed against `uat`. In Claude Code a
+  `PreToolUse` hook in `.claude/settings.json` runs it automatically and blocks `gh pr create` while it fails.
 - Work on the current branch unless the user asks for a new one.
 - Do not commit, amend, rebase, merge, push, force-push, or open a pull request unless explicitly asked.
 - Never use destructive Git commands to clean the workspace.
