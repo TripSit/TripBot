@@ -226,6 +226,38 @@ async function seedDrugVariants(drugRecords: DrugRecord[], userId: string): Prom
   );
 }
 
+type RoaRecord = NonNullable<DrugRecord['roas']>[number];
+
+function buildRoaData(drugVariantId: string, roa: RoaRecord) {
+  const dosage = roa.dosage ?? null;
+  const duration = roa.duration ?? null;
+  const route = routeMap[roa.name.toLowerCase() as keyof typeof routeMap] ?? roa.name;
+
+  return {
+    drug_variant_id: drugVariantId,
+    route: route.toUpperCase() as drug_roa,
+
+    dose_threshold: parseDose('threshold' as Strength, dosage),
+    dose_light: parseDose('light' as Strength, dosage),
+    dose_common: parseDose('common' as Strength, dosage),
+    dose_strong: parseDose('strong' as Strength, dosage),
+    dose_heavy: parseDose('heavy' as Strength, dosage),
+
+    duration_total_min: parseDuration('total' as Period, 'min', duration),
+    duration_total_max: parseDuration('total' as Period, 'max', duration),
+    duration_onset_min: parseDuration('onset' as Period, 'min', duration),
+    duration_onset_max: parseDuration('onset' as Period, 'max', duration),
+    duration_comeup_min: parseDuration('comeup' as Period, 'min', duration),
+    duration_comeup_max: parseDuration('comeup' as Period, 'max', duration),
+    duration_peak_min: parseDuration('peak' as Period, 'min', duration),
+    duration_peak_max: parseDuration('peak' as Period, 'max', duration),
+    duration_offset_min: parseDuration('offset' as Period, 'min', duration),
+    duration_offset_max: parseDuration('offset' as Period, 'max', duration),
+    duration_after_effects_min: parseDuration('after effects' as Period, 'min', duration),
+    duration_after_effects_max: parseDuration('after effects' as Period, 'max', duration),
+  };
+}
+
 async function seedDrugVariantRoas(
   drugRecords: DrugRecord[],
   variantRecords: drug_variants[],
@@ -236,32 +268,7 @@ async function seedDrugVariantRoas(
 
     if (drug.roas && drugVariant) {
       for (const roa of drug.roas.filter(r => r.name)) {
-        await prisma.drug_variant_roas.create({
-          data: {
-            drug_variant_id: drugVariant.id,
-            route: (routeMap[roa.name.toLowerCase() as keyof typeof routeMap]
-              ?? roa.name).toUpperCase() as drug_roa,
-
-            dose_threshold: parseDose('threshold' as Strength, roa.dosage ?? null),
-            dose_light: parseDose('light' as Strength, roa.dosage ?? null),
-            dose_common: parseDose('common' as Strength, roa.dosage ?? null),
-            dose_strong: parseDose('strong' as Strength, roa.dosage ?? null),
-            dose_heavy: parseDose('heavy' as Strength, roa.dosage ?? null),
-
-            duration_total_min: parseDuration('total' as Period, 'min', roa.duration ?? null),
-            duration_total_max: parseDuration('total' as Period, 'max', roa.duration ?? null),
-            duration_onset_min: parseDuration('onset' as Period, 'min', roa.duration ?? null),
-            duration_onset_max: parseDuration('onset' as Period, 'max', roa.duration ?? null),
-            duration_comeup_min: parseDuration('comeup' as Period, 'min', roa.duration ?? null),
-            duration_comeup_max: parseDuration('comeup' as Period, 'max', roa.duration ?? null),
-            duration_peak_min: parseDuration('peak' as Period, 'min', roa.duration ?? null),
-            duration_peak_max: parseDuration('peak' as Period, 'max', roa.duration ?? null),
-            duration_offset_min: parseDuration('offset' as Period, 'min', roa.duration ?? null),
-            duration_offset_max: parseDuration('offset' as Period, 'max', roa.duration ?? null),
-            duration_after_effects_min: parseDuration('after effects' as Period, 'min', roa.duration ?? null),
-            duration_after_effects_max: parseDuration('after effects' as Period, 'max', roa.duration ?? null),
-          },
-        });
+        await prisma.drug_variant_roas.create({ data: buildRoaData(drugVariant.id, roa) });
       }
     }
   }
