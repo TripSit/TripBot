@@ -56,6 +56,14 @@ describe('sanitizeForIssue', () => {
     expect(out).toContain('<id>');
     expect(out).toContain('/<home>/x.ts');
   });
+
+  it('stays linear on a long run of address-like characters', () => {
+    // The unanchored patterns took seconds here (quadratic backtracking); the lookbehind keeps this to milliseconds
+    const started = performance.now();
+    const out = sanitizeForIssue(`${'a.'.repeat(40_000)} mod.helper+x@mail.example.org`);
+    expect(performance.now() - started).toBeLessThan(1000);
+    expect(out.endsWith(' <email>')).toBe(true);
+  });
 });
 
 describe('isReportableError', () => {

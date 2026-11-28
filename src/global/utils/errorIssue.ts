@@ -20,12 +20,17 @@ const IGNORED_DISCORD_CODES = new Set([10003, 10007, 10008, 10013, 10062, 40060,
 const issueLimiter = new ReportLimiter(3, 3_600_000, 3_600_000);
 const lastCommented = new Map<string, number>();
 
-/** The repository is public, so strip anything that could identify a person or grant access. */
+/**
+ * The repository is public, so strip anything that could identify a person or grant access.
+ * The token and email patterns start with a lookbehind so a match can only begin where a run of
+ * those characters begins; without it, every position in a long run is retried and the
+ * replacement takes quadratic time (Sonar S5852).
+ */
 export function sanitizeForIssue(text: string): string {
   return text
-    .replace(/[\w.-]{20,}\.[\w-]{6,}\.[\w-]{20,}/g, '<token>')
+    .replace(/(?<![\w.-])[\w.-]{20,}\.[\w-]{6,}\.[\w-]{20,}/g, '<token>')
     .replace(/\b(?:gh[pousr]_|github_pat_)\w+/g, '<token>')
-    .replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, '<email>')
+    .replace(/(?<![\w.+-])[\w.+-]+@[\w-]+\.[\w.-]+/g, '<email>')
     .replace(/\b\d{17,20}\b/g, '<id>')
     .replace(/\/(?:home|Users)\/[^/\s]+/g, '/<home>')
     .replace(/(\/(?:webhooks|interactions)\/)[^\s/]+\/[^\s/)]+/g, '$1<id>/<token>');
@@ -46,7 +51,7 @@ export function errorFingerprint(errorData: unknown, stack: string): string {
   const name = errorData instanceof Error ? errorData.name : typeof errorData;
   const frames = stack.split('\n').filter(l => l.trim().startsWith('at ')).slice(0, 3);
   const basis = frames.length ? frames.join('|') : stack.split('\n')[0];
-  return createHash('sha1').update(`${name}|${sanitizeForIssue(basis)}`).digest('hex').slice(0, 10);
+  return createHash('sha256').update(`${name}|${sanitizeForIssue(basis)}`).digest('hex').slice(0, 10);
 }
 
 function buildBody(fingerprint: string, stack: string, commandName?: string): string {
