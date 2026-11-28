@@ -13,6 +13,7 @@ import commandContext from '../utils/context';
 import { dataSensitiveCommands } from '../utils/commandStats';
 import { describeError } from '../../global/utils/networkErrors';
 import { ReportLimiter, withTimeout } from '../../global/utils/errorReporter';
+import fileErrorIssue from '../../global/utils/errorIssue';
 
 const F = f(__filename);
 
@@ -137,6 +138,8 @@ async function handleErrorUnsafe(
 
   // If this is production, send a message to the channel and alert the developers
   if (env.NODE_ENV === 'production') {
+    // Track it on GitHub too; runs in parallel and never throws
+    fileErrorIssue(errorData, errorStack, commandName).catch(() => undefined);
     const wasIgnorable = await reportInProduction(errorData, errorStack, embed, commandName, interaction);
     if (wasIgnorable) return;
   }

@@ -1,5 +1,8 @@
 import { DiscordAPIError } from 'discord.js';
 import handleError from '../../events/error';
+import fileErrorIssue from '../../../global/utils/errorIssue';
+
+vi.mock('../../../global/utils/errorIssue', () => ({ default: vi.fn().mockResolvedValue(undefined) }));
 
 const originalEnv = env.NODE_ENV;
 const originalClient = global.discordClient;
@@ -17,6 +20,20 @@ afterEach(() => {
 });
 
 describe('handleError', () => {
+  it('files a GitHub issue for the error in production', async () => {
+    global.discordClient = { isReady: () => false } as never;
+    const err = new Error('unique failure issue');
+    await handleError(err, 'ping');
+    expect(fileErrorIssue).toHaveBeenCalledWith(err, expect.stringContaining('unique failure issue'), 'ping');
+  });
+
+  it('does not file an issue outside production', async () => {
+    env.NODE_ENV = 'development';
+    vi.mocked(fileErrorIssue).mockClear();
+    await handleError(new Error('unique failure dev'));
+    expect(fileErrorIssue).not.toHaveBeenCalled();
+  });
+
   it('does not throw or fetch anything when Discord is not ready', async () => {
     const fetch = vi.fn();
     global.discordClient = { isReady: () => false, channels: { fetch } } as never;

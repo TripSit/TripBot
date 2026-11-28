@@ -78,6 +78,14 @@ Run through this whenever a change touches any of the following. If an answer is
 - **Age:** does the change collect data that could identify someone as under 13, or content unsuitable for under-18
   users in non-age-restricted spaces?
 
+## Automatic error reports
+
+In production, `src/global/utils/errorIssue.ts` files a GitHub issue (label `bot-error`) for unexpected errors, and
+`.github/workflows/AutoFixErrors.yml` (off unless the `AUTOFIX_ENABLED` repository variable is `true`) lets Claude propose
+a fix PR. The issue holds only a redacted stack trace and the command name: snowflake IDs, emails, tokens and home paths
+are stripped, and message content or command options are never included. The `/privacy` text names this. If a change
+puts anything else into the issue body, re-run the checklist above.
+
 ## Developer Portal items (outside the code)
 
 Keep these in sync whenever the bot's behavior changes; a code change cannot verify them:
