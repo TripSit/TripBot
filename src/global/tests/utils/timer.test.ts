@@ -177,15 +177,16 @@ describe('runTimer', () => {
       const { run } = await start();
 
       await run('retention');
-      expect(dbMock.users.findMany).toHaveBeenCalledTimes(1);
+      // Each daily run queries users twice: the inactive-account purge and the moderator thread prune
+      expect(dbMock.users.findMany).toHaveBeenCalledTimes(2);
 
       vi.setSystemTime(Date.UTC(2026, 10, 25, 23, 59));
       await run('retention');
-      expect(dbMock.users.findMany).toHaveBeenCalledTimes(1);
+      expect(dbMock.users.findMany).toHaveBeenCalledTimes(2);
 
       vi.setSystemTime(Date.UTC(2026, 10, 26, 0, 5));
       await run('retention');
-      expect(dbMock.users.findMany).toHaveBeenCalledTimes(2);
+      expect(dbMock.users.findMany).toHaveBeenCalledTimes(4);
     });
 
     it('still purges when the ban reconciliation fails', async () => {
@@ -199,7 +200,7 @@ describe('runTimer', () => {
       await run('retention');
 
       expect(global.log.error).toHaveBeenCalledWith('timer', expect.stringContaining('Ban reconciliation failed'));
-      expect(dbMock.users.findMany).toHaveBeenCalledTimes(1);
+      expect(dbMock.users.findMany).toHaveBeenCalledTimes(2);
       expect(dbMock.user_actions.deleteMany).toHaveBeenCalled();
     });
   });
